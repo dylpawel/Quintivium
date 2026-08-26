@@ -401,7 +401,7 @@ let _state = {
     inventory:  {},   // { item_id: qty }
     // Equipped slots → item_id. null = empty. Two hand slots (hand_l/hand_r)
     // both contribute their bonuses in combat; there is no single "weapon".
-    equipped:   { head: null, hand_l: null, hand_r: null, neck: null, torso: null, shoes: null },
+    equipped:   { head: null, hand_l: null, hand_r: null, neck: null, torso: null, feet: null },
     firedOnce:  new Set(),
     currentMap: null,
     weather:    {},   // mapId → weatherRecord (persistent in-session override; survives change_map)
@@ -410,13 +410,13 @@ let _state = {
 
 // Slot → accepted item type. `hand` items fit either hand_l or hand_r.
 const SLOT_TYPES = {
-    head: 'head', hand_l: 'hand', hand_r: 'hand', neck: 'neck', torso: 'torso', shoes: 'shoes',
+    head: 'head', hand_l: 'hand', hand_r: 'hand', neck: 'neck', torso: 'torso', feet: 'feet',
 }
 // Human-readable slot order for the body diagram + iteration.
-const SLOT_ORDER = ['head', 'neck', 'hand_l', 'hand_r', 'torso', 'shoes']
+const SLOT_ORDER = ['head', 'neck', 'hand_l', 'hand_r', 'torso', 'feet']
 // Types that actually occupy a body slot. Anything else (e.g. 'material') is
 // not equippable and itemSlotType returns null for it.
-const EQUIPPABLE_TYPES = new Set(['head', 'hand', 'neck', 'torso', 'shoes'])
+const EQUIPPABLE_TYPES = new Set(['head', 'hand', 'neck', 'torso', 'feet'])
 
 let _scripts  = []
 let _scenario = null
@@ -453,11 +453,11 @@ export function getState() { return _state }
 
 // Item definitions registry (set by game.js after assets load). Each def:
 //   { icon:[col,row], type:string, bonuses:{attack,defense,armor,agility,base_dmg,...} }
-// `type` decides which slot(s) an item can occupy (head|hand|neck|torso|shoes).
+// `type` decides which slot(s) an item can occupy (head|hand|neck|torso|feet).
 let _itemDefs = {}
 export function setItemDefs(defs) { _itemDefs = defs || {} }
 
-/** Return the slot type an item fits (head|hand|neck|torso|shoes), or null. */
+/** Return the slot type an item fits (head|hand|neck|torso|feet), or null. */
 export function itemSlotType(itemId) {
     const def = _itemDefs[itemId]
     const t = def?.type
@@ -717,7 +717,7 @@ export async function loadScenario(id, basePath = '/scenarios') {
         },
         flags:      { ..._scenario.flags },
         inventory:  {},
-        equipped:   { head: null, hand_l: null, hand_r: null, neck: null, torso: null, shoes: null },
+        equipped:   { head: null, hand_l: null, hand_r: null, neck: null, torso: null, feet: null },
         firedOnce:  new Set(),
         currentMap: _scenario.start_map,
         lighting:   {},   // per-map lighting overrides reset on fresh scenario load

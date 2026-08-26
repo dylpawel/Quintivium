@@ -590,7 +590,7 @@ and is automatically collected when the player enters the tile. The item is adde
 the player's inventory (with auto-equip if applicable) and a toast message is shown.
 
 ```json
-{ "type": "spawn_item", "item_id": "gold", "x": 10, "y": 8, "qty": 5 }
+{ "type": "spawn_item", "item_id": "Gold", "x": 10, "y": 8, "qty": 5 }
 ```
 
 | Field | Description |

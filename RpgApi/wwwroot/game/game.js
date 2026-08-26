@@ -322,7 +322,7 @@ const playerStats = {
     equippedWeapon: null,
 
     // Equipped body slots → item_id (null = empty)
-    equipped: { head: null, hand_l: null, hand_r: null, neck: null, torso: null, shoes: null },
+    equipped: { head: null, hand_l: null, hand_r: null, neck: null, torso: null, feet: null },
 
     // Inventory: item_id → quantity
     items: {},
@@ -3075,7 +3075,7 @@ function _collectLights(now) {
     // Player equipped lights: any equipped item with a "light" definition emits a light.
     // Reads each equipped slot every frame, so picking up a glowing item lights the halo instantly.
     const eq = engine.getState().equipped || {}
-    for (const slot of ['hand_l', 'hand_r', 'head', 'neck', 'torso', 'shoes']) {
+    for (const slot of ['hand_l', 'hand_r', 'head', 'neck', 'torso', 'feet']) {
         const itemId = eq[slot]
         if (!itemId) continue
         const def = _itemsDef[itemId]
@@ -3664,7 +3664,7 @@ function updateHud() {
     if (goldIcon) _drawGoldIcon(goldIcon)
     const goldText = document.getElementById('hud-gold-text')
     const engineState = engine.getState()
-    const goldAmount = engineState.inventory?.gold ?? 0
+    const goldAmount = engineState.inventory?.Gold ?? 0
     if (goldText) goldText.textContent = goldAmount
     // Also update playerStats for other code that might reference it
     playerStats.gold = goldAmount
@@ -3684,7 +3684,7 @@ function updateHud() {
  * Draw the gold coin icon onto the HUD gold canvas.
  */
 function _drawGoldIcon(cv) {
-    const def = _itemsDef['gold']
+    const def = _itemsDef['Gold']
     const icon = def && (def.icon || (Array.isArray(def) ? def : null))
     if (!icon || !_itemsImg) return
     const [col, row] = icon
@@ -3845,7 +3845,7 @@ function _populateEquipStats() {
     }
     // Gold is now in engine inventory
     const engineState = engine.getState()
-    const goldAmount = engineState.inventory?.gold ?? 0
+    const goldAmount = engineState.inventory?.Gold ?? 0
     playerStats.gold = goldAmount  // keep in sync
 
     // ── Gold display ──────────────────────────────────────────────────

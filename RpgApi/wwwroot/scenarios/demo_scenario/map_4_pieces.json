@@ -59,7 +59,7 @@
       },
       {
         "type": "give_item",
-        "item_id": "gold",
+        "item_id": "Gold",
         "qty": 20
       },
       {
