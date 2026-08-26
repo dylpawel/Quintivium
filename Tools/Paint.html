@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3x3 Tile Sync Editor</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        
+        .source-container { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; width: 90%; overflow: auto; max-height: 320px; text-align: center; border: 1px solid #444; }
+        #sourceCanvas { border: 2px solid #555; image-rendering: pixelated; cursor: crosshair; background-image: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 10px 10px; }
+
+        .main-layout { display: flex; gap: 30px; align-items: flex-start; max-width: 95vw; }
+        
+        .grid-viewport { overflow: auto; max-height: 80vh; max-width: 70vw; border: 2px solid #444; background: #222; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, auto); grid-template-rows: repeat(3, auto); gap: 1px; background: #444; }
+        
+        .cell { background: #000; position: relative; line-height: 0; }
+        .cell canvas { image-rendering: pixelated; display: block; cursor: crosshair; background-image: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 10px 10px; }
+        
+        body.mode-place .cell.selected { outline: 4px solid #007bff; outline-offset: -4px; z-index: 10; }
+
+        .side-panel { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 20px; }
+        .panel { background: #333; padding: 15px; border-radius: 8px; width: 240px; border: 1px solid #444; }
+        
+        .btn { width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; border: none; border-radius: 4px; background: #555; color: white; font-weight: bold; }
+        .btn.active { background: #007bff; box-shadow: 0 0 10px rgba(0,123,255,0.5); }
+        .btn-probe.active { background: #ffc107; color: #000; }
+        
+        .palette { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; max-height: 150px; overflow-y: auto; }
+        .swatch { width: 28px; height: 28px; border: 1px solid #fff; cursor: pointer; border-radius: 2px; box-sizing: border-box; }
+        .swatch.transparent-type { background-image: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px; border: 2px solid #ff4444; }
+        
+        select, input[type="color"] { width: 100%; padding: 8px; background: #222; color: #fff; border: 1px solid #555; border-radius: 4px; }
+        label { font-size: 0.8em; color: #aaa; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body class="mode-place">
+
+    <div class="source-container">
+        <strong style="display:block; margin-bottom: 10px;">Source Strip</strong>
+        <canvas id="sourceCanvas" height="32"></canvas>
+        <div style="margin-top:10px;"><input type="file" id="loader" accept="image/png"></div>
+    </div>
+
+    <div class="main-layout">
+        <div class="grid-viewport">
+            <div id="grid" class="grid-container"></div>
+        </div>
+
+        <div class="side-panel">
+            <div class="panel">
+                <div id="coords" style="font-family: monospace; color: #0f0;">X: 0, Y: 0</div>
+                
+                <label>View Zoom</label>
+                <select id="zoomSelect">
+                    <option value="1">1x</option>
+                    <option value="2">2x</option>
+                    <option value="4" selected>4x</option>
+                    <option value="8">8x</option>
+                </select>
+
+                <hr style="border:0; border-top:1px solid #444; margin:15px 0;">
+                
+                <button id="modePlace" class="mode-btn btn active">Assign Tile</button>
+                <button id="modeDraw" class="mode-btn btn">Paint Pixel</button>
+                <button id="modeProbe" class="mode-btn btn btn-probe">Probe Color</button>
+                
+                <label>Active Color</label>
+                <input type="color" id="colorPicker" value="#ffffff">
+                
+                <label>Palette (Transparent + Colors >5%)</label>
+                <div id="palette" class="palette"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const sourceCanvas = document.getElementById('sourceCanvas');
+    const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    const gridEl = document.getElementById('grid');
+    const colorPicker = document.getElementById('colorPicker');
+    const zoomSelect = document.getElementById('zoomSelect');
+    
+    let mode = 'place'; 
+    let isTransparentMode = false;
+    let selectedCellIdx = 0;
+    const cellAssignments = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const cellCanvases = [];
+
+    function init() {
+        for (let i = 0; i < 9; i++) {
+            const div = document.createElement('div');
+            div.className = `cell ${i === 0 ? 'selected' : ''}`;
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 32;
+            div.appendChild(canvas);
+            gridEl.appendChild(div);
+            cellCanvases.push(canvas.getContext('2d', { willReadFrequently: true }));
+            
+            div.onclick = () => selectCell(i);
+            canvas.onmousemove = (e) => handleCanvasInput(e, i, false);
+            canvas.onmousedown = (e) => handleCanvasInput(e, i, true);
+        }
+        sourceCanvas.width = 32;
+        sourceCanvas.height = 32;
+        sCtx.fillStyle = '#333';
+        sCtx.fillRect(0,0,32,32);
+        applyZoom();
+        updateAllCells();
+        updatePalette();
+    }
+
+    function setMode(newMode) {
+        mode = newMode;
+        document.querySelectorAll('.mode-btn').forEach(b => {
+            const btnMode = b.id.replace('mode', '').toLowerCase();
+            b.classList.toggle('active', btnMode === mode);
+        });
+        document.body.className = 'mode-' + mode;
+    }
+
+    function applyZoom() {
+        const factor = parseInt(zoomSelect.value);
+        const size = 32 * factor;
+        document.querySelectorAll('.cell canvas').forEach(canv => {
+            canv.style.width = canv.style.height = size + 'px';
+        });
+        gridEl.style.gridTemplateColumns = `repeat(3, ${size}px)`;
+    }
+
+    function selectCell(idx) {
+        selectedCellIdx = idx;
+        document.querySelectorAll('.cell').forEach((el, i) => el.classList.toggle('selected', i === idx));
+    }
+
+    function handleCanvasInput(e, cellIdx, isClick) {
+        const rect = cellCanvases[cellIdx].canvas.getBoundingClientRect();
+        const factor = parseInt(zoomSelect.value);
+        const x = Math.floor((e.clientX - rect.left) / factor);
+        const y = Math.floor((e.clientY - rect.top) / factor);
+        
+        if (x < 0 || x >= 32 || y < 0 || y >= 32) return;
+        document.getElementById('coords').innerText = `Cell: ${cellIdx} | X: ${x}, Y: ${y}`;
+
+        if (e.buttons === 1 || isClick) {
+            if (mode === 'draw') {
+                paintToSource(cellAssignments[cellIdx], x, y);
+            } else if (mode === 'probe') {
+                const pixel = cellCanvases[cellIdx].getImageData(x, y, 1, 1).data;
+                if (pixel[3] < 10) {
+                    isTransparentMode = true;
+                } else {
+                    const hex = "#" + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1);
+                    colorPicker.value = hex;
+                    isTransparentMode = false;
+                }
+                setMode('draw');
+            }
+        }
+    }
+
+    sourceCanvas.onclick = (e) => {
+        if (mode !== 'place') return;
+        const rect = sourceCanvas.getBoundingClientRect();
+        const scaleX = sourceCanvas.width / rect.width;
+        const scaleY = sourceCanvas.height / rect.height;
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+        const cols = Math.max(1, Math.floor(sourceCanvas.width / 32));
+        const tileCol = Math.floor(clickX / 32);
+        const tileRow = Math.floor(clickY / 32);
+        cellAssignments[selectedCellIdx] = tileRow * cols + tileCol;
+        updateAllCells();
+    };
+
+    function paintToSource(tileIdx, x, y) {
+        const cols = Math.max(1, Math.floor(sourceCanvas.width / 32));
+        const srcX = (tileIdx % cols) * 32 + x;
+        const srcY = Math.floor(tileIdx / cols) * 32 + y;
+        if (isTransparentMode) {
+            sCtx.clearRect(srcX, srcY, 1, 1);
+        } else {
+            sCtx.fillStyle = colorPicker.value;
+            sCtx.fillRect(srcX, srcY, 1, 1);
+        }
+        updateAllCells();
+        updatePalette();
+    }
+
+    function updateAllCells() {
+        const cols = Math.max(1, Math.floor(sourceCanvas.width / 32));
+        cellAssignments.forEach((tileIdx, cellIdx) => {
+            const ctx = cellCanvases[cellIdx];
+            ctx.clearRect(0, 0, 32, 32);
+            const srcX = (tileIdx % cols) * 32;
+            const srcY = Math.floor(tileIdx / cols) * 32;
+            ctx.drawImage(sourceCanvas, srcX, srcY, 32, 32, 0, 0, 32, 32);
+        });
+    }
+
+    document.getElementById('loader').onchange = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            sourceCanvas.width = img.width; sourceCanvas.height = img.height;
+            sCtx.clearRect(0, 0, sourceCanvas.width, sourceCanvas.height);
+            sCtx.drawImage(img, 0, 0);
+            updateAllCells();
+            updatePalette();
+        };
+        img.src = URL.createObjectURL(e.target.files[0]);
+    };
+
+    function updatePalette() {
+        const imgData = sCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height).data;
+        const counts = {}; let total = 0;
+        for (let i = 0; i < imgData.length; i += 4) {
+            if (imgData[i+3] < 10) continue; 
+            const hex = "#" + ((1 << 24) + (imgData[i] << 16) + (imgData[i+1] << 8) + imgData[i+2]).toString(16).slice(1);
+            counts[hex] = (counts[hex] || 0) + 1; total++;
+        }
+        
+        const palette = document.getElementById('palette');
+        palette.innerHTML = '';
+
+        // Add Permanent Transparent Swatch
+        const transSw = document.createElement('div');
+        transSw.className = 'swatch transparent-type';
+        transSw.title = "Transparent";
+        transSw.onclick = () => {
+            isTransparentMode = true;
+            setMode('draw');
+        };
+        palette.appendChild(transSw);
+
+        Object.keys(counts).forEach(color => {
+            if (counts[color] / total > 0.05) {
+                const sw = document.createElement('div');
+                sw.className = 'swatch'; sw.style.backgroundColor = color;
+                sw.onclick = () => {
+                    colorPicker.value = color;
+                    isTransparentMode = false;
+                    setMode('draw');
+                };
+                palette.appendChild(sw);
+            }
+        });
+    }
+
+    colorPicker.oninput = () => { isTransparentMode = false; };
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.onclick = () => setMode(btn.id.replace('mode', '').toLowerCase());
+    });
+
+    zoomSelect.onchange = applyZoom;
+    init();
+</script>
+</body>
+</html>

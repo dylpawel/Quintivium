@@ -1,0 +1,37 @@
+[
+  { "id": "loot_reaper",  "on": "monster_defeated",
+    "condition": "monster_type('Skeleton Reaper') AND kills >= 2",
+    "actions": [ { "type": "give_item", "item_id": "torch", "qty": 1 } ] },
+
+  { "id": "loot_skeleton","on": "monster_defeated",
+    "condition": "monster_type('Skeleton') AND kills['Skeleton'] >= 3",
+    "actions": [ { "type": "give_item", "item_id": "bone", "qty": 1 } ] },
+
+  { "id": "loot_veteran", "on": "monster_defeated",
+    "condition": "stat(total_kills) >= 5",
+    "actions": [ { "type": "give_item", "item_id": "medal", "qty": 1 } ] },
+
+  { "id": "any_kill_msg", "on": "monster_defeated",
+    "condition": "kills > 0",
+    "actions": [ { "type": "show_dialog", "text": "a kill happened" } ] },
+
+  { "id": "reaper_on1",   "on": "monster_defeated",
+    "condition": "monster_type('Skeleton Reaper') AND kills('Orc') >= 99",
+    "actions": [ { "type": "give_item", "item_id": "should_never_fire", "qty": 1 } ] },
+
+  { "id": "reaper_third_listener", "on": "monster_defeated",
+    "condition": "monster_type('Skeleton Reaper') AND kills == 3",
+    "actions": [ { "type": "show_dialog", "text": "third reaper" } ] },
+
+  { "id": "double_quote_match", "on": "monster_defeated",
+    "condition": "monster_type(\"Skeleton\") AND kills >= 1",
+    "actions": [ { "type": "give_item", "item_id": "dquote", "qty": 1 } ] },
+
+  { "id": "underscore_normalises", "on": "monster_defeated",
+    "condition": "monster_type('Skeleton_Reaper') AND kills >= 1",
+    "actions": [ { "type": "give_item", "item_id": "underscore", "qty": 1 } ] },
+
+  { "id": "callform_equals", "on": "monster_defeated",
+    "condition": "kills('Skeleton Reaper') == 1",
+    "actions": [ { "type": "give_item", "item_id": "callform", "qty": 1 } ] }
+]

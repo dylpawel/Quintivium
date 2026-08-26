@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Anchored Shadow Mask Tool</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; padding: 20px; margin: 0; }
+        .controls { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; align-items: end; border: 1px solid #444; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        canvas { border: 1px solid #555; image-rendering: pixelated; display: block; }
+        section { margin-bottom: 30px; border-top: 1px solid #444; padding-top: 20px; }
+        h2 { font-size: 1.2em; color: #0078d7; margin: 0 0 15px 0; }
+        
+        .preview-bg.bg-checkers { background-image: linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #444 75%); background-size: 10px 10px; background-color: #222; }
+        .preview-bg.bg-green { background: #00ff00 !important; }
+        .preview-bg.bg-blue { background: #0000ff !important; }
+        .preview-bg.bg-black { background: #000000 !important; }
+        .preview-bg.bg-white { background: #ffffff !important; color: #333; }
+        
+        #tileGallery { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tile-unit { border: 1px solid #555; padding: 5px; border-radius: 4px; text-align: center; }
+        .tile-unit span { display: block; font-size: 10px; margin-top: 5px; font-family: monospace; }
+        
+        label { display: block; font-size: 0.75em; margin-bottom: 5px; color: #bbb; font-weight: bold; text-transform: uppercase; }
+        input, select { background: #444; color: white; border: 1px solid #666; padding: 8px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; background: #444; padding: 8px; border-radius: 4px; border: 1px solid #666; cursor: pointer; font-size: 0.8em; height: 38px; box-sizing: border-box; }
+        .override-panel { background: #444; padding: 15px; border-radius: 8px; border: 1px solid #0078d7; display: flex; gap: 20px; align-items: flex-end; margin-bottom: 10px; }
+        .info-panel { background: #0078d722; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; border-left: 4px solid #0078d7; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div><label>1. Tileset</label><input type="file" id="upload" accept="image/*"></div>
+        <div><label>Angle: <span id="angleVal">45</span>°</label><input type="range" id="angle" min="0" max="360" value="45"></div>
+        <div><label>Length</label><input type="number" id="length" value="12" min="0"></div>
+        <div><label>Zoom</label><select id="zoom"><option value="2">2x</option><option value="3">3x</option><option value="4" selected>4x</option></select></div>
+        <div><label>Background</label><select id="bgSelect"><option value="bg-checkers">Checkers</option><option value="bg-green">Green</option><option value="bg-blue">Blue</option><option value="bg-black">Black</option><option value="bg-white">White</option></select></div>
+        <div><label class="checkbox-row"><input type="checkbox" id="showBorders"> Borders</label></div>
+        <button id="processBtn" style="padding: 8px; background: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; height: 38px; font-weight: bold;">Refresh</button>
+    </div>
+
+    <div id="metrics" class="info-panel">Upload an image to calculate grid.</div>
+
+    <section>
+        <h2>1. Source Image</h2>
+        <div id="sourceWrapper" class="preview-bg bg-checkers" style="display: inline-block; padding: 5px;"><canvas id="sourceCanvas"></canvas></div>
+    </section>
+
+    <section>
+        <h2>2. Tile Gallery</h2>
+        <div id="tileGallery"></div>
+    </section>
+
+    <section>
+        <h2>3. Destination Sheet (Shadow Mask: RGB 0,0,0 | Alpha 255)</h2>
+        <div class="override-panel">
+            <div><label>Cell Width (px)</label><input type="number" id="overrideW" value="48"></div>
+            <div><label>Cell Height (px)</label><input type="number" id="overrideH" value="48"></div>
+        </div>
+        <div id="sheetWrapper" class="preview-bg bg-checkers" style="display: inline-block;"><canvas id="shadowSheet"></canvas></div>
+    </section>
+
+<script>
+    const upload = document.getElementById('upload'), sourceCanvas = document.getElementById('sourceCanvas'), sCtx = sourceCanvas.getContext('2d'), shadowSheet = document.getElementById('shadowSheet'), sheetCtx = shadowSheet.getContext('2d'), gallery = document.getElementById('tileGallery'), metricsDiv = document.getElementById('metrics'), tileSize = 32;
+    let sourceImg = new Image();
+
+    function updateBackgrounds() {
+        const bgClass = document.getElementById('bgSelect').value;
+        const targets = [document.getElementById('sourceWrapper'), document.getElementById('sheetWrapper'), ...document.querySelectorAll('.tile-unit')];
+        targets.forEach(el => { if (el) el.className = el.classList.contains('tile-unit') ? `tile-unit preview-bg ${bgClass}` : `preview-bg ${bgClass}`; });
+    }
+
+    function autoCalcSize() {
+        const angleRad = parseInt(document.getElementById('angle').value) * (Math.PI / 180);
+        const length = parseInt(document.getElementById('length').value);
+        document.getElementById('overrideW').value = tileSize + Math.ceil(Math.abs(Math.cos(angleRad) * length));
+        document.getElementById('overrideH').value = tileSize + Math.ceil(Math.abs(Math.sin(angleRad) * length));
+    }
+
+    upload.onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            sourceImg.onload = () => {
+                sourceCanvas.width = sourceImg.width; sourceCanvas.height = sourceImg.height;
+                sCtx.drawImage(sourceImg, 0, 0);
+                autoCalcSize(); updatePipeline();
+            };
+            sourceImg.src = f.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    ['angle', 'length', 'zoom', 'bgSelect', 'showBorders', 'overrideW', 'overrideH'].forEach(id => {
+        document.getElementById(id).oninput = () => {
+            if (id === 'angle') { document.getElementById('angleVal').innerText = document.getElementById('angle').value; autoCalcSize(); }
+            if (id === 'length') autoCalcSize();
+            if (id === 'bgSelect') updateBackgrounds();
+            updatePipeline();
+        };
+    });
+
+    document.getElementById('processBtn').onclick = updatePipeline;
+
+    function updatePipeline() {
+        if (!sourceImg.src) return;
+        gallery.innerHTML = '';
+        const zoom = parseInt(document.getElementById('zoom').value), angle = parseInt(document.getElementById('angle').value) * (Math.PI / 180), length = parseInt(document.getElementById('length').value), bg = document.getElementById('bgSelect').value, showBorders = document.getElementById('showBorders').checked;
+        const cellW = parseInt(document.getElementById('overrideW').value), cellH = parseInt(document.getElementById('overrideH').value);
+        const cols = Math.floor(sourceImg.width / tileSize), rows = Math.floor(sourceImg.height / tileSize);
+
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const offsetX = cos >= 0 ? 0 : (cellW - tileSize);
+        const offsetY = sin >= 0 ? 0 : (cellH - tileSize);
+
+        metricsDiv.innerHTML = `<strong>Anchor:</strong> ${cos >= 0 ? 'Left' : 'Right'}-${sin >= 0 ? 'Top' : 'Bottom'} | <strong>Cell:</strong> ${cellW}x${cellH}px`;
+
+        shadowSheet.width = cols * cellW; shadowSheet.height = rows * cellH;
+        sheetCtx.clearRect(0, 0, shadowSheet.width, shadowSheet.height);
+        
+        // Final shadow output is drawn here at globalAlpha = 1.0 (RGB 0,0,0, A 255)
+        sheetCtx.globalAlpha = 1.0;
+        sheetCtx.fillStyle = 'rgb(0,0,0)';
+
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+                const tx = col * tileSize, ty = row * tileSize, dx = col * cellW, dy = row * cellH;
+                const tCanvas = document.createElement('canvas'); tCanvas.width = tileSize; tCanvas.height = tileSize;
+                const tCtx = tCanvas.getContext('2d'); tCtx.drawImage(sourceImg, tx, ty, tileSize, tileSize, 0, 0, tileSize, tileSize);
+                const imgData = tCtx.getImageData(0, 0, tileSize, tileSize).data;
+                const isSolid = (x, y) => (x >= 0 && x < tileSize && y >= 0 && y < tileSize) ? imgData[(y * tileSize + x) * 4 + 3] > 10 : true;
+
+                const tsCanvas = document.createElement('canvas'); tsCanvas.width = cellW; tsCanvas.height = cellH;
+                const tsCtx = tsCanvas.getContext('2d'); tsCtx.fillStyle = 'rgb(0,0,0)';
+                const borders = [];
+
+                for (let py = 0; py < tileSize; py++) {
+                    for (let px = 0; px < tileSize; px++) {
+                        if (isSolid(px, py)) {
+                            let isEdge = false;
+                            for(let ny=-1; ny<=1; ny++) { for(let nx=-1; nx<=1; nx++) { 
+                                if(nx===0 && ny===0) continue; if(!isSolid(px+nx, py+ny)) { isEdge = true; break; }
+                            } if(isEdge) break; }
+                            if (isEdge) {
+                                borders.push({x: px, y: py});
+                                for (let s = 0.5; s <= length; s += 0.5) {
+                                    const sx = px + cos * s, sy = py + sin * s;
+                                    tsCtx.fillRect(offsetX + sx, offsetY + sy, 1, 1);
+                                    sheetCtx.fillRect(dx + offsetX + sx, dy + offsetY + sy, 1, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Gallery Unit Preview (Keeps 0.35 opacity for visual clarity)
+                const uCanvas = document.createElement('canvas'); uCanvas.width = cellW * zoom; uCanvas.height = cellH * zoom;
+                const uCtx = uCanvas.getContext('2d'); uCtx.imageSmoothingEnabled = false; uCtx.scale(zoom, zoom);
+                uCtx.globalAlpha = 0.35; uCtx.drawImage(tsCanvas, 0, 0);
+                uCtx.globalAlpha = 1.0; uCtx.drawImage(tCanvas, offsetX, offsetY);
+                if (showBorders) { uCtx.fillStyle = 'rgba(255, 0, 0, 0.5)'; borders.forEach(p => uCtx.fillRect(offsetX + p.x, offsetY + p.y, 1, 1)); }
+                
+                const container = document.createElement('div'); container.className = `tile-unit preview-bg ${bg}`;
+                container.appendChild(uCanvas); gallery.appendChild(container);
+            }
+        }
+        updateBackgrounds();
+    }
+</script>
+</body>
+</html>

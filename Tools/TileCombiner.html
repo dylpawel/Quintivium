@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tileset Combiner</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Toolbar ────────────────────────────────────────────────────────── */
+        #toolbar {
+            display: flex;
+            align-items: center;
+            height: 44px;
+            background: #252525;
+            border-bottom: 2px solid #2e2e2e;
+            flex-shrink: 0;
+            padding: 0 4px;
+            gap: 0;
+        }
+        #toolbar h2 {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #666;
+            padding: 0 14px;
+            white-space: nowrap;
+        }
+        .sep { width: 1px; height: 26px; background: #333; flex-shrink: 0; margin: 0 2px; }
+        .cg  { display: flex; align-items: center; gap: 6px; padding: 0 10px; }
+
+        label { font-size: 0.74rem; color: #777; white-space: nowrap; }
+
+        select, input[type=number] {
+            background: #2e2e2e;
+            color: #ddd;
+            border: 1px solid #484848;
+            border-radius: 3px;
+            padding: 3px 7px;
+            font-size: 0.74rem;
+            outline: none;
+        }
+        select:focus, input[type=number]:focus { border-color: #4a7a66; }
+
+        button {
+            background: #2e2e2e;
+            color: #bbb;
+            border: 1px solid #484848;
+            border-radius: 3px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 0.74rem;
+            white-space: nowrap;
+            transition: background .1s;
+        }
+        button:hover { background: #3a3a3a; color: #fff; border-color: #5a5a5a; }
+
+        #btnAdd {
+            background: #192e22;
+            border-color: #356648;
+            color: #55b87a;
+        }
+        #btnAdd:hover { background: #224432; }
+
+        #btnSave {
+            background: #192038;
+            border-color: #354e78;
+            color: #5577bb;
+        }
+        #btnSave:hover { background: #222d48; }
+
+        /* ── Main ───────────────────────────────────────────────────────────── */
+        #main { display: flex; flex: 1; overflow: hidden; }
+
+        /* ── Sources panel ──────────────────────────────────────────────────── */
+        #srcPanel {
+            width: 380px;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            background: #1c1c1c;
+            border-right: 2px solid #2a2a2a;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: background .12s;
+        }
+        #srcPanel.drag-over { background: #182820; }
+
+        .panel-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px;
+            background: #202020;
+            border-bottom: 1px solid #272727;
+            font-size: 0.66rem;
+            letter-spacing: 1px;
+            color: #555;
+            flex-shrink: 0;
+        }
+        #selInfo { color: #55b87a; font-size: 0.7rem; }
+
+        #srcList  { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+        #noSrcMsg {
+            padding: 50px 24px;
+            text-align: center;
+            color: #353535;
+            font-size: 0.82rem;
+            line-height: 2;
+        }
+        #noSrcMsg b { color: #484848; }
+
+        /* Source items */
+        .src-item { border-bottom: 1px solid #1e1e1e; }
+
+        .src-hdr {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #222;
+        }
+        .src-name { flex: 1; font-size: 0.7rem; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .src-dim  { font-size: 0.64rem; color: #3e3e3e; white-space: nowrap; }
+        .src-rm   {
+            background: #28181a; border: 1px solid #502a2a; color: #996666;
+            border-radius: 2px; padding: 1px 5px; font-size: 0.68rem; cursor: pointer;
+        }
+        .src-rm:hover { background: #3a2020; color: #ff7777; }
+
+        /* Canvas wrapper — checkerboard */
+        .src-wrap {
+            position: relative;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .src-wrap, #destWrap {
+            background-color: #0c0c0c;
+            background-image:
+                linear-gradient(45deg, #121212 25%, transparent 25%),
+                linear-gradient(-45deg, #121212 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #121212 75%),
+                linear-gradient(-45deg, transparent 75%, #121212 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+        }
+
+        .src-canvas {
+            display: block;
+            cursor: crosshair;
+            image-rendering: pixelated;
+        }
+        .src-ov {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+            image-rendering: pixelated;
+        }
+
+        /* ── Destination panel ──────────────────────────────────────────────── */
+        #destPanel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        #destWrap {
+            flex: 1;
+            overflow: auto;
+            cursor: crosshair;
+        }
+        #destWrap.can-place { cursor: cell; }
+
+        #destCanvas { display: block; image-rendering: pixelated; }
+
+        /* ── Status bar ─────────────────────────────────────────────────────── */
+        #statusbar {
+            padding: 3px 12px;
+            background: #1c1c1c;
+            border-top: 1px solid #252525;
+            font-size: 0.67rem;
+            color: #444;
+            flex-shrink: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Toolbar ────────────────────────────────────────────────────────────── -->
+<div id="toolbar">
+    <h2>TILESET&nbsp;COMBINER</h2>
+
+    <div class="sep"></div>
+    <div class="cg">
+        <label>Snap:</label>
+        <select id="selSnap">
+            <option value="16">16 px</option>
+            <option value="32" selected>32 px</option>
+        </select>
+    </div>
+
+    <div class="sep"></div>
+    <div class="cg">
+        <label>Dest:</label>
+        <input type="number" id="inCols" value="16" min="1" max="512" style="width:50px" title="Width in tiles">
+        <span style="color:#3a3a3a;font-size:.85rem;line-height:1">×</span>
+        <input type="number" id="inRows" value="16" min="1" max="512" style="width:50px" title="Height in tiles">
+        <label style="color:#3a3a3a">tiles</label>
+        <button id="btnApply">Apply</button>
+    </div>
+
+    <div class="sep"></div>
+    <div class="cg">
+        <button id="btnAdd">＋ Add Sources</button>
+        <input type="file" id="fileIn" accept="image/*" multiple style="display:none">
+    </div>
+
+    <div class="sep"></div>
+    <div class="cg">
+        <label>Alpha&nbsp;threshold:</label>
+        <input type="range" id="alphaSlider" min="0" max="100" value="0" style="width:90px;accent-color:#5577bb;cursor:pointer;">
+        <span id="alphaVal" style="font-size:.74rem;color:#777;min-width:28px;text-align:right;">0%</span>
+    </div>
+
+    <div class="sep"></div>
+    <div class="cg">
+        <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
+        <button id="btnClear">Clear Dest</button>
+        <button id="btnSave">⬇ Save PNG</button>
+    </div>
+</div>
+
+<!-- ── Main area ──────────────────────────────────────────────────────────── -->
+<div id="main">
+
+    <!-- Sources -->
+    <div id="srcPanel">
+        <div class="panel-hdr">
+            <span>SOURCE SPRITESHEETS</span>
+            <span id="selInfo">no selection</span>
+        </div>
+        <div id="srcList">
+            <div id="noSrcMsg">
+                Drop image files here<br>or click <b>＋ Add Sources</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- Destination -->
+    <div id="destPanel">
+        <div class="panel-hdr">
+            <span>DESTINATION TILESET</span>
+            <span id="destSizeInfo" style="color:#3e3e3e;font-size:.67rem;"></span>
+        </div>
+        <div id="destWrap">
+            <canvas id="destCanvas"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Status bar ─────────────────────────────────────────────────────────── -->
+<div id="statusbar">
+    Click and drag on a source spritesheet to select tiles, then click the destination to place. Right-click destination to erase.
+</div>
+
+<script>
+'use strict';
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const selSnap     = document.getElementById('selSnap');
+const inCols      = document.getElementById('inCols');
+const inRows      = document.getElementById('inRows');
+const btnApply    = document.getElementById('btnApply');
+const btnAdd      = document.getElementById('btnAdd');
+const fileIn      = document.getElementById('fileIn');
+const btnUndo     = document.getElementById('btnUndo');
+const btnClear    = document.getElementById('btnClear');
+const btnSave     = document.getElementById('btnSave');
+const alphaSlider = document.getElementById('alphaSlider');
+const alphaValEl  = document.getElementById('alphaVal');
+
+alphaSlider.addEventListener('input', () => {
+    alphaValEl.textContent = alphaSlider.value + '%';
+});
+const srcPanel    = document.getElementById('srcPanel');
+const srcList     = document.getElementById('srcList');
+const noSrcMsg    = document.getElementById('noSrcMsg');
+const selInfoEl   = document.getElementById('selInfo');
+const destSizeEl  = document.getElementById('destSizeInfo');
+const destWrap    = document.getElementById('destWrap');
+const destCvs     = document.getElementById('destCanvas');
+const dctx        = destCvs.getContext('2d');
+const statusEl    = document.getElementById('statusbar');
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let gridSnap = 32;
+let dstCols  = 16;
+let dstRows  = 16;
+
+// sources[i] = { img, name, canvas, overlay, oc }
+const sources = [];
+
+let sel  = null;    // { si, x, y, w, h }  pixels on source image, grid-aligned
+let drag = null;    // { si, x0, y0, x1, y1 }
+let hoverPt = null; // { px, py }  snapped pixel position on dest
+
+// Backing canvas — the clean pixel data saved on export
+const back = document.createElement('canvas');
+const bctx = back.getContext('2d');
+
+// Undo stack of ImageData snapshots
+const undoStack = [];
+const MAX_UNDO  = 40;
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const floorSnap = (v, s) => Math.floor(v / s) * s;
+const clamp     = (v, a, b) => Math.max(a, Math.min(b, v));
+const setStatus = msg => { statusEl.textContent = msg; };
+
+// ── Destination ───────────────────────────────────────────────────────────────
+function initDest(preserveContent = false) {
+    const W = dstCols * gridSnap;
+    const H = dstRows * gridSnap;
+
+    // Preserve existing back pixels before resizing
+    let snapshot = null;
+    if (preserveContent && back.width > 0 && back.height > 0) {
+        snapshot = document.createElement('canvas');
+        snapshot.width  = back.width;
+        snapshot.height = back.height;
+        snapshot.getContext('2d').drawImage(back, 0, 0);
+    }
+
+    destCvs.width = W;
+    destCvs.height = H;
+    back.width  = W;
+    back.height = H;
+
+    if (snapshot) bctx.drawImage(snapshot, 0, 0);
+
+    renderDest();
+    destSizeEl.textContent = `${W} × ${H} px  —  ${dstCols} × ${dstRows} tiles @ ${gridSnap}px`;
+}
+
+function renderDest(preview = null) {
+    const W = destCvs.width;
+    const H = destCvs.height;
+    dctx.clearRect(0, 0, W, H);
+
+    // Checkerboard
+    for (let r = 0; r < dstRows; r++) {
+        for (let c = 0; c < dstCols; c++) {
+            dctx.fillStyle = (r + c) % 2 === 0 ? '#0d0d0d' : '#171717';
+            dctx.fillRect(c * gridSnap, r * gridSnap, gridSnap, gridSnap);
+        }
+    }
+
+    // Pixel content
+    dctx.drawImage(back, 0, 0);
+
+    // Grid lines
+    dctx.save();
+    dctx.strokeStyle = 'rgba(55,55,85,0.5)';
+    dctx.lineWidth = 1;
+    for (let x = 0; x <= W; x += gridSnap) {
+        dctx.beginPath();
+        dctx.moveTo(x + 0.5, 0);
+        dctx.lineTo(x + 0.5, H);
+        dctx.stroke();
+    }
+    for (let y = 0; y <= H; y += gridSnap) {
+        dctx.beginPath();
+        dctx.moveTo(0, y + 0.5);
+        dctx.lineTo(W, y + 0.5);
+        dctx.stroke();
+    }
+    dctx.restore();
+
+    // Placement preview ghost
+    if (preview && sel) {
+        const { px, py } = preview;
+        const fw = Math.min(sel.w, W - px);
+        const fh = Math.min(sel.h, H - py);
+        if (fw > 0 && fh > 0) {
+            const { img } = sources[sel.si];
+            dctx.save();
+            dctx.globalAlpha = 0.65;
+            dctx.drawImage(img, sel.x, sel.y, fw, fh, px, py, fw, fh);
+            dctx.globalAlpha = 1;
+            dctx.strokeStyle = '#00ff88';
+            dctx.lineWidth = 2;
+            dctx.setLineDash([4, 3]);
+            dctx.strokeRect(px + 1, py + 1, fw - 2, fh - 2);
+            dctx.restore();
+        }
+    }
+}
+
+// ── Undo ──────────────────────────────────────────────────────────────────────
+function pushUndo() {
+    undoStack.push(bctx.getImageData(0, 0, back.width, back.height));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+function undo() {
+    if (!undoStack.length) { setStatus('Nothing to undo.'); return; }
+    bctx.putImageData(undoStack.pop(), 0, 0);
+    renderDest(sel && hoverPt ? hoverPt : null);
+    setStatus('Undo.');
+}
+
+// ── Destination mouse ─────────────────────────────────────────────────────────
+function destPt(e) {
+    const r  = destCvs.getBoundingClientRect();
+    const sx = destCvs.width  / r.width;
+    const sy = destCvs.height / r.height;
+    return {
+        px: clamp(floorSnap((e.clientX - r.left) * sx, gridSnap), 0, destCvs.width  - gridSnap),
+        py: clamp(floorSnap((e.clientY - r.top)  * sy, gridSnap), 0, destCvs.height - gridSnap),
+    };
+}
+
+destCvs.addEventListener('mousemove', e => {
+    hoverPt = destPt(e);
+    renderDest(sel ? hoverPt : null);
+});
+
+destCvs.addEventListener('mouseleave', () => {
+    hoverPt = null;
+    renderDest();
+});
+
+destCvs.addEventListener('click', e => {
+    if (!sel) { setStatus('Select a region on a source spritesheet first.'); return; }
+    placeAt(destPt(e));
+});
+
+destCvs.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    eraseAt(destPt(e));
+});
+
+function placeAt({ px, py }) {
+    const { img } = sources[sel.si];
+    const fw = Math.min(sel.w, back.width  - px);
+    const fh = Math.min(sel.h, back.height - py);
+    if (fw <= 0 || fh <= 0) return;
+    pushUndo();
+
+    const threshold = Math.round((parseInt(alphaSlider.value) / 100) * 255);
+
+    if (threshold === 0) {
+        // Fast path — no filtering needed
+        bctx.drawImage(img, sel.x, sel.y, fw, fh, px, py, fw, fh);
+    } else {
+        // Draw source region into a temp canvas, then zero out sub-threshold pixels
+        const tmp  = document.createElement('canvas');
+        tmp.width  = fw;
+        tmp.height = fh;
+        const tctx = tmp.getContext('2d');
+        tctx.drawImage(img, sel.x, sel.y, fw, fh, 0, 0, fw, fh);
+
+        const id   = tctx.getImageData(0, 0, fw, fh);
+        const data = id.data;
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] < threshold) {
+                data[i - 3] = 0;
+                data[i - 2] = 0;
+                data[i - 1] = 0;
+                data[i]     = 0;
+            }
+        }
+        tctx.putImageData(id, 0, 0);
+        bctx.drawImage(tmp, 0, 0, fw, fh, px, py, fw, fh);
+    }
+
+    renderDest(hoverPt);
+    setStatus(`Placed ${fw / gridSnap}×${fh / gridSnap} tile(s) at (${px / gridSnap}, ${py / gridSnap}). Click again to place more, or select a new region.`);
+}
+
+function eraseAt({ px, py }) {
+    const tw = sel ? Math.ceil(sel.w / gridSnap) : 1;
+    const th = sel ? Math.ceil(sel.h / gridSnap) : 1;
+    pushUndo();
+    bctx.clearRect(px, py, tw * gridSnap, th * gridSnap);
+    renderDest(hoverPt);
+    setStatus(`Erased ${tw}×${th} tile(s) at (${px / gridSnap}, ${py / gridSnap}).`);
+}
+
+// ── Source management ─────────────────────────────────────────────────────────
+function loadImages(files) {
+    for (const f of files) {
+        if (!f.type.startsWith('image/')) continue;
+        const img = new Image();
+        img.onload = () => {
+            const si = sources.length;
+            sources.push({ img, name: f.name });
+            buildSrcItem(si);
+            noSrcMsg.style.display = 'none';
+        };
+        img.src = URL.createObjectURL(f);
+    }
+}
+
+function buildSrcItem(si) {
+    const { img, name } = sources[si];
+
+    const div = document.createElement('div');
+    div.className = 'src-item';
+    div.dataset.si = si;
+
+    // Header row
+    const hdr = document.createElement('div');
+    hdr.className = 'src-hdr';
+
+    const nm  = document.createElement('span'); nm.className = 'src-name'; nm.textContent = name; nm.title = name;
+    const dim = document.createElement('span'); dim.className = 'src-dim';  dim.textContent = `${img.naturalWidth}×${img.naturalHeight}`;
+    const rm  = document.createElement('button'); rm.className = 'src-rm'; rm.textContent = '✕'; rm.title = 'Remove';
+    rm.onclick = () => {
+        div.remove();
+        if (sel && sel.si === si) { sel = null; updateSelInfo(); }
+    };
+    hdr.append(nm, dim, rm);
+
+    // Canvas + overlay
+    const wrap = document.createElement('div');
+    wrap.className = 'src-wrap';
+
+    const cvs = document.createElement('canvas');
+    cvs.className = 'src-canvas';
+    cvs.width  = img.naturalWidth;
+    cvs.height = img.naturalHeight;
+    cvs.getContext('2d').drawImage(img, 0, 0);
+    sources[si].canvas = cvs;
+
+    const ov = document.createElement('canvas');
+    ov.className = 'src-ov';
+    ov.width  = img.naturalWidth;
+    ov.height = img.naturalHeight;
+    sources[si].overlay = ov;
+    sources[si].oc      = ov.getContext('2d');
+
+    wrap.append(cvs, ov);
+    div.append(hdr, wrap);
+    srcList.appendChild(div);
+
+    // Per-canvas events
+    cvs.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        const { px, py } = srcPt(e, si);
+        drag = { si, x0: px, y0: py, x1: px, y1: py };
+        e.preventDefault();
+    });
+
+    cvs.addEventListener('mousemove', e => {
+        if (drag) return; // global handler takes care of drag
+        const { px, py } = srcPt(e, si);
+        drawOv(si, { x: px, y: py, w: gridSnap, h: gridSnap });
+    });
+
+    cvs.addEventListener('mouseleave', () => {
+        if (drag) return;
+        drawOv(si, null);
+    });
+}
+
+function srcPt(e, si) {
+    const { img, canvas } = sources[si];
+    const r  = canvas.getBoundingClientRect();
+    const sx = img.naturalWidth  / r.width;
+    const sy = img.naturalHeight / r.height;
+    return {
+        px: clamp(floorSnap((e.clientX - r.left) * sx, gridSnap), 0, img.naturalWidth  - gridSnap),
+        py: clamp(floorSnap((e.clientY - r.top)  * sy, gridSnap), 0, img.naturalHeight - gridSnap),
+    };
+}
+
+function drawOv(si, hoverRect) {
+    const { img, oc } = sources[si];
+    if (!oc) return;
+    oc.clearRect(0, 0, img.naturalWidth, img.naturalHeight);
+
+    // Confirmed selection outline (dashed green)
+    if (sel && sel.si === si) {
+        oc.save();
+        oc.strokeStyle = '#00ff88';
+        oc.lineWidth   = 2;
+        oc.setLineDash([5, 3]);
+        oc.strokeRect(sel.x + 1, sel.y + 1, sel.w - 2, sel.h - 2);
+        // Corner fill hint
+        oc.fillStyle = 'rgba(0,255,136,0.07)';
+        oc.fillRect(sel.x, sel.y, sel.w, sel.h);
+        oc.restore();
+    }
+
+    // Hover / drag rect (yellow)
+    if (hoverRect) {
+        oc.save();
+        oc.fillStyle   = 'rgba(255,220,50,0.12)';
+        oc.strokeStyle = 'rgba(255,220,50,0.85)';
+        oc.lineWidth   = 1;
+        oc.setLineDash([]);
+        oc.fillRect(hoverRect.x, hoverRect.y, hoverRect.w, hoverRect.h);
+        oc.strokeRect(hoverRect.x + 0.5, hoverRect.y + 0.5, hoverRect.w - 1, hoverRect.h - 1);
+        oc.restore();
+    }
+}
+
+function updateSelInfo() {
+    if (!sel) {
+        selInfoEl.textContent = 'no selection';
+        destWrap.classList.remove('can-place');
+    } else {
+        const tw = Math.ceil(sel.w / gridSnap);
+        const th = Math.ceil(sel.h / gridSnap);
+        selInfoEl.textContent = `${tw}×${th} tile${tw * th > 1 ? 's' : ''} selected`;
+        destWrap.classList.add('can-place');
+    }
+    renderDest(sel && hoverPt ? hoverPt : null);
+}
+
+// ── Global mouse (source drag tracking) ──────────────────────────────────────
+document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const { px, py } = srcPt(e, drag.si);
+    drag.x1 = px;
+    drag.y1 = py;
+    const rx = Math.min(drag.x0, drag.x1);
+    const ry = Math.min(drag.y0, drag.y1);
+    const rw = Math.abs(drag.x1 - drag.x0) + gridSnap;
+    const rh = Math.abs(drag.y1 - drag.y0) + gridSnap;
+    drawOv(drag.si, { x: rx, y: ry, w: rw, h: rh });
+});
+
+document.addEventListener('mouseup', e => {
+    if (!drag || e.button !== 0) return;
+
+    const si  = drag.si;
+    const { img } = sources[si];
+
+    let x = Math.min(drag.x0, drag.x1);
+    let y = Math.min(drag.y0, drag.y1);
+    let w = Math.abs(drag.x1 - drag.x0) + gridSnap;
+    let h = Math.abs(drag.y1 - drag.y0) + gridSnap;
+
+    x = clamp(x, 0, img.naturalWidth  - gridSnap);
+    y = clamp(y, 0, img.naturalHeight - gridSnap);
+    w = clamp(w, gridSnap, img.naturalWidth  - x);
+    h = clamp(h, gridSnap, img.naturalHeight - y);
+
+    sel  = { si, x, y, w, h };
+    drag = null;
+
+    updateSelInfo();
+    drawOv(si, null);
+
+    const tw = Math.ceil(w / gridSnap);
+    const th = Math.ceil(h / gridSnap);
+    setStatus(`Selected ${tw}×${th} tile${tw * th > 1 ? 's' : ''} from "${sources[si].name}". Click destination to place.`);
+});
+
+// ── Toolbar events ────────────────────────────────────────────────────────────
+selSnap.addEventListener('change', () => {
+    gridSnap = parseInt(selSnap.value);
+    sel = null;
+    updateSelInfo();
+    initDest(true);
+    setStatus(`Grid snap → ${gridSnap} px.`);
+});
+
+btnApply.addEventListener('click', () => {
+    const c = parseInt(inCols.value);
+    const r = parseInt(inRows.value);
+    if (!c || !r || c < 1 || r < 1) return;
+    dstCols = c;
+    dstRows = r;
+    initDest(true);
+    setStatus(`Destination → ${dstCols}×${dstRows} tiles.`);
+});
+
+btnUndo.addEventListener('click', undo);
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+});
+
+btnClear.addEventListener('click', () => {
+    if (!confirm('Clear the destination canvas?')) return;
+    pushUndo();
+    bctx.clearRect(0, 0, back.width, back.height);
+    renderDest();
+    setStatus('Destination cleared.');
+});
+
+btnSave.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href     = back.toDataURL('image/png');
+    a.download = 'tileset_combined.png';
+    a.click();
+    setStatus('Saved tileset_combined.png');
+});
+
+btnAdd.addEventListener('click', () => fileIn.click());
+fileIn.addEventListener('change', () => { loadImages(fileIn.files); fileIn.value = ''; });
+
+// Drag-drop images onto source panel
+srcPanel.addEventListener('dragenter', e => { e.preventDefault(); srcPanel.classList.add('drag-over'); });
+srcPanel.addEventListener('dragleave', e => { if (!srcPanel.contains(e.relatedTarget)) srcPanel.classList.remove('drag-over'); });
+srcPanel.addEventListener('dragover',  e => e.preventDefault());
+srcPanel.addEventListener('drop', e => {
+    e.preventDefault();
+    srcPanel.classList.remove('drag-over');
+    loadImages(e.dataTransfer.files);
+});
+
+// Also accept drops anywhere on page
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    loadImages(e.dataTransfer.files);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+initDest();
+</script>
+</body>
+</html>

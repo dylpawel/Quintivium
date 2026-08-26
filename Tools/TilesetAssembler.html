@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tile Strip Assembler</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: sans-serif;
+            background: #222;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h2 { margin: 0 0 12px; font-size: 1rem; color: #aaa; letter-spacing: 1px; }
+
+        /*  Controls  */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            background: #333;
+            padding: 10px 14px;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+        .controls label { font-size: 0.85rem; color: #aaa; }
+        select, button {
+            background: #444;
+            color: #eee;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        button:hover { background: #555; }
+
+        /*  Output strip  */
+        #output-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            background: #444;
+            padding: 6px;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            max-width: 100%;
+        }
+        .slot {
+            border: 2px solid #666;
+            background: #111;
+            cursor: pointer;
+            image-rendering: pixelated;
+            flex-shrink: 0;
+        }
+        .slot.active { border-color: #00ff88; box-shadow: 0 0 6px #00ff88; }
+        .slot.filled { border-color: #557; }
+
+        /*  Sources area  */
+        #sources-area {
+            width: 100%;
+            max-width: 960px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /*  Drop zone  */
+        #drop-zone {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px dashed #555;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            padding: 8px 12px;
+            background: #2a2a2a;
+            color: #777;
+            font-size: 0.82rem;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        #drop-zone.drag-over {
+            border-color: #00bb66;
+            background: #1a3a2a;
+            color: #00ff88;
+        }
+        #add-source-btn {
+            background: #2a4a3a;
+            border-color: #00bb66;
+            color: #00bb66;
+            flex-shrink: 0;
+        }
+        #add-source-btn:hover { background: #3a5a4a; }
+
+        /*  Sources list (stacked rows)  */
+        #sources-list {
+            border: 2px solid #555;
+            border-top: 1px solid #444;
+            border-radius: 0 0 6px 6px;
+            overflow: auto;
+            max-height: 520px;
+            background: #111;
+        }
+
+        .source-row {
+            border-bottom: 1px solid #333;
+        }
+        .source-row:last-child { border-bottom: none; }
+
+        .source-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #2d2d2d;
+            padding: 4px 8px;
+            border-bottom: 1px solid #3a3a3a;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .source-header .src-name {
+            font-size: 0.78rem;
+            color: #bbb;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+        .source-header.active-hdr .src-name { color: #00ff88; }
+        .src-remove-btn {
+            background: #3a2a2a;
+            border: 1px solid #664444;
+            color: #cc6666;
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .src-remove-btn:hover { background: #553333; color: #ff8888; }
+
+        .source-canvas {
+            display: block;
+            cursor: crosshair;
+            image-rendering: pixelated;
+        }
+        .source-canvas.active-canvas {
+            outline: 2px solid #00ff88;
+        }
+
+        /*  No-sources placeholder  */
+        #no-source-msg {
+            color: #555;
+            padding: 30px;
+            text-align: center;
+            font-size: 0.88rem;
+        }
+
+        /*  Hint bar  */
+        #hint {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>TILE STRIP ASSEMBLER</h2>
+
+    <div class="controls">
+        <label>Tile size:</label>
+        <select id="tileSize">
+            <option value="16">16&#xd7;16</option>
+            <option value="32" selected>32&#xd7;32</option>
+            <option value="48">48&#xd7;48</option>
+            <option value="64">64&#xd7;64</option>
+        </select>
+        <label>Columns:</label>
+        <input type="number" id="slotCount" value="16" min="1" max="512" style="width:60px">
+        <label>Rows:</label>
+        <input type="number" id="rowCount" value="1" min="1" max="512" style="width:60px">
+        <button id="rotateBtn">&#10227; Rotate CW</button>
+        <button id="flipBtn">&#8596; Flip</button>
+        <button id="clearAllBtn">Clear All</button>
+        <button id="saveBtn">Save PNG</button>
+    </div>
+
+    <div id="output-strip"></div>
+
+    <div id="sources-area">
+        <div id="drop-zone">
+            <span>Drop image files here &nbsp;or</span>
+            <button id="add-source-btn">+ Add Source</button>
+        </div>
+        <div id="sources-list">
+            <div id="no-source-msg">No sources loaded. Drop files above or click &ldquo;+ Add Source&rdquo;.</div>
+        </div>
+    </div>
+
+    <div id="hint">Left-click source: copy tile to active slot &amp; advance &nbsp;|&nbsp; Right-click source: overlay tile &nbsp;|&nbsp; Right-click output slot: clear slot</div>
+
+    <input type="file" id="upload" accept="image/*" multiple style="display:none">
+
+<script>
+    //  DOM refs 
+    const tileSizeEl  = document.getElementById('tileSize');
+    const slotCountEl = document.getElementById('slotCount');
+    const rowCountEl  = document.getElementById('rowCount');
+    const outputStrip = document.getElementById('output-strip');
+    const saveBtn     = document.getElementById('saveBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const rotateBtn   = document.getElementById('rotateBtn');
+    const flipBtn     = document.getElementById('flipBtn');
+    const dropZone    = document.getElementById('drop-zone');
+    const sourcesList = document.getElementById('sources-list');
+    const addSourceBtn = document.getElementById('add-source-btn');
+    const uploadInput  = document.getElementById('upload');
+    const noSourceMsg  = document.getElementById('no-source-msg');
+
+    //  State 
+    let tileSize     = 32;
+    let slotCount    = 16;
+    let rowCount     = 1;
+    let selectedSlot = 0;
+
+    // slotsData[i] = string[] of baked dataURLs (layers composited on save/render)
+    let slotsData = [];
+
+    // sources[i] = { name, img, canvas, ctx } | null
+    let sources           = [];
+    let activeSourceIndex = -1;
+
+    //  Slots 
+    function initSlots() {
+        tileSize  = parseInt(tileSizeEl.value);
+        slotCount = Math.max(1, parseInt(slotCountEl.value) || 1);
+        rowCount  = Math.max(1, parseInt(rowCountEl.value)  || 1);
+        const totalSlots = slotCount * rowCount;
+
+        slotsData.length = totalSlots;
+        for (let i = 0; i < totalSlots; i++) {
+            if (!slotsData[i]) slotsData[i] = [];
+        }
+
+        outputStrip.style.display = 'grid';
+        outputStrip.style.gridTemplateColumns = 'repeat(' + slotCount + ', ' + tileSize + 'px)';
+
+        outputStrip.innerHTML = '';
+        selectedSlot = Math.min(selectedSlot, totalSlots - 1);
+
+        for (let i = 0; i < totalSlots; i++) {
+            const div = document.createElement('div');
+            div.className = 'slot' + (i === selectedSlot ? ' active' : '');
+            div.style.width  = tileSize + 'px';
+            div.style.height = tileSize + 'px';
+            div.title = 'Slot ' + (i + 1);
+            div.addEventListener('click', () => selectSlot(i));
+            div.addEventListener('contextmenu', e => { e.preventDefault(); clearSlot(i); });
+            outputStrip.appendChild(div);
+            renderSlot(i);
+        }
+
+        // Redraw grids so grid lines match new tile size
+        sources.forEach((src, idx) => { if (src) drawGrid(idx); });
+    }
+
+    function selectSlot(i) {
+        selectedSlot = i;
+        document.querySelectorAll('.slot').forEach((s, idx) =>
+            s.classList.toggle('active', idx === i));
+    }
+
+    function clearSlot(i) {
+        slotsData[i] = [];
+        renderSlot(i);
+    }
+
+    function renderSlot(i) {
+        const slot   = outputStrip.children[i];
+        if (!slot) return;
+        const layers = slotsData[i];
+        if (!layers || layers.length === 0) {
+            slot.style.backgroundImage = '';
+            slot.style.backgroundSize  = '';
+            slot.classList.remove('filled');
+            return;
+        }
+        const tmp  = document.createElement('canvas');
+        tmp.width  = tileSize;
+        tmp.height = tileSize;
+        const tCtx = tmp.getContext('2d');
+        let pending = layers.length;
+        layers.forEach(dataURL => {
+            const img = new Image();
+            img.onload = () => {
+                tCtx.drawImage(img, 0, 0, tileSize, tileSize);
+                if (--pending === 0) {
+                    slot.style.backgroundImage = 'url(' + tmp.toDataURL() + ')';
+                    slot.style.backgroundSize  = 'contain';
+                    slot.classList.add('filled');
+                }
+            };
+            img.src = dataURL;
+        });
+    }
+
+    //  Tile extraction 
+    function extractTile(srcIdx, tx, ty) {
+        const tmp  = document.createElement('canvas');
+        tmp.width  = tileSize;
+        tmp.height = tileSize;
+        const tCtx = tmp.getContext('2d');
+        tCtx.drawImage(sources[srcIdx].img, tx, ty, tileSize, tileSize, 0, 0, tileSize, tileSize);
+        return tmp.toDataURL();
+    }
+
+    //  Canvas click handler (per source) 
+    function makeCanvasClickHandler(idx) {
+        return function(e) {
+            if (!sources[idx]) return;
+            e.preventDefault();
+
+            // Mark this source active
+            if (activeSourceIndex !== idx) setActiveSource(idx);
+
+            const canvas = sources[idx].canvas;
+            const rect   = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const tx     = Math.floor((e.clientX - rect.left) * scaleX / tileSize) * tileSize;
+            const ty     = Math.floor((e.clientY - rect.top)  * scaleY / tileSize) * tileSize;
+
+            const isRight = e.type === 'contextmenu';
+            const dataURL = extractTile(idx, tx, ty);
+
+            if (isRight) {
+                slotsData[selectedSlot].push(dataURL);
+            } else {
+                slotsData[selectedSlot] = [dataURL];
+            }
+            renderSlot(selectedSlot);
+
+            if (!isRight && selectedSlot < slotCount * rowCount - 1) {
+                selectSlot(selectedSlot + 1);
+            }
+        };
+    }
+
+    //  Source rows 
+    function addSource(name, img) {
+        const idx = sources.length;
+
+        const canvas    = document.createElement('canvas');
+        canvas.className = 'source-canvas';
+        canvas.width    = img.width;
+        canvas.height   = img.height;
+        const sCtx      = canvas.getContext('2d');
+        sCtx.drawImage(img, 0, 0);
+
+        sources.push({ name, img, canvas, ctx: sCtx });
+
+        // Row wrapper
+        const row = document.createElement('div');
+        row.className    = 'source-row';
+        row.dataset.index = idx;
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'source-header';
+
+        const nameSpan       = document.createElement('span');
+        nameSpan.className   = 'src-name';
+        nameSpan.textContent = name;
+        nameSpan.title       = name;
+
+        const removeBtn       = document.createElement('button');
+        removeBtn.className   = 'src-remove-btn';
+        removeBtn.textContent = ' Remove';
+        removeBtn.title       = 'Remove source (keeps already-copied tiles)';
+        removeBtn.addEventListener('click', () => removeSource(idx));
+
+        header.appendChild(nameSpan);
+        header.appendChild(removeBtn);
+
+        // Canvas events
+        const handler = makeCanvasClickHandler(idx);
+        canvas.addEventListener('click',       handler);
+        canvas.addEventListener('contextmenu', handler);
+
+        row.appendChild(header);
+        row.appendChild(canvas);
+
+        // Hide placeholder, append row
+        noSourceMsg.style.display = 'none';
+        sourcesList.appendChild(row);
+
+        drawGrid(idx);
+        setActiveSource(idx);
+    }
+
+    function setActiveSource(idx) {
+        activeSourceIndex = idx;
+        document.querySelectorAll('.source-header').forEach((h, i) => {
+            const rowIdx = parseInt(h.closest('.source-row').dataset.index);
+            h.classList.toggle('active-hdr', rowIdx === idx);
+        });
+        document.querySelectorAll('.source-canvas').forEach(c => {
+            const rowIdx = parseInt(c.closest('.source-row').dataset.index);
+            c.classList.toggle('active-canvas', rowIdx === idx);
+        });
+    }
+
+    function removeSource(idx) {
+        sources[idx] = null;
+
+        const row = sourcesList.querySelector('.source-row[data-index="' + idx + '"]');
+        if (row) row.remove();
+
+        // Show placeholder if no sources left
+        if (sources.every(s => s === null)) {
+            noSourceMsg.style.display = 'block';
+            activeSourceIndex = -1;
+            return;
+        }
+
+        if (activeSourceIndex === idx) {
+            const next = sources.findIndex(s => s !== null);
+            if (next >= 0) setActiveSource(next);
+        }
+    }
+
+    //  Grid overlay 
+    function drawGrid(idx) {
+        if (!sources[idx]) return;
+        const { img, canvas, ctx: sCtx } = sources[idx];
+        canvas.width  = img.width;   // clears canvas
+        canvas.height = img.height;
+        sCtx.drawImage(img, 0, 0);
+        sCtx.strokeStyle = 'rgba(255,255,255,0.22)';
+        sCtx.lineWidth   = 1;
+        for (let x = 0; x <= img.width;  x += tileSize) {
+            sCtx.beginPath(); sCtx.moveTo(x, 0); sCtx.lineTo(x, img.height); sCtx.stroke();
+        }
+        for (let y = 0; y <= img.height; y += tileSize) {
+            sCtx.beginPath(); sCtx.moveTo(0, y); sCtx.lineTo(img.width, y); sCtx.stroke();
+        }
+    }
+
+    //  File loading 
+    function loadFiles(files) {
+        Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img  = new Image();
+                img.onload = () => addSource(file.name, img);
+                img.src    = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Button
+    addSourceBtn.addEventListener('click', () => { uploadInput.value = ''; uploadInput.click(); });
+    uploadInput.addEventListener('change', e => loadFiles(e.target.files));
+
+    // Drag-and-drop on the drop zone (and the whole sources area)
+    ['dragenter', 'dragover'].forEach(evt =>
+        dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('drag-over'); }));
+    ['dragleave', 'drop'].forEach(evt =>
+        dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('drag-over'); }));
+    dropZone.addEventListener('drop', e => loadFiles(e.dataTransfer.files));
+
+    // Also accept drops on the sources list itself
+    sourcesList.addEventListener('dragover', e => e.preventDefault());
+    sourcesList.addEventListener('drop',     e => { e.preventDefault(); loadFiles(e.dataTransfer.files); });
+
+    //  Save 
+    saveBtn.addEventListener('click', () => {
+        const exportCanvas  = document.createElement('canvas');
+        exportCanvas.width  = tileSize * slotCount;
+        exportCanvas.height = tileSize * rowCount;
+        const eCtx = exportCanvas.getContext('2d');
+
+        let total = 0;
+        slotsData.forEach(layers => { if (layers) total += layers.length; });
+
+        if (total === 0) { doSave(exportCanvas); return; }
+
+        let done = 0;
+        slotsData.forEach((layers, si) => {
+            if (!layers) return;
+            const col = si % slotCount;
+            const row = Math.floor(si / slotCount);
+            layers.forEach(dataURL => {
+                const img  = new Image();
+                img.onload = () => {
+                    eCtx.drawImage(img, 0, 0, tileSize, tileSize, col * tileSize, row * tileSize, tileSize, tileSize);
+                    if (++done === total) doSave(exportCanvas);
+                };
+                img.src = dataURL;
+            });
+        });
+    });
+
+    function doSave(canvas) {
+        const link    = document.createElement('a');
+        link.download = 'tileset_strip.png';
+        link.href     = canvas.toDataURL();
+        link.click();
+    }
+
+    //  Transform selected slot 
+    function transformSlot(transform) {
+        const layers = slotsData[selectedSlot];
+        if (!layers || layers.length === 0) return;
+
+        // composite all layers first
+        const comp  = document.createElement('canvas');
+        comp.width  = tileSize;
+        comp.height = tileSize;
+        const cCtx  = comp.getContext('2d');
+
+        let pending = layers.length;
+        layers.forEach(dataURL => {
+            const img = new Image();
+            img.onload = () => {
+                cCtx.drawImage(img, 0, 0, tileSize, tileSize);
+                if (--pending === 0) applyTransform();
+            };
+            img.src = dataURL;
+        });
+
+        function applyTransform() {
+            const out  = document.createElement('canvas');
+            out.width  = tileSize;
+            out.height = tileSize;
+            const oCtx = out.getContext('2d');
+            oCtx.save();
+            transform(oCtx, tileSize);
+            oCtx.drawImage(comp, 0, 0);
+            oCtx.restore();
+            slotsData[selectedSlot] = [out.toDataURL()];
+            renderSlot(selectedSlot);
+        }
+    }
+
+    rotateBtn.addEventListener('click', () => {
+        transformSlot((ctx, size) => {
+            ctx.translate(size, 0);
+            ctx.rotate(Math.PI / 2);
+        });
+    });
+
+    flipBtn.addEventListener('click', () => {
+        transformSlot((ctx, size) => {
+            ctx.translate(size, 0);
+            ctx.scale(-1, 1);
+        });
+    });
+
+    //  Clear all 
+    clearAllBtn.addEventListener('click', () => {
+        const total = slotCount * rowCount;
+        for (let i = 0; i < total; i++) { slotsData[i] = []; renderSlot(i); }
+        selectSlot(0);
+    });
+
+    //  Control changes 
+    tileSizeEl.addEventListener('change', initSlots);
+    slotCountEl.addEventListener('change', initSlots);
+    rowCountEl.addEventListener('change',  initSlots);
+
+    //  Boot 
+    initSlots();
+</script>
+</body>
+</html>

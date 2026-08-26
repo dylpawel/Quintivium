@@ -1,0 +1,30 @@
+{
+  "id": "world",
+  "name": "World",
+  "backgroundColor": "#87ceeb",
+  "tileSize": 32,
+  "cliff": "cliff.png",
+  "cliffMask": "cliff_mask.png",
+  "elevation": "elevation.png",
+  "elevationBottom": "elevation_bottom.png",
+  "elevationMask": "elevation_mask.png",
+  "elevationShadow": "elevation_shadows.png",
+  "elevationBottomShadow": "elevation_bottom_shadows.png",
+  "ramp": "ramp.png",
+  "rampShadow": "ramp_shadows.png",
+  "terrains": [
+    { "id": 0, "name": "grass", "sprite": "grass.png", "tags": ["ground"], "variants": 9 },
+    { "id": 1, "name": "sand",  "sprite": "sand.png", "tags": ["ground"] },
+    { "id": 2, "name": "dirt",  "sprite": "dirt.png", "tags": ["ground"] },
+    { "id": 3, "name": "swamp", "sprite": "swamp.png" },
+    { "id": 4, "name": "hole", "sprite": "hole.png" },
+    { "id": 5, "name": "coal", "sprite": "coal.png", "tags": ["ground"] },
+    { "id": 6, "name": "lava", "sprite": "lava.png" },
+    { "id": 7, "name": "water", "sprite": "../shared/water.png", "base": true }
+  ],
+  "priority": [2,5,0,1,4,6,7,3],
+  "fences": [
+    { "id": "wood", "name": "Wood Fence", "sprite": "fence_wood.png" },
+    { "id": "stone", "name": "Stone Fence", "sprite": "fence_stone.png" }
+  ]
+}

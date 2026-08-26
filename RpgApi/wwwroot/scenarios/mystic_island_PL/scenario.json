@@ -1,0 +1,21 @@
+{
+  "title": "Mistyczna Wyspa",
+  "description": "Podróż po tajemniczej wyspie.",
+  "start_map": "island_1",
+  "start_position": "start",
+  "hero": "Tom",
+  "questionPools": 1,
+  "questionCategories": {
+    "default": { "name": "Domyślny",   "pools": 2 },
+    "math":    { "name": "Matematyka", "pools": 2 }
+  },
+  "scriptFiles": [
+    "scripts.json",
+    { "file": "island_1_script.json", "map": "island_1" }
+  ],
+  "variables": {
+    "level": 1,
+    "hp": 100
+  },
+  "flags": {}
+}

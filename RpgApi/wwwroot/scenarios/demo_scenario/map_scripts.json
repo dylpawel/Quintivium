@@ -1,0 +1,213 @@
+[
+  {
+    "id": "spawn_npcs",
+    "on": "map_enter",
+    "once": true,
+    "actions": [
+      { "type": "spawn_npc", "npc": "Hero-Mage", "x": 4, "y": 18, "id": "mage" },
+      { "type": "spawn_npc", "npc": "Hero-Farmer", "x": 2, "y": 5, "id": "farmer" }
+    ]
+  },
+  {
+    "id": "spawn_test_items",
+    "on": "map_enter",
+    "once": true,
+    "actions": [
+      { "type": "spawn_item", "item_id": "gold", "x": 10, "y": 10, "qty": 5 },
+      { "type": "spawn_item", "item_id": "sword", "x": 12, "y": 10 },
+      { "type": "spawn_item", "item_id": "torch", "x": 14, "y": 10, "qty": 2 }
+    ]
+  },
+  {
+    "id": "map_enter_world",
+    "on": "map_enter",
+    "once": true,
+    "actions": [
+      { "type": "spawn_monster", "monster": "Orc Pounder" },
+      { "type": "spawn_monster", "monster": "Skeleton" },
+      { "type": "spawn_monster", "monster": "Knight" },
+      { "type": "spawn_monster", "monster": "Skeleton Warrior", "x": 23, "y":4 },
+      { "type": "spawn_monster", "monster": "Wizard", "x": 28, "y": 15 },
+      { "type": "spawn_monster", "monster": "Orc Warrior", "x": 20, "y": 10, "radius": 3 },
+      { "type": "spawn_monster", "monster": "Skeleton Mage", "x": 20, "y": 10, "radius": 3 },
+      { "type": "spawn_monster", "monster": "Rogue", "x": 20, "y": 10, "radius": 3 },
+      { "type": "show_dialog", "text": "You stand at the edge of a vast world..." }
+    ]
+  },
+  {
+    "id": "cave_enter_notorch",
+    "on": "tile_approach",
+    "tile": { "x": 23, "y": 3 },
+    "condition": "!has_item(torch)",
+    "actions": [
+      { "type": "show_dialog", "text": "The cave entrance yawns before you, dark and cold." },
+      { "type": "show_dialog", "text": "You need a torch before venturing in there.", "item": "torch" },
+      { "type": "block_move" }
+    ]
+  },
+  {
+    "id": "cave_enter",
+    "on": "tile_approach",
+    "tile": { "x": 23, "y": 3 },
+    "condition": "has_item(torch)",
+    "actions": [
+      { "type": "show_dialog", "text": "Torch in hand, you step into the darkness...", "item": "torch" },
+      { "type": "change_map", "map_id": "cave", "mark": "Start" }
+    ]
+  },
+  {
+    "id": "cooper_hut_repeat",
+    "on": "tile_approach",
+    "tile": { "x": 20, "y": 10 },
+    "condition": "flag(cooper_visited)",
+    "actions": [
+      { "type": "show_dialog", "text": "The hut is silent now. The Orc Shaman is gone." },
+      { "type": "block_move" }
+    ]
+  },
+  {
+    "id": "cooper_hut",
+    "on": "tile_approach",
+    "tile": { "x": 20, "y": 10 },
+    "once": true,
+    "actions": [
+      { "type": "set_flag", "name": "cooper_visited" },
+      { "type": "show_dialog", "text": "You see a small hut. It looks abandoned..." },
+      { "type": "show_dialog", "text": "Suddenly, an Orc Shaman appears!" },
+      { "type": "start_combat", "enemy_id": "Orc Shaman" }
+    ]
+  },
+  {
+    "id": "seaside_hut",
+    "on": "tile_approach",
+    "tile": { "x": 25, "y": 12 },
+    "actions": [
+      { "type": "show_dialog", "text": "Something feels strange about this place..." }
+    ]
+  },
+  {
+    "id": "armory_hut",
+    "on": "tile_approach",
+    "tile": { "x": 15, "y": 14 },
+    "actions": [
+      { "type": "show_dialog", "text": "I'd better stay outside, it's not a good idea to go in there alone." }
+    ]
+  },
+  {
+    "id": "orc_ambush",
+    "on": "tile_approach",
+    "condition": "near(10, 10, 2) && chance(0.2)",
+    "actions": [
+      { "type": "show_dialog", "text": "An Orc leaps out from the shadows!" },
+      { "type": "start_combat", "enemy_id": "Orc" }
+    ]
+  },
+  {
+    "id": "fire_block",
+    "on": "tile_approach",
+    "tile": { "x": 6, "y": 5 },
+    "actions": [
+      { "type": "show_dialog", "text": "The heat is unbearable. Flames leap and roar, barring your path." },
+      { "type": "fire_event", "event": "acquire_torch" },
+      { "type": "block_move" }
+    ]
+  },
+  {
+    "id": "acquire_torch",
+    "on": "acquire_torch",
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "You notice a torch nearby, perhaps it could help you navigate the dark caves.", "item": "torch" },
+      { "type": "give_item", "item_id": "torch" }
+    ]
+  },
+  {
+    "id": "mushroom_story",
+    "on": "tile_enter",
+    "tile": { "x": 5, "y": 13 },
+    "actions": [
+      { "type": "show_dialog", "text": "Ah, the air here is thick with the scent of deep earth. These mushrooms hold ancient secrets, whispering tales of the old gods and the forgotten magic that sleeps beneath the roots." }
+    ]
+  },
+  {
+    "id": "fallen_oak_story",
+    "on": "tile_enter",
+    "tile": { "x": 8, "y": 4 },
+    "actions": [
+      {
+        "type": "pick_random",
+        "choices": [
+          { "actions": [{ "type": "show_dialog", "text": "A fallen tree is not merely wood and branch; it is a silent monument to centuries. Each crack in its bark holds the memory of forgotten kings and the whispers of the earth itself." }] },
+          { "actions": [{ "type": "show_dialog", "text": "When a great oak lies broken, its roots do not simply decay—they become the deep arteries of the forest, pulsing with ancient magic that binds the land together." }] },
+          { "actions": [{ "type": "show_dialog", "text": "Those who study the fallen timber claim they can read the past written in the grain. The age and condition of the wood reveal the secrets of ages long gone." }] }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "see_shells",
+    "on": "tile_enter",
+    "tile": { "x": 28, "y": 15 },
+    "actions": [
+      { "type": "show_dialog", "text": "You have arrived at a mysterious location." }
+    ]
+  },
+  {
+    "id": "strange_stone_appears",
+    "on": "tile_enter",
+    "tile": { "x": 2, "y": 8 },
+    "once": true,
+    "actions": [
+      { "type": "spawn_decoration", "asset_id": "rocks_6", "x": 2, "y": 9 },
+      { "type": "show_dialog", "text": "A strange-looking stone appears in the water..." }
+    ]
+  },
+  {
+    "id": "storm_swell",
+    "on": "tile_enter",
+    "tile": { "x": 3, "y": 8 },
+    "once": true,
+    "actions": [
+      { "type": "set_weather", "weather": "rain", "intensity": 0.9, "wind": 90, "transition_secs": 4 },
+      { "type": "show_message", "text": "The wind picks up and the rain turns to a downpour...", "duration": 4000 }
+    ]
+  },
+  {
+    "id": "farmer_weather",
+    "on": "npc_interact",
+    "npc": "farmer",
+    "actions": [
+      { "type": "show_dialog", "speaker": "Hero-Farmer", "text": "The skies do as I bid. What weather would you have, traveler?" },
+      { "type": "show_choice", "text": "Choose the weather:", "choices": [
+        { "label": "Clear skies", "actions": [
+          { "type": "set_weather", "weather": "none", "wind": 0, "transition_secs": 2 }
+        ]},
+        { "label": "Rain", "actions": [
+          { "type": "show_choice", "text": "Wind direction?", "choices": [
+            { "label": "Left",  "actions": [ { "type": "set_weather", "weather": "rain", "intensity": 0.6, "wind": -100, "transition_secs": 2 }, { "type": "show_message", "text": "A gentle rain drifts in from the east...", "duration": 3000 } ] },
+            { "label": "Right", "actions": [ { "type": "set_weather", "weather": "rain", "intensity": 0.6, "wind":  100, "transition_secs": 2 }, { "type": "show_message", "text": "A gentle rain drifts in from the west...", "duration": 3000 } ] },
+            { "label": "No wind", "actions": [ { "type": "set_weather", "weather": "rain", "intensity": 0.6, "wind": 0, "transition_secs": 2 } ] }
+          ]}
+        ]},
+        { "label": "Snow", "actions": [
+          { "type": "show_choice", "text": "Wind direction?", "choices": [
+            { "label": "Left",  "actions": [ { "type": "set_weather", "weather": "snow", "intensity": 0.8, "wind": -30, "transition_secs": 2 } ] },
+            { "label": "Right", "actions": [ { "type": "set_weather", "weather": "snow", "intensity": 0.8, "wind":  30, "transition_secs": 2 } ] },
+            { "label": "No wind", "actions": [ { "type": "set_weather", "weather": "snow", "intensity": 0.5, "wind": 0, "transition_secs": 2 } ] }
+          ]}
+        ]},
+        { "label": "Night", "actions": [
+          { "type": "set_lighting", "lighting": { "col": [0, 1, 10], "a": 0.90
+           }, "transition_secs": 4 }
+        ]},
+        { "label": "Day", "actions": [
+          { "type": "set_lighting", "lighting": "day", "transition_secs": 4 }
+        ]},
+        { "label": "Sunset", "actions": [
+          { "type": "set_lighting", "lighting": "sunset", "transition_secs": 3 }
+        ]},
+        { "label": "Farewell." }
+      ]}
+    ]
+  }
+]

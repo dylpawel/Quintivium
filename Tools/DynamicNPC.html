@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>32x32 Catmull-Rom Studio (Sprite Sheet Driven Preview)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #1a1a1a;
+            color: #eaeaea;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .app-container {
+            display: flex;
+            gap: 25px;
+            background: #262626;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 1200px;
+        }
+        .canvas-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #333;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        canvas {
+            image-rendering: pixelated;
+            border: 2px solid #444;
+            background: #1f1f1f;
+            cursor: crosshair;
+        }
+        .sidebar {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover { background-color: #2563eb; }
+        .btn-success { background-color: #10b981; }
+        .btn-success:hover { background-color: #059669; }
+        .layer-list {
+            background: #1f1f1f;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .layer-item {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .layer-item.active {
+            border-color: #3b82f6;
+            background: #343a40;
+        }
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .layer-title-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .priority-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .priority-btn {
+            background: #444;
+            color: #fff;
+            border: none;
+            padding: 2px 6px;
+            font-size: 11px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .priority-btn:hover { background: #555; }
+        .layer-params {
+            background: #1a1a1a;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .param-row label { color: #ccc; }
+        .param-group-title {
+            font-weight: bold;
+            color: #3b82f6;
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+            margin-top: 4px;
+        }
+        .param-row input, .spritesheet-controls input {
+            width: 55px;
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 2px;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .instructions {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+        .drop-zone {
+            width: 256px;
+            padding: 12px;
+            border: 2px dashed #555;
+            border-radius: 6px;
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+            background: #1f1f1f;
+            margin-bottom: 8px;
+        }
+        .drop-zone.dragover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .drop-zone:hover {
+            border-color: #666;
+            color: #bbb;
+        }
+        .spritesheet-card {
+            margin-top: 20px;
+            background: #262626;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 1065px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        .spritesheet-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #333;
+            padding: 10px 20px;
+            border-radius: 6px;
+        }
+        .sheet-preview-container {
+            width: 100%;
+            overflow-x: auto;
+            background: #1a1a1a;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            display: flex;
+            justify-content: flex-start;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>32x32 Layer Studio (Sheet-Driven Preview)</h1>
+
+    <div class="app-container">
+        <div class="canvas-card">
+            <h3 id="workspaceTitle">Workspace (Base Layer)</h3>
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+                ondragover="event.preventDefault(); this.classList.add('dragover')"
+                ondragleave="this.classList.remove('dragover')"
+                ondrop="handleFileDrop(event)">
+                Drop image here or click to select
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+            <canvas id="srcCanvas" width="32" height="32" style="width: 256px; height: 256px;"></canvas>
+            <div class="instructions">
+                <strong>Controls:</strong><br>
+                • Simple Click: Adds/removes a single pixel<br>
+                • Left-click + Drag: Lasso paint area to active layer<br>
+                • Right-click + Drag: Erase lasso area from active layer
+            </div>
+        </div>
+
+        <div class="canvas-card">
+            <h3>Bicubic Preview (Driven from Sheet)</h3>
+            <canvas id="liveCanvas" width="32" height="32" style="width: 256px; height: 256px;"></canvas>
+        </div>
+
+        <div class="sidebar">
+            <button class="btn" onclick="createNewLayer()">+ Add New Layer</button>
+            <div class="layer-list" id="layerList"></div>
+        </div>
+    </div>
+
+    <div class="spritesheet-card">
+        <h3>Generated Master Sprite Sheet</h3>
+        <div class="spritesheet-controls">
+            <label for="frameCountInput">Frames per cycle:</label>
+            <input type="number" id="frameCountInput" value="8" min="2" max="64" onchange="generateSpriteSheet()">
+            <button class="btn btn-success" onclick="generateSpriteSheet()">Force Rebuild Sheet</button>
+        </div>
+        <div class="sheet-preview-container">
+            <canvas id="sheetCanvas" width="256" height="32" style="height: 64px; width: auto;"></canvas>
+        </div>
+    </div>
+
+<script>
+    const srcCanvas = document.getElementById('srcCanvas');
+    const sCtx = srcCanvas.getContext('2d');
+    const liveCanvas = document.getElementById('liveCanvas');
+    const lCtx = liveCanvas.getContext('2d');
+    const sheetCanvas = document.getElementById('sheetCanvas');
+    const sheetCtx = sheetCanvas.getContext('2d');
+
+    const NATIVE_RES = 32;
+
+    let rawPixels = []; 
+    let pixelLayerAssignments = new Int8Array(1024).fill(-1); 
+
+    let layers = []; 
+    let activeLayerUniqueId = -1; 
+
+    let isDrawing = false;
+    let hasMoved = false;
+    let drawMode = 'add'; 
+    let currentPath = [];
+    let spriteLoaded = false;
+    let nextUniqueId = 0;
+
+    const fps = 10;
+    const interval = 1000 / fps;
+    let lastFrameTime = 0;
+    let currentPlayingFrame = 0; // Tracks discrete frame indices directly from sheet limits
+
+    const layerColors = [
+        'rgba(239, 68, 68, 0.5)', 'rgba(34, 197, 94, 0.5)', 
+        'rgba(168, 85, 247, 0.5)', 'rgba(249, 115, 22, 0.5)', 'rgba(236, 72, 153, 0.5)'
+    ];
+
+    function loadImageFromSrc(src, name) {
+        const img = new Image();
+        img.onload = () => {
+            rawPixels = [];
+            pixelLayerAssignments = new Int8Array(1024).fill(-1);
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = tempCanvas.height = NATIVE_RES;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(img, 0, 0, NATIVE_RES, NATIVE_RES);
+            const imgData = tCtx.getImageData(0, 0, NATIVE_RES, NATIVE_RES).data;
+
+            for (let i = 0; i < imgData.length; i += 4) {
+                rawPixels.push({ r: imgData[i], g: imgData[i+1], b: imgData[i+2], a: imgData[i+3] });
+            }
+            spriteLoaded = true;
+            if (name) document.getElementById('dropZone').textContent = name;
+            renderWorkspace();
+            updateLayerUI();
+            generateSpriteSheet();
+        };
+        img.src = src;
+    }
+
+    function handleFileDrop(e) {
+        e.preventDefault();
+        document.getElementById('dropZone').classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const url = URL.createObjectURL(file);
+            loadImageFromSrc(url, file.name);
+        }
+    }
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            loadImageFromSrc(url, file.name);
+        }
+    }
+
+    loadImageFromSrc('NPC.png', null);
+
+    srcCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    srcCanvas.addEventListener('mousedown', (e) => {
+        if (!spriteLoaded) return;
+        isDrawing = true;
+        hasMoved = false;
+        drawMode = (e.button === 0) ? 'add' : 'remove';
+        currentPath = [];
+        trackMouse(e);
+    });
+
+    srcCanvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        hasMoved = true;
+        trackMouse(e);
+        renderWorkspace();
+        
+        sCtx.strokeStyle = drawMode === 'add' ? '#3b82f6' : '#ef4444';
+        sCtx.lineWidth = 1; 
+        sCtx.beginPath();
+        currentPath.forEach((pt, idx) => {
+            if(idx === 0) sCtx.moveTo(pt.x + 0.5, pt.y + 0.5);
+            else sCtx.lineTo(pt.x + 0.5, pt.y + 0.5);
+        });
+        sCtx.stroke();
+    });
+
+    srcCanvas.addEventListener('mouseup', (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+
+        if (!hasMoved && currentPath.length > 0) {
+            const pt = currentPath[0];
+            const idx = pt.y * NATIVE_RES + pt.x;
+            if (drawMode === 'add' && activeLayerUniqueId !== -1) {
+                pixelLayerAssignments[idx] = activeLayerUniqueId;
+            } else if (drawMode === 'remove' && pixelLayerAssignments[idx] === activeLayerUniqueId) {
+                pixelLayerAssignments[idx] = -1;
+            }
+        } else if (currentPath.length > 2) {
+            processLasso();
+        }
+
+        currentPath = [];
+        renderWorkspace();
+        updateLayerUI();
+        generateSpriteSheet();
+    });
+
+    function trackMouse(e) {
+        const rect = srcCanvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (NATIVE_RES / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (NATIVE_RES / rect.height));
+        
+        if (x >= 0 && x < NATIVE_RES && y >= 0 && y < NATIVE_RES) {
+            if (currentPath.length === 0 || currentPath[currentPath.length - 1].x !== x || currentPath[currentPath.length - 1].y !== y) {
+                currentPath.push({x, y});
+            }
+        }
+    }
+
+    function isInsideOrOnPolygon(x, y, poly) {
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            const xi = poly[i].x, yi = poly[i].y;
+            const xj = poly[j].x, yj = poly[j].y;
+            if ((y === yi && x === xi) || (y === yj && x === xj)) return true;
+            if ((yi === yj && y === yi) && (x > Math.min(xi, xj) && x < Math.max(xi, xj))) return true;
+            const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+
+    function processLasso() {
+        for (let y = 0; y < NATIVE_RES; y++) {
+            for (let x = 0; x < NATIVE_RES; x++) {
+                if (isInsideOrOnPolygon(x, y, currentPath)) {
+                    const idx = y * NATIVE_RES + x;
+                    if (drawMode === 'add' && activeLayerUniqueId !== -1) {
+                        pixelLayerAssignments[idx] = activeLayerUniqueId;
+                    } else if (drawMode === 'remove' && pixelLayerAssignments[idx] === activeLayerUniqueId) {
+                        pixelLayerAssignments[idx] = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    function createNewLayer() {
+        const id = nextUniqueId++;
+        layers.push({ 
+            uid: id,
+            ampY: 1.2, yOffset: 0.0,
+            ampX: 0.0, xOffset: 0.0,
+            scaleX: 1.0, scaleY: 1.0
+        });
+        activeLayerUniqueId = id;
+        renderWorkspace();
+        updateLayerUI();
+        generateSpriteSheet();
+    }
+
+    function selectLayer(uid) {
+        activeLayerUniqueId = uid;
+        renderWorkspace();
+        updateLayerUI();
+    }
+
+    function moveLayer(index, direction) {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= layers.length) return;
+        
+        const temp = layers[index];
+        layers[index] = layers[targetIndex];
+        layers[targetIndex] = temp;
+        
+        updateLayerUI();
+        generateSpriteSheet();
+    }
+
+    function updateParam(uid, key, val) {
+        const layer = layers.find(l => l.uid === uid);
+        if (layer) layer[key] = parseFloat(val) || 0;
+        generateSpriteSheet();
+    }
+
+    function updateLayerUI() {
+        const list = document.getElementById('layerList');
+        const activeLayer = layers.find(l => l.uid === activeLayerUniqueId);
+        const activeDisplayIndex = activeLayer ? layers.indexOf(activeLayer) + 1 : 0;
+        
+        document.getElementById('workspaceTitle').innerText = activeLayerUniqueId === -1 ? 
+            `Workspace (Base Layer)` : `Workspace (Editing Layer ${activeDisplayIndex})`;
+        
+        let html = `
+            <div class="layer-item ${activeLayerUniqueId === -1 ? 'active' : ''}" onclick="selectLayer(-1)">
+                <div class="layer-header"><span>Base Background Sprite</span></div>
+            </div>
+        `;
+
+        for (let i = layers.length - 1; i >= 0; i--) {
+            const layer = layers[i];
+            const count = pixelLayerAssignments.filter(v => v === layer.uid).length;
+            const isActive = activeLayerUniqueId === layer.uid;
+
+            let paramUI = `
+                <div class="layer-params" onclick="event.stopPropagation()">
+                    <div class="param-group-title">Vertical Motion (Y)</div>
+                    <div class="param-row"><label>Bob Amp:</label><input type="number" step="0.1" value="${layer.ampY}" onchange="updateParam(${layer.uid}, 'ampY', this.value)"></div>
+                    <div class="param-row"><label>Fixed Offset:</label><input type="number" step="0.5" value="${layer.yOffset}" onchange="updateParam(${layer.uid}, 'yOffset', this.value)"></div>
+                    
+                    <div class="param-group-title">Horizontal Motion (X)</div>
+                    <div class="param-row"><label>Bob Amp:</label><input type="number" step="0.1" value="${layer.ampX}" onchange="updateParam(${layer.uid}, 'ampX', this.value)"></div>
+                    <div class="param-row"><label>Fixed Offset:</label><input type="number" step="0.5" value="${layer.xOffset}" onchange="updateParam(${layer.uid}, 'xOffset', this.value)"></div>
+                    
+                    <div class="param-group-title">Matrix Scaling</div>
+                    <div class="param-row"><label>Scale X factor:</label><input type="number" step="0.05" value="${layer.scaleX}" onchange="updateParam(${layer.uid}, 'scaleX', this.value)"></div>
+                    <div class="param-row"><label>Scale Y factor:</label><input type="number" step="0.05" value="${layer.scaleY}" onchange="updateParam(${layer.uid}, 'scaleY', this.value)"></div>
+                </div>`;
+
+            html += `
+                <div class="layer-item ${isActive ? 'active' : ''}" onclick="selectLayer(${layer.uid})">
+                    <div class="layer-header">
+                        <div class="layer-title-area">
+                            <span style="border-left: 4px solid ${layerColors[layer.uid % layerColors.length]}; padding-left:5px;">Layer ${i + 1} (${count} px)</span>
+                        </div>
+                        <div class="priority-controls" onclick="event.stopPropagation()">
+                            <button class="priority-btn" onclick="moveLayer(${i}, 1)">▲ Up</button>
+                            <button class="priority-btn" onclick="moveLayer(${i}, -1)">▼ Down</button>
+                        </div>
+                    </div>
+                    ${paramUI}
+                </div>`;
+        }
+        list.innerHTML = html;
+    }
+
+    function renderWorkspace() {
+        sCtx.clearRect(0, 0, NATIVE_RES, NATIVE_RES);
+        if (!spriteLoaded) return;
+
+        const imgData = sCtx.createImageData(NATIVE_RES, NATIVE_RES);
+        for (let i = 0; i < 1024; i++) {
+            const dataIdx = i * 4;
+            const p = rawPixels[i];
+            const assignment = pixelLayerAssignments[i];
+
+            imgData.data[dataIdx]   = p.r;
+            imgData.data[dataIdx+1] = p.g;
+            imgData.data[dataIdx+2] = p.b;
+            imgData.data[dataIdx+3] = p.a;
+
+            if (assignment !== -1) {
+                sCtx.fillStyle = layerColors[assignment % layerColors.length];
+                sCtx.fillRect(i % NATIVE_RES, Math.floor(i / NATIVE_RES), 1, 1);
+            }
+        }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = tempCanvas.height = NATIVE_RES;
+        tempCanvas.getContext('2d').putImageData(imgData, 0, 0);
+        
+        sCtx.globalCompositeOperation = 'destination-over';
+        sCtx.drawImage(tempCanvas, 0, 0);
+        sCtx.globalCompositeOperation = 'source-over';
+    }
+
+    function catmullRom1D(p0, p1, p2, p3, t) {
+        return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
+            (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t
+        );
+    }
+
+    function getPixelColorAt(x, y, uid) {
+        let cx = Math.min(NATIVE_RES - 1, Math.max(0, x));
+        let cy = Math.min(NATIVE_RES - 1, Math.max(0, y));
+        let idx = cy * NATIVE_RES + cx;
+
+        if (pixelLayerAssignments[idx] === uid) {
+            return rawPixels[idx];
+        }
+        return { r: 0, g: 0, b: 0, a: 0 };
+    }
+
+    function sampleBicubicCatmullRom(srcX, srcY, uid) {
+        let xFloor = Math.floor(srcX - 0.5);
+        let yFloor = Math.floor(srcY - 0.5);
+        let tx = srcX - 0.5 - xFloor;
+        let ty = srcY - 0.5 - yFloor;
+
+        const channels = ['r', 'g', 'b', 'a'];
+        let result = { r: 0, g: 0, b: 0, a: 0 };
+
+        channels.forEach(ch => {
+            let arrY = [];
+            for (let row = 0; row < 4; row++) {
+                let p0 = getPixelColorAt(xFloor - 1, yFloor - 1 + row, uid)[ch];
+                let p1 = getPixelColorAt(xFloor,     yFloor - 1 + row, uid)[ch];
+                let p2 = getPixelColorAt(xFloor + 1, yFloor - 1 + row, uid)[ch];
+                let p3 = getPixelColorAt(xFloor + 2, yFloor - 1 + row, uid)[ch];
+                arrY.push(catmullRom1D(p0, p1, p2, p3, tx));
+            }
+            result[ch] = catmullRom1D(arrY[0], arrY[1], arrY[2], arrY[3], ty);
+        });
+
+        return result;
+    }
+
+    // Isolated Core Render Framework - Synthesizes a discrete frame data array
+    function renderFrameBuffer(timeValue) {
+        // Create an empty image buffer in local memory
+        const canvasBuffer = document.createElement('canvas');
+        canvasBuffer.width = canvasBuffer.height = NATIVE_RES;
+        const ctxBuffer = canvasBuffer.getContext('2d');
+        const frameData = ctxBuffer.createImageData(NATIVE_RES, NATIVE_RES);
+
+        // 1. Static unassigned pixel rendering pass
+        for (let i = 0; i < 1024; i++) {
+            if (pixelLayerAssignments[i] === -1) {
+                const pixelIdx = i * 4;
+                const p = rawPixels[i];
+                frameData.data[pixelIdx]     = p.r;
+                frameData.data[pixelIdx + 1] = p.g;
+                frameData.data[pixelIdx + 2] = p.b;
+                frameData.data[pixelIdx + 3] = p.a;
+            }
+        }
+
+        // 2. Priority Stack Layer transformation pass
+        layers.forEach((layer) => {
+            let moveY = (Math.sin(timeValue) * layer.ampY) + layer.yOffset;
+            let moveX = (Math.cos(timeValue) * layer.ampX) + layer.xOffset;
+
+            const pivotX = NATIVE_RES / 2;
+            const pivotY = NATIVE_RES / 2;
+
+            for (let dstY = 0; dstY < NATIVE_RES; dstY++) {
+                for (let dstX = 0; dstX < NATIVE_RES; dstX++) {
+                    let targetX = dstX + 0.5;
+                    let targetY = dstY + 0.5;
+
+                    let unMovedX = targetX - moveX;
+                    let unMovedY = targetY - moveY;
+
+                    let srcX = pivotX + (unMovedX - pivotX) / layer.scaleX;
+                    let srcY = pivotY + (unMovedY - pivotY) / layer.scaleY;
+
+                    let sampleColor = sampleBicubicCatmullRom(srcX, srcY, layer.uid);
+
+                    if (sampleColor && sampleColor.a >= 128) { 
+                        let pixelIdx = (dstY * NATIVE_RES + dstX) * 4;
+                        frameData.data[pixelIdx]     = Math.min(255, Math.max(0, sampleColor.r));
+                        frameData.data[pixelIdx + 1] = Math.min(255, Math.max(0, sampleColor.g));
+                        frameData.data[pixelIdx + 2] = Math.min(255, Math.max(0, sampleColor.b));
+                        frameData.data[pixelIdx + 3] = 255;
+                    }
+                }
+            }
+        });
+
+        return frameData;
+    }
+
+    // REGENERATES SPRITE SHEET (Source of truth for previewing loops)
+    function generateSpriteSheet() {
+        if (!spriteLoaded) return;
+
+        const totalFrames = parseInt(document.getElementById('frameCountInput').value) || 8;
+        
+        sheetCanvas.width = totalFrames * NATIVE_RES;
+        sheetCanvas.height = NATIVE_RES;
+        sheetCtx.clearRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+
+        // Build out every single step frame across a strict 2PI system cycle distribution
+        for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+            const stepRad = (frameIndex / totalFrames) * (Math.PI * 2);
+            const computedFrameData = renderFrameBuffer(stepRad);
+
+            const cellBufferCanvas = document.createElement('canvas');
+            cellBufferCanvas.width = cellBufferCanvas.height = NATIVE_RES;
+            cellBufferCanvas.getContext('2d').putImageData(computedFrameData, 0, 0);
+
+            const destinationPlacementX = frameIndex * NATIVE_RES;
+            sheetCtx.drawImage(cellBufferCanvas, destinationPlacementX, 0);
+        }
+        
+        // Safety bounds check to prevent overflow indexing when frame range updates
+        if (currentPlayingFrame >= totalFrames) {
+            currentPlayingFrame = 0;
+        }
+    }
+
+    function pipelineLoop(currentTime) {
+        requestAnimationFrame(pipelineLoop);
+
+        const delta = currentTime - lastFrameTime;
+        if (delta > interval) {
+            lastFrameTime = currentTime - (delta % interval);
+            if (!spriteLoaded) return;
+
+            const totalFrames = parseInt(document.getElementById('frameCountInput').value) || 8;
+
+            // Clear display preview canvas target window area
+            lCtx.clearRect(0, 0, NATIVE_RES, NATIVE_RES);
+
+            // FIX: Extracts a discrete slice from sheetCanvas using current index parameters
+            const sourceOffsetX = currentPlayingFrame * NATIVE_RES;
+            lCtx.drawImage(
+                sheetCanvas, 
+                sourceOffsetX, 0, NATIVE_RES, NATIVE_RES, // Source boundary box criteria definition parameters
+                0, 0, NATIVE_RES, NATIVE_RES              // Destination layout window alignment maps
+            );
+
+            // Cycle index coordinates to point to sequential sheet sections safely
+            currentPlayingFrame = (currentPlayingFrame + 1) % totalFrames;
+        }
+    }
+
+    requestAnimationFrame(pipelineLoop);
+</script>
+</body>
+</html>

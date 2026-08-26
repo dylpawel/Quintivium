@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Transparency Tool</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #ddd; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        #drop-zone { border: 2px dashed #555; padding: 20px; width: 80%; text-align: center; margin-bottom: 20px; cursor: pointer; }
+        #drop-zone.hover { border-color: #007bff; background: #222; }
+        
+        .controls { background: #333; padding: 15px; border-radius: 8px; display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        
+        /* The Checkerboard Background for transparency visualization */
+        .canvas-container { 
+            overflow: auto; 
+            max-width: 90vw; 
+            max-height: 70vh; 
+            background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
+                              linear-gradient(-45deg, #222 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #222 75%), 
+                              linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 1px solid #444;
+        }
+
+        canvas { 
+            image-rendering: pixelated; /* Chrome/Edge/Safari */
+            image-rendering: crisp-edges; /* Firefox */
+            cursor: crosshair; 
+            display: block;
+        }
+
+        .filter-item { display: inline-flex; align-items: center; background: #444; padding: 5px 10px; border-radius: 4px; margin: 5px; }
+        .filter-item button { margin-left: 10px; cursor: pointer; background: #ff4444; border: none; color: white; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <div id="drop-zone">Drop PNG here or click to upload</div>
+    <input type="file" id="file-input" accept="image/png" style="display:none">
+
+    <div class="controls">
+        <label>Zoom: 
+            <select id="zoom-select">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4">4x</option>
+            </select>
+        </label>
+        <label>Similarity: <input type="range" id="similarity-range" min="0" max="255" value="20"> <span id="sim-val">20</span></label>
+    </div>
+
+    <div id="filter-list"></div>
+
+    <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+    </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const zoomSelect = document.getElementById('zoom-select');
+    const similarityRange = document.getElementById('similarity-range');
+    const filterList = document.getElementById('filter-list');
+    
+    let originalImageData = null; // Clean slate
+    let activeFilters = []; // Array of {r, g, b, a, tolerance}
+    let imgElement = new Image();
+
+    // --- File Handling ---
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => handleFile(e.target.files[0]);
+    
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('hover'); };
+    dropZone.ondragleave = () => dropZone.classList.remove('hover');
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('hover');
+        handleFile(e.dataTransfer.files[0]);
+    };
+
+    function handleFile(file) {
+        if (!file || file.type !== "image/png") return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imgElement.onload = () => {
+                canvas.width = imgElement.width;
+                canvas.height = imgElement.height;
+                ctx.drawImage(imgElement, 0, 0);
+                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                activeFilters = [];
+                render();
+            };
+            imgElement.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // --- Core Logic ---
+    canvas.addEventListener('click', (e) => {
+        if (!originalImageData) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const scale = canvas.width / rect.width;
+        const x = Math.floor((e.clientX - rect.left) * scale);
+        const y = Math.floor((e.clientY - rect.top) * scale);
+        
+        // Get pixel from the ORIGINAL data so we don't pick up transparency
+        const index = (y * originalImageData.width + x) * 4;
+        const r = originalImageData.data[index];
+        const g = originalImageData.data[index + 1];
+        const b = originalImageData.data[index + 2];
+        const a = originalImageData.data[index + 3];
+
+        activeFilters.push({ r, g, b, a, tolerance: parseInt(similarityRange.value) });
+        render();
+    });
+
+    function render() {
+        if (!originalImageData) return;
+
+        // Apply Zoom
+        const z = zoomSelect.value;
+        canvas.style.width = (imgElement.width * z) + "px";
+        canvas.style.height = (imgElement.height * z) + "px";
+
+        // Process Pixels
+        const workingData = new ImageData(
+            new Uint8ClampedArray(originalImageData.data),
+            originalImageData.width,
+            originalImageData.height
+        );
+
+        const data = workingData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            
+            for (const filter of activeFilters) {
+                // Euclidean distance in RGBA space
+                const diff = Math.sqrt(
+                    Math.pow(r - filter.r, 2) +
+                    Math.pow(g - filter.g, 2) +
+                    Math.pow(b - filter.b, 2) +
+                    Math.pow(a - filter.a, 2)
+                );
+
+                if (diff <= filter.tolerance) {
+                    data[i + 3] = 0; // Set Alpha to 0
+                    break; 
+                }
+            }
+        }
+
+        ctx.putImageData(workingData, 0, 0);
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('sim-val').innerText = similarityRange.value;
+        filterList.innerHTML = '';
+        activeFilters.forEach((f, index) => {
+            const div = document.createElement('div');
+            div.className = 'filter-item';
+            div.innerHTML = `
+                <span style="display:inline-block; width:15px; height:15px; background:rgba(${f.r},${f.g},${f.b},${f.a/255}); border:1px solid #fff; margin-right:5px;"></span>
+                Tol: ${f.tolerance}
+                <button onclick="removeFilter(${index})">✕</button>
+            `;
+            filterList.appendChild(div);
+        });
+    }
+
+    window.removeFilter = (idx) => {
+        activeFilters.splice(idx, 1);
+        render();
+    };
+
+    similarityRange.oninput = () => {
+        document.getElementById('sim-val').innerText = similarityRange.value;
+    };
+
+    zoomSelect.onchange = render;
+
+    // Right-click Save Logic
+    canvas.oncontextmenu = (e) => {
+        e.preventDefault();
+        const link = document.createElement('a');
+        link.download = 'edited_image.png';
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    };
+</script>
+</body>
+</html>

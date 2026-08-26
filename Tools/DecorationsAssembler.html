@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tileset Assembler</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#1a1a1f;
+  color:#c8c8d0;
+  font-family:monospace;
+  font-size:12px;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:16px;
+}
+#app{
+  width:100%;
+  max-width:900px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.panel{
+  background:#22222a;
+  border:1px solid #383848;
+  border-radius:6px;
+  padding:10px 12px;
+}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.label{color:#7a7a90;font-size:11px;white-space:nowrap}
+select,input[type=number]{
+  background:#16161e;
+  color:#c8c8d0;
+  border:1px solid #383848;
+  border-radius:4px;
+  padding:3px 6px;
+  font-size:11px;
+  font-family:monospace;
+  text-align:left;
+}
+select:focus,input:focus{outline:1px solid #5a5aaa;outline-offset:-1px}
+input[type=number]{width:48px}
+button{
+  background:#2a2a38;
+  color:#c8c8d0;
+  border:1px solid #484860;
+  border-radius:4px;
+  padding:4px 7px;
+  font-size:11px;
+  font-family:monospace;
+  cursor:pointer;
+  white-space:nowrap;
+  display:flex;align-items:center;justify-content:center;
+}
+button:hover{background:#32324a;border-color:#6060a0}
+button.active{background:#3a3a6a;border-color:#7070c0;color:#b0b0ff}
+button.icon-btn{width:30px;height:28px;padding:0;}
+button.icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sep{width:1px;height:18px;background:#383848;flex-shrink:0}
+.chip{
+  font-size:11px;
+  font-family:monospace;
+  color:#7a7a90;
+  background:#16161e;
+  border:1px solid #2a2a38;
+  border-radius:4px;
+  padding:2px 7px;
+  white-space:nowrap;
+}
+.chip b{color:#a0a0c0;font-weight:500}
+.section-label{font-size:10px;color:#555568;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+.canvas-wrap{
+  border:1px solid #2e2e3e;
+  border-radius:4px;
+  overflow:auto;
+  background:#0e0e14;
+  display:inline-block;
+  max-width:100%;
+  max-height:480px;
+}
+canvas{display:block;image-rendering:pixelated;cursor:crosshair}
+#grid-canvas{cursor:default}
+.file-label{
+  color:#7a7a90;
+  font-size:11px;
+  background:#16161e;
+  border:1px solid #383848;
+  border-radius:4px;
+  padding:3px 8px;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  width:220px;
+  display:block;
+}
+.file-label:hover{border-color:#6060a0;color:#c8c8d0}
+#upload{display:none}
+input[type=range]{
+  accent-color:#5a5aaa;
+  cursor:pointer;
+  width:140px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+ 
+  <div class="panel">
+    <div class="row">
+      <label class="file-label" for="upload" id="file-label-txt">choose image…</label>
+      <input type="file" id="upload" accept="image/*">
+      <div class="sep"></div>
+      <span class="label">tile</span>
+      <select id="tileSize">
+        <option value="16">16×16</option>
+        <option value="32" selected>32×32</option>
+        <option value="64">64×64</option>
+      </select>
+      <div class="sep"></div>
+      <span class="label">grid</span>
+      <input type="number" id="gridW" value="6" min="1" max="32">
+      <span class="label">×</span>
+      <input type="number" id="gridH" value="6" min="1" max="32">
+      <div class="sep"></div>
+      <button class="icon-btn" id="clearBtn" title="Clear grid">
+        <svg viewBox="0 0 16 16"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+      </button>
+      <button class="icon-btn" id="saveBtn" title="Save PNG">
+        <svg viewBox="0 0 16 16"><line x1="8" y1="2" x2="8" y2="10"/><polyline points="5,7 8,10 11,7"/><line x1="3" y1="13" x2="13" y2="13"/></svg>
+      </button>
+    </div>
+  </div>
+ 
+  <div class="panel">
+    <div class="section-label">destination grid</div>
+    <div class="row" style="margin-bottom:8px">
+      <span class="label">zoom</span>
+      <button class="dzbtn active" data-z="1">1×</button>
+      <button class="dzbtn" data-z="2">2×</button>
+      <button class="dzbtn" data-z="3">3×</button>
+      <button class="dzbtn" data-z="4">4×</button>
+      <div class="sep"></div>
+      <span class="chip" id="ic-grid">0×0 cells</span>
+      <div class="sep"></div>
+      <span class="label">bg</span>
+      <select id="bgSel">
+        <option value="checker">checker</option>
+        <option value="black">black</option>
+        <option value="white">white</option>
+        <option value="magenta">magenta</option>
+        <option value="none">dark</option>
+      </select>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="grid-canvas"></canvas>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="label">alpha threshold</span>
+      <input type="range" id="alphaThreshSlider" min="0" max="255" value="0">
+      <span class="chip"><b id="alphaThreshVal">0</b></span>
+    </div>
+  </div>
+ 
+  <div class="panel">
+    <div class="section-label">source</div>
+    <div class="row" style="margin-bottom:8px">
+      <span class="label">zoom</span>
+      <button class="zbtn" data-z="1">1×</button>
+      <button class="zbtn active" data-z="2">2×</button>
+      <button class="zbtn" data-z="3">3×</button>
+      <button class="zbtn" data-z="4">4×</button>
+      <div class="sep"></div>
+      <span class="chip"><b id="ic-pos">–</b> px</span>
+      <span class="chip">src <b id="ic-src">–</b></span>
+      <span class="chip">box <b id="ic-box">–</b></span>
+    </div>
+    <div class="canvas-wrap" id="src-outer">
+      <canvas id="src-canvas" tabindex="0"></canvas>
+    </div>
+    <div style="margin-top:6px;font-size:10px;color:#444458;line-height:1.7">
+      click → place cursor · arrows → move 1px · shift+arrows → resize box 1px · enter → stamp to selected cell · right-click grid cell → clear
+    </div>
+  </div>
+ 
+</div>
+<script>
+const upload=document.getElementById('upload');
+const fileLabelTxt=document.getElementById('file-label-txt');
+const tileSizeEl=document.getElementById('tileSize');
+const gridWEl=document.getElementById('gridW');
+const gridHEl=document.getElementById('gridH');
+const clearBtn=document.getElementById('clearBtn');
+const saveBtn=document.getElementById('saveBtn');
+const bgSel=document.getElementById('bgSel');
+const gridCanvas=document.getElementById('grid-canvas');
+const gc=gridCanvas.getContext('2d');
+const srcCanvas=document.getElementById('src-canvas');
+const sc=srcCanvas.getContext('2d');
+const icPos=document.getElementById('ic-pos');
+const icSrc=document.getElementById('ic-src');
+const icBox=document.getElementById('ic-box');
+const icGrid=document.getElementById('ic-grid');
+ 
+let img=null;
+let tileSize=32;
+let srcZoom=2;
+let dstZoom=1;
+let gridW=6,gridH=6;
+let selCell={c:0,r:0};
+let selRange={c0:0,r0:0,c1:0,r1:0};
+let isDragging=false;
+let isSrcDragging=false;
+let isSrcDragged=false;
+let srcDragStart={x:0,y:0};
+let cursor={x:0,y:0};
+let boxPxW=32,boxPxH=32;
+let cells=[];
+let alphaThreshold=0;
+const PAD=16;
+ 
+function initCells(){
+  cells=[];
+  for(let r=0;r<gridH;r++){cells.push([]);for(let c=0;c<gridW;c++)cells[r].push(null);}
+}
+initCells();
+ 
+function clampCursor(){
+  if(!img)return;
+  cursor.x=Math.max(0,Math.min(img.naturalWidth-1,cursor.x));
+  cursor.y=Math.max(0,Math.min(img.naturalHeight-1,cursor.y));
+}
+function clampBox(){
+  if(!img)return;
+  boxPxW=Math.max(1,Math.min(img.naturalWidth-cursor.x,boxPxW));
+  boxPxH=Math.max(1,Math.min(img.naturalHeight-cursor.y,boxPxH));
+}
+function cellsW(){return Math.ceil(boxPxW/tileSize);}
+function cellsH(){return Math.ceil(boxPxH/tileSize);}
+ 
+function drawCellFiltered(ctx,d,dx,dy){
+  if(alphaThreshold<=0){
+    ctx.drawImage(d.canvas,d.ox,d.oy,tileSize,tileSize,dx,dy,tileSize,tileSize);
+    return;
+  }
+  const tmp=document.createElement('canvas');
+  tmp.width=tileSize;tmp.height=tileSize;
+  const tc=tmp.getContext('2d');
+  tc.drawImage(d.canvas,d.ox,d.oy,tileSize,tileSize,0,0,tileSize,tileSize);
+  const id=tc.getImageData(0,0,tileSize,tileSize);
+  const data=id.data;
+  for(let i=3;i<data.length;i+=4){if(data[i]<alphaThreshold)data[i]=0;}
+  tc.putImageData(id,0,0);
+  ctx.drawImage(tmp,0,0,tileSize,tileSize,dx,dy,tileSize,tileSize);
+}
+ 
+function drawCheckerPattern(ctx,x,y,w,h,a,b){
+  const sz=8;
+  for(let cy=0;cy<h;cy+=sz)for(let cx=0;cx<w;cx+=sz){
+    ctx.fillStyle=((Math.floor(cx/sz)+Math.floor(cy/sz))%2===0)?a:b;
+    ctx.fillRect(x+cx,y+cy,Math.min(sz,w-cx),Math.min(sz,h-cy));
+  }
+}
+ 
+function applyGridBg(){
+  const v=bgSel.value;
+  const w=gridCanvas.width,h=gridCanvas.height;
+  if(v==='black'){gc.fillStyle='#000';gc.fillRect(0,0,w,h);}
+  else if(v==='white'){gc.fillStyle='#fff';gc.fillRect(0,0,w,h);}
+  else if(v==='magenta'){gc.fillStyle='#ff00ff';gc.fillRect(0,0,w,h);}
+  else if(v==='checker'){drawCheckerPattern(gc,0,0,w,h,'#3a3a4a','#252530');}
+  else{gc.fillStyle='#0e0e14';gc.fillRect(0,0,w,h);}
+}
+ 
+function drawGrid(){
+  const logW=tileSize*gridW,logH=tileSize*gridH;
+  gridCanvas.width=logW*dstZoom;
+  gridCanvas.height=logH*dstZoom;
+  applyGridBg();
+  gc.imageSmoothingEnabled=false;
+  gc.save();
+  gc.scale(dstZoom,dstZoom);
+  for(let r=0;r<gridH;r++)for(let c=0;c<gridW;c++){
+    const x=c*tileSize,y=r*tileSize;
+    const d=cells[r][c];
+    if(d)drawCellFiltered(gc,d,x,y);
+    const isSel=(c>=selRange.c0&&c<=selRange.c1&&r>=selRange.r0&&r<=selRange.r1);
+    gc.strokeStyle=isSel?'#7070ff':'#2a2a3a';
+    gc.lineWidth=isSel?2/dstZoom:0.5/dstZoom;
+    const inset=isSel?1/dstZoom:0.25/dstZoom;
+    const shrink=isSel?2/dstZoom:0.5/dstZoom;
+    gc.strokeRect(x+inset,y+inset,tileSize-shrink,tileSize-shrink);
+  }
+  gc.restore();
+  icGrid.textContent=`${gridW}×${gridH} · ${logW}×${logH}px`;
+}
+ 
+function drawSrc(){
+  if(!img){
+    srcCanvas.width=320;srcCanvas.height=200;
+    sc.fillStyle='#0e0e14';sc.fillRect(0,0,320,200);
+    sc.fillStyle='#333344';sc.font='12px monospace';sc.fillText('load an image',12,20);
+    return;
+  }
+  const pad=PAD*srcZoom;
+  const w=img.naturalWidth*srcZoom,h=img.naturalHeight*srcZoom;
+  srcCanvas.width=w+pad*2;srcCanvas.height=h+pad*2;
+  drawCheckerPattern(sc,0,0,srcCanvas.width,srcCanvas.height,'#3a3a4a','#252530');
+  sc.imageSmoothingEnabled=false;
+  sc.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,pad,pad,w,h);
+  const cW=cellsW(),cH=cellsH();
+  const rx=pad+cursor.x*srcZoom,ry=pad+cursor.y*srcZoom;
+  const rw=boxPxW*srcZoom,rh=boxPxH*srcZoom;
+  const fw=cW*tileSize*srcZoom,fh=cH*tileSize*srcZoom;
+  sc.strokeStyle='rgba(80,80,160,0.35)';sc.lineWidth=1;
+  sc.strokeRect(rx,ry,fw,fh);
+  for(let i=1;i<cW;i++){sc.beginPath();sc.moveTo(rx+i*tileSize*srcZoom,ry);sc.lineTo(rx+i*tileSize*srcZoom,ry+fh);sc.stroke();}
+  for(let j=1;j<cH;j++){sc.beginPath();sc.moveTo(rx,ry+j*tileSize*srcZoom);sc.lineTo(rx+fw,ry+j*tileSize*srcZoom);sc.stroke();}
+  sc.strokeStyle='rgba(0,0,0,0.7)';sc.lineWidth=3;
+  sc.strokeRect(rx,ry,rw,rh);
+  sc.strokeStyle='rgba(120,120,255,0.95)';sc.lineWidth=2;
+  sc.strokeRect(rx+1,ry+1,rw-2,rh-2);
+  icPos.textContent=`${cursor.x}, ${cursor.y}`;
+  icSrc.textContent=`${img.naturalWidth}×${img.naturalHeight}`;
+  icBox.textContent=`${boxPxW}×${boxPxH}px → ${cW}×${cH} cells`;
+}
+ 
+function buildStampCanvas(){
+  const cW=cellsW(),cH=cellsH();
+  const canvW=cW*tileSize,canvH=cH*tileSize;
+  const c=document.createElement('canvas');
+  c.width=canvW;c.height=canvH;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,canvW,canvH);
+  ctx.imageSmoothingEnabled=false;
+  const dx=Math.floor((canvW-boxPxW)/2);
+  const dy=Math.floor((canvH-boxPxH)/2);
+  ctx.drawImage(img,cursor.x,cursor.y,boxPxW,boxPxH,dx,dy,boxPxW,boxPxH);
+  return{canvas:c,cW,cH};
+}
+ 
+function stamp(){
+  if(!img)return;
+  const{canvas,cW,cH}=buildStampCanvas();
+  const r0=selRange.r0,c0=selRange.c0;
+  for(let dr=0;dr<cH;dr++)for(let dc=0;dc<cW;dc++){
+    const r=r0+dr,c=c0+dc;
+    if(r<gridH&&c<gridW)cells[r][c]={canvas,ox:dc*tileSize,oy:dr*tileSize};
+  }
+  let nc=selRange.c0+cW,nr=selRange.r0;
+  if(nc>=gridW){nc=0;nr+=cH;}
+  setSelRange(Math.min(nc,gridW-1),Math.min(nr,gridH-1),Math.min(nc,gridW-1),Math.min(nr,gridH-1));
+  drawGrid();
+}
+ 
+function gridCellAt(e){
+  const rect=gridCanvas.getBoundingClientRect();
+  const c=Math.max(0,Math.min(gridW-1,Math.floor((e.clientX-rect.left)/dstZoom/tileSize)));
+  const r=Math.max(0,Math.min(gridH-1,Math.floor((e.clientY-rect.top)/dstZoom/tileSize)));
+  return{c,r};
+}
+function setSelRange(c0,r0,c1,r1){
+  selRange={c0:Math.min(c0,c1),r0:Math.min(r0,r1),c1:Math.max(c0,c1),r1:Math.max(r0,r1)};
+  selCell={c:selRange.c0,r:selRange.r0};
+}
+
+function srcPxAt(e){
+  const rect=srcCanvas.getBoundingClientRect();
+  return{
+    x:Math.max(0,Math.min(img.naturalWidth-1,Math.floor((e.clientX-rect.left)/srcZoom-PAD))),
+    y:Math.max(0,Math.min(img.naturalHeight-1,Math.floor((e.clientY-rect.top)/srcZoom-PAD)))
+  };
+}
+
+srcCanvas.addEventListener('mousedown',e=>{
+  if(!img||e.button!==0)return;
+  const{x,y}=srcPxAt(e);
+  isSrcDragging=true;
+  isSrcDragged=false;  // reset here, before mousedown, so click suppression persists until next press
+  srcDragStart={x,y};
+  cursor.x=x;cursor.y=y;
+  boxPxW=1;boxPxH=1;
+  clampCursor();clampBox();drawSrc();srcCanvas.focus();
+});
+
+srcCanvas.addEventListener('click',e=>{
+  if(!img||isSrcDragged)return;
+  const rect=srcCanvas.getBoundingClientRect();
+  cursor.x=Math.max(0,Math.min(img.naturalWidth-1,Math.floor((e.clientX-rect.left)/srcZoom-PAD)));
+  cursor.y=Math.max(0,Math.min(img.naturalHeight-1,Math.floor((e.clientY-rect.top)/srcZoom-PAD)));
+  clampCursor();clampBox();drawSrc();srcCanvas.focus();
+});
+ 
+srcCanvas.addEventListener('mousemove',e=>{
+  if(!img)return;
+  const rect=srcCanvas.getBoundingClientRect();
+  const px=Math.floor((e.clientX-rect.left)/srcZoom-PAD);
+  const py=Math.floor((e.clientY-rect.top)/srcZoom-PAD);
+  icPos.textContent=`${Math.max(0,px)}, ${Math.max(0,py)}`;
+  if(!isSrcDragging||e.buttons===0){isSrcDragging=false;return;}
+  isSrcDragged=true;
+  const x1=Math.max(0,Math.min(img.naturalWidth-1,px));
+  const y1=Math.max(0,Math.min(img.naturalHeight-1,py));
+  cursor.x=Math.min(srcDragStart.x,x1);
+  cursor.y=Math.min(srcDragStart.y,y1);
+  boxPxW=Math.abs(x1-srcDragStart.x)+1;
+  boxPxH=Math.abs(y1-srcDragStart.y)+1;
+  clampBox();drawSrc();
+});
+ 
+srcCanvas.addEventListener('keydown',e=>{
+  if(!img)return;
+  const dirs={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  if(dirs[e.key]){
+    e.preventDefault();
+    const[dx,dy]=dirs[e.key];
+    if(e.shiftKey){boxPxW=Math.max(1,boxPxW+dx);boxPxH=Math.max(1,boxPxH+dy);clampBox();}
+    else{cursor.x+=dx;cursor.y+=dy;clampCursor();}
+    drawSrc();
+  }
+  if(e.key==='Enter'){e.preventDefault();stamp();}
+});
+ 
+gridCanvas.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  const{c,r}=gridCellAt(e);
+  isDragging=true;
+  setSelRange(c,r,c,r);
+  drawGrid();
+  srcCanvas.focus();
+});
+
+gridCanvas.addEventListener('mousemove',e=>{
+  if(!isDragging||e.buttons===0){isDragging=false;return;}
+  const{c,r}=gridCellAt(e);
+  setSelRange(selRange.c0,selRange.r0,c,r);
+  drawGrid();
+});
+
+gridCanvas.addEventListener('mouseup',e=>{
+  if(e.button!==0)return;
+  isDragging=false;
+});
+
+document.addEventListener('mouseup',()=>{isDragging=false;isSrcDragging=false;});
+ 
+gridCanvas.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const{c,r}=gridCellAt(e);
+  if(c>=0&&c<gridW&&r>=0&&r<gridH){cells[r][c]=null;drawGrid();}
+});
+ 
+document.querySelectorAll('.dzbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    dstZoom=parseInt(b.dataset.z);
+    document.querySelectorAll('.dzbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    drawGrid();
+  });
+});
+ 
+document.querySelectorAll('.zbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    srcZoom=parseInt(b.dataset.z);
+    document.querySelectorAll('.zbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    drawSrc();
+  });
+});
+ 
+tileSizeEl.addEventListener('change',()=>{
+  tileSize=parseInt(tileSizeEl.value);
+  boxPxW=tileSize;boxPxH=tileSize;
+  initCells();drawGrid();drawSrc();
+});
+ 
+function applyGridSize(){
+  const nw=Math.max(1,Math.min(32,parseInt(gridWEl.value)||6));
+  const nh=Math.max(1,Math.min(32,parseInt(gridHEl.value)||6));
+  const nc=[];
+  for(let r=0;r<nh;r++){nc.push([]);for(let c=0;c<nw;c++)nc[r].push((r<gridH&&c<gridW)?cells[r][c]:null);}
+  gridW=nw;gridH=nh;cells=nc;
+  if(selCell.c>=gridW)selCell.c=gridW-1;
+  if(selCell.r>=gridH)selCell.r=gridH-1;
+  setSelRange(selCell.c,selCell.r,selCell.c,selCell.r);
+  drawGrid();
+}
+gridWEl.addEventListener('change',applyGridSize);
+gridHEl.addEventListener('change',applyGridSize);
+bgSel.addEventListener('change',drawGrid);
+ 
+const alphaThreshSlider=document.getElementById('alphaThreshSlider');
+const alphaThreshVal=document.getElementById('alphaThreshVal');
+alphaThreshSlider.addEventListener('input',()=>{
+  alphaThreshold=parseInt(alphaThreshSlider.value);
+  alphaThreshVal.textContent=alphaThreshold;
+  drawGrid();
+});
+ 
+clearBtn.addEventListener('click',()=>{initCells();drawGrid();});
+ 
+saveBtn.addEventListener('click',()=>{
+  const ec=document.createElement('canvas');
+  ec.width=tileSize*gridW;ec.height=tileSize*gridH;
+  const ectx=ec.getContext('2d');
+  ectx.clearRect(0,0,ec.width,ec.height);
+  for(let r=0;r<gridH;r++)for(let c=0;c<gridW;c++){
+    const d=cells[r][c];
+    if(d)drawCellFiltered(ectx,d,c*tileSize,r*tileSize);
+  }
+  const a=document.createElement('a');
+  a.download='tileset.png';
+  a.href=ec.toDataURL('image/png');
+  a.click();
+});
+ 
+upload.addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  fileLabelTxt.textContent=f.name.length>28?f.name.slice(0,26)+'…':f.name;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const i=new Image();
+    i.onload=()=>{
+      img=i;cursor={x:0,y:0};boxPxW=tileSize;boxPxH=tileSize;
+      drawSrc();drawGrid();srcCanvas.focus();
+    };
+    i.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+ 
+drawGrid();drawSrc();
+</script>
+</body>
+</html>
+ 

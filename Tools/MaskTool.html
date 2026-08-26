@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tile Set Refiner (Fill Tool)</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        
+        /* Top Source Strip */
+        .source-container { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; width: 90%; overflow-x: auto; border: 1px solid #444; }
+        #sourceCanvas { 
+            border: 2px solid #555; 
+            image-rendering: pixelated; 
+            cursor: pointer; 
+            background-image: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 10px 10px; 
+        }
+
+        .editor-layout { display: flex; gap: 30px; align-items: flex-start; }
+        
+        /* Zoomed Editor */
+        .zoom-window { 
+            border: 2px solid #007bff; 
+            background: #000; 
+            image-rendering: pixelated; 
+            background-image: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 20px 20px;
+            cursor: bucket;
+        }
+
+        .panel { background: #333; padding: 15px; border-radius: 8px; width: 220px; border: 1px solid #444; }
+        .btn { width: 100%; padding: 10px; margin: 5px 0; cursor: pointer; border: none; border-radius: 4px; background: #555; color: white; font-weight: bold; }
+        .btn.active { background: #007bff; }
+        .btn-white { background: #fff; color: #000; }
+        .btn-trans { background: #ff4444; color: #fff; }
+        
+        label { font-size: 0.8em; color: #aaa; margin-top: 10px; display: block; }
+        select { width: 100%; padding: 8px; background: #222; color: #fff; border: 1px solid #555; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="source-container">
+        <strong>Tile Set Source (Click a 32x32 cell to edit)</strong><br><br>
+        <canvas id="sourceCanvas" height="32"></canvas>
+        <div style="margin-top:10px;"><input type="file" id="loader" accept="image/png"></div>
+    </div>
+
+    <div class="editor-layout">
+        <canvas id="zoomCanvas" class="zoom-window" width="32" height="32"></canvas>
+
+        <div class="panel">
+            <label>Zoom Level</label>
+            <select id="zoomSelect">
+                <option value="4">2x (64px)</option>
+                <option value="8">3x (96px)</option>
+                <option value="12" selected>4x (128px)</option>
+                <option value="16">8x (256px)</option>
+            </select>
+
+            <label>Fill Color</label>
+            <button id="fillWhite" class="btn btn-white active">Fill White</button>
+            <button id="fillTrans" class="btn btn-trans">Fill Transparent</button>
+            
+            <p style="font-size: 0.75em; color: #888; margin-top: 15px;">
+                * Clicking a pixel will flood-fill all connected pixels of the same color.
+            </p>
+            <button onclick="downloadResult()" class="btn" style="background:#28a745">Save Strip</button>
+        </div>
+    </div>
+
+<script>
+    const sourceCanvas = document.getElementById('sourceCanvas');
+    const sCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    const zoomCanvas = document.getElementById('zoomCanvas');
+    const zCtx = zoomCanvas.getContext('2d', { willReadFrequently: true });
+    
+    let selectedTileIdx = 0;
+    let fillColor = [255, 255, 255, 255]; // RGBA
+    let isWhiteMode = true;
+
+    // --- Init ---
+    function init() {
+        sourceCanvas.width = 32;
+        sCtx.fillStyle = '#444';
+        sCtx.fillRect(0,0,32,32);
+        updateZoomView();
+        refreshEditor();
+    }
+
+    // --- Zoom Logic ---
+    function updateZoomView() {
+        const factor = parseInt(document.getElementById('zoomSelect').value);
+        const size = 32 * factor;
+        zoomCanvas.style.width = size + 'px';
+        zoomCanvas.style.height = size + 'px';
+    }
+
+    // --- Selection Logic ---
+    sourceCanvas.onclick = (e) => {
+        const rect = sourceCanvas.getBoundingClientRect();
+        const clickX = (e.clientX - rect.left) * (sourceCanvas.width / rect.width);
+        selectedTileIdx = Math.floor(clickX / 32);
+        refreshEditor();
+    };
+
+    function refreshEditor() {
+        zCtx.clearRect(0, 0, 32, 32);
+        zCtx.drawImage(sourceCanvas, selectedTileIdx * 32, 0, 32, 32, 0, 0, 32, 32);
+    }
+
+    // --- Flood Fill Algorithm ---
+    zoomCanvas.onclick = (e) => {
+        const rect = zoomCanvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / (rect.width / 32));
+        const y = Math.floor((e.clientY - rect.top) / (rect.height / 32));
+
+        const imgData = zCtx.getImageData(0, 0, 32, 32);
+        const targetColor = getPixel(imgData, x, y);
+        
+        // Don't fill if color is already the same
+        if (colorsMatch(targetColor, fillColor)) return;
+
+        floodFill(imgData, x, y, targetColor, fillColor);
+        zCtx.putImageData(imgData, 0, 0);
+        
+        // Propagate to source
+        sCtx.clearRect(selectedTileIdx * 32, 0, 32, 32);
+        sCtx.drawImage(zoomCanvas, selectedTileIdx * 32, 0);
+    };
+
+    function getPixel(imgData, x, y) {
+        const i = (y * imgData.width + x) * 4;
+        return [imgData.data[i], imgData.data[i+1], imgData.data[i+2], imgData.data[i+3]];
+    }
+
+    function colorsMatch(c1, c2) {
+        return c1[0] === c2[0] && c1[1] === c2[1] && c1[2] === c2[2] && c1[3] === c2[3];
+    }
+
+    function floodFill(imgData, startX, startY, targetColor, replacementColor) {
+        const stack = [[startX, startY]];
+        const width = imgData.width;
+        const height = imgData.height;
+
+        while (stack.length > 0) {
+            const [x, y] = stack.pop();
+            const i = (y * width + x) * 4;
+
+            if (x >= 0 && x < width && y >= 0 && y < height && colorsMatch(getPixel(imgData, x, y), targetColor)) {
+                imgData.data[i] = replacementColor[0];
+                imgData.data[i+1] = replacementColor[1];
+                imgData.data[i+2] = replacementColor[2];
+                imgData.data[i+3] = replacementColor[3];
+
+                stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+            }
+        }
+    }
+
+    // --- UI Controls ---
+    document.getElementById('fillWhite').onclick = () => {
+        fillColor = [255, 255, 255, 255];
+        document.getElementById('fillWhite').classList.add('active');
+        document.getElementById('fillTrans').classList.remove('active');
+    };
+
+    document.getElementById('fillTrans').onclick = () => {
+        fillColor = [0, 0, 0, 0];
+        document.getElementById('fillTrans').classList.add('active');
+        document.getElementById('fillWhite').classList.remove('active');
+    };
+
+    document.getElementById('zoomSelect').onchange = updateZoomView;
+
+    document.getElementById('loader').onchange = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            sourceCanvas.width = img.width;
+            sourceCanvas.height = 32;
+            sCtx.clearRect(0, 0, img.width, 32);
+            sCtx.drawImage(img, 0, 0);
+            selectedTileIdx = 0;
+            refreshEditor();
+        };
+        img.src = URL.createObjectURL(e.target.files[0]);
+    };
+
+    function downloadResult() {
+        const link = document.createElement('a');
+        link.download = 'refined_tileset.png';
+        link.href = sourceCanvas.toDataURL();
+        link.click();
+    }
+
+    init();
+</script>
+</body>
+</html>

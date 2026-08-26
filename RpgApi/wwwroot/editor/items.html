@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Item Editor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #111;
+      color: #e0e0e0;
+      font: 14px/1.5 sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 10px 18px;
+      background: #1a1f2b;
+      border-bottom: 1px solid #2e3a50;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 { font-size: 16px; font-weight: 700; color: #7eb8f7; letter-spacing: 0.06em; }
+    header .path { font-size: 12px; color: #556; }
+
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Spritesheet panel ── */
+    #sheet-panel {
+      flex: 1;
+      overflow: auto;
+      padding: 18px;
+      background: #131720;
+    }
+    #sheet-wrap {
+      display: inline-block;
+      position: relative;
+      cursor: crosshair;
+      border: 1px solid #2e3a50;
+      image-rendering: pixelated;
+    }
+    #sheet-wrap canvas { display: block; image-rendering: pixelated; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 280px;
+      min-width: 220px;
+      background: #1a1f2b;
+      border-left: 1px solid #2e3a50;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid #2e3a50;
+    }
+    .sidebar-section h2 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #4a6fa5;
+      margin-bottom: 10px;
+    }
+
+    #sel-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #sel-canvas {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+      border: 1px solid #2e3a50;
+      border-radius: 6px;
+      background: #0d1117;
+      flex-shrink: 0;
+    }
+    #sel-info { font-size: 13px; color: #8a9bb5; }
+    #sel-info strong { color: #cdd; display: block; font-size: 14px; }
+
+    label { display: block; font-size: 12px; color: #8a9bb5; margin-bottom: 4px; }
+    input[type=text] {
+      width: 100%;
+      padding: 7px 10px;
+      background: #0d1117;
+      border: 1px solid #2e3a50;
+      border-radius: 5px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+    }
+    input[type=text]:focus { border-color: #4a6fa5; }
+
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+    button {
+      flex: 1;
+      padding: 7px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    button:disabled { opacity: 0.35; cursor: default; }
+    .btn-primary { background: #2a5ca8; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #3570cc; }
+    .btn-danger  { background: #7a2020; color: #fcc; }
+    .btn-danger:hover:not(:disabled) { background: #a02828; }
+    .btn-save    { background: #1e6b3e; color: #b0ffcc; margin: 14px 16px; flex: none; width: calc(100% - 32px); }
+    .btn-save:hover { background: #28894f; }
+
+    /* ── Tab buttons ── */
+    .tab-btn {
+      flex: none; padding: 5px 13px; border: 1px solid #2e3a50; border-radius: 5px;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.12s;
+      background: #1a1f2b; color: #7a8baa;
+    }
+    .tab-btn:hover { background: #243150; color: #b0c8e0; }
+    .tab-btn.active { background: #2a5ca8; border-color: #3570cc; color: #fff; }
+
+    /* ── Named items list ── */
+    #items-list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 0 4px;
+      transition: background 0.1s;
+    }
+    .item-row:hover { background: #1f2940; }
+    .item-row.active { background: #243150; }
+    .item-row canvas {
+      width: 32px;
+      height: 32px;
+      image-rendering: pixelated;
+      border: 1px solid #2e3a50;
+      border-radius: 3px;
+      background: #0d1117;
+      flex-shrink: 0;
+    }
+    .item-row .item-name {
+      flex: 1;
+      font-size: 13px;
+      color: #c8d8ee;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .item-row .item-coord { font-size: 11px; color: #445; }
+    .item-row .del-btn {
+      flex: none;
+      background: none;
+      border: none;
+      color: #553;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      opacity: 0.5;
+    }
+    .item-row:hover .del-btn { opacity: 1; color: #c55; }
+
+    #status {
+      padding: 6px 16px;
+      font-size: 12px;
+      color: #4a8;
+      min-height: 24px;
+    }
+    #status.err { color: #e66; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Item Editor</h1>
+  <div style="display:flex; gap:6px;">
+    <button class="tab-btn" id="tab-items" data-mode="items">🎒 Items</button>
+    <button class="tab-btn" id="tab-crafting" data-mode="crafting">🔧 Crafting</button>
+  </div>
+  <span class="path" id="path-label">assets/items.png</span>
+</header>
+
+<div class="workspace">
+  <!-- Spritesheet canvas -->
+  <div id="sheet-panel">
+    <div id="sheet-wrap">
+      <canvas id="sheet-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <!-- Selection -->
+    <div class="sidebar-section">
+      <h2>Selection</h2>
+      <div id="sel-preview">
+        <canvas id="sel-canvas" width="64" height="64"></canvas>
+        <div id="sel-info">
+          <strong id="sel-name-display">—</strong>
+          <span id="sel-coord">No cell selected</span>
+        </div>
+      </div>
+      <label for="name-input">Item ID</label>
+      <input type="text" id="name-input" placeholder="e.g. torch" />
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-assign" disabled>Assign</button>
+        <button class="btn-danger"  id="btn-remove" disabled>Remove</button>
+      </div>
+    </div>
+
+    <!-- Named items -->
+    <div class="sidebar-section" style="border-bottom:none; padding-bottom:6px;">
+      <h2><span id="list-heading">Items</span> (<span id="item-count">0</span>)</h2>
+    </div>
+    <div id="items-list-wrap">
+      <div id="items-list"></div>
+    </div>
+
+    <div id="status"></div>
+    <button class="btn-save" id="btn-save">💾 Save items.json</button>
+  </div>
+</div>
+
+<script>
+const TILE      = 32
+const SCALE     = 3   // display scale
+const CELL      = TILE * SCALE
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let _mode     = 'items'   // 'items' | 'crafting'
+let _items    = {}   // { name: [col, row] }
+let _crafting = {}   // { name: [col, row] }
+let _img      = null // items.png
+let _craftImg = null // crafting.png
+let _selCol   = -1
+let _selRow   = -1
+let _fileHandle = null   // FileSystemFileHandle for direct save
+
+function _activeDict() { return _mode === 'items' ? _items : _crafting }
+function _activeImg()  { return _mode === 'items' ? _img : _craftImg }
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const sheetCanvas   = document.getElementById('sheet-canvas')
+const sheetCtx      = sheetCanvas.getContext('2d')
+const selCanvas     = document.getElementById('sel-canvas')
+const selCtx        = selCanvas.getContext('2d')
+const nameInput     = document.getElementById('name-input')
+const btnAssign     = document.getElementById('btn-assign')
+const btnRemove     = document.getElementById('btn-remove')
+const btnSave       = document.getElementById('btn-save')
+const selCoord      = document.getElementById('sel-coord')
+const selNameDisp   = document.getElementById('sel-name-display')
+const itemsList     = document.getElementById('items-list')
+const itemCount     = document.getElementById('item-count')
+const statusEl      = document.getElementById('status')
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+async function init() {
+  // Load items.json
+  try {
+    const res = await fetch('../assets/items.json')
+    if (res.ok) {
+      const data = await res.json()
+      _items = data.items || data
+      _crafting = data.crafting || {}
+    }
+  } catch { /* first run */ }
+
+  // Load items.png
+  _img = await new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload  = () => resolve(img)
+    img.onerror = () => reject(new Error('Cannot load items.png'))
+    img.src = '../assets/items.png'
+  })
+
+  // Load crafting.png (optional)
+  _craftImg = await new Promise(resolve => {
+    const img = new Image()
+    img.onload  = () => resolve(img)
+    img.onerror = () => { console.warn('crafting.png not found'); resolve(null) }
+    img.src = '../assets/crafting.png'
+  })
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchMode(btn.dataset.mode))
+  })
+
+  switchMode('items')
+}
+
+// ── Drawing ───────────────────────────────────────────────────────────────────
+function drawSheet() {
+  const img = _activeImg()
+  if (!img) return
+  const COLS_D = window._COLS ?? COLS
+  const ROWS_D = window._ROWS ?? ROWS
+  sheetCtx.clearRect(0, 0, sheetCanvas.width, sheetCanvas.height)
+  sheetCtx.imageSmoothingEnabled = false
+  sheetCtx.drawImage(img, 0, 0, sheetCanvas.width, sheetCanvas.height)
+
+  // Build a reverse lookup: "col,row" → name
+  const dict = _activeDict()
+  const coordMap = {}
+  for (const [name, raw] of Object.entries(dict)) {
+    const [c, r] = Array.isArray(raw) ? raw : raw.icon
+    coordMap[`${c},${r}`] = name
+  }
+
+  // Grid + labels
+  for (let r = 0; r < ROWS_D; r++) {
+    for (let c = 0; c < COLS_D; c++) {
+      const x = c * CELL, y = r * CELL
+      const key = `${c},${r}`
+
+      // Highlight named cells
+      if (coordMap[key]) {
+        sheetCtx.fillStyle = 'rgba(100,180,255,0.18)'
+        sheetCtx.fillRect(x, y, CELL, CELL)
+      }
+
+      // Selected cell
+      if (c === _selCol && r === _selRow) {
+        sheetCtx.strokeStyle = '#f0c030'
+        sheetCtx.lineWidth   = 3
+        sheetCtx.strokeRect(x + 1.5, y + 1.5, CELL - 3, CELL - 3)
+      }
+
+      // Grid lines
+      sheetCtx.strokeStyle = 'rgba(255,255,255,0.08)'
+      sheetCtx.lineWidth   = 1
+      sheetCtx.strokeRect(x, y, CELL, CELL)
+
+      // Name label if named
+      if (coordMap[key]) {
+        sheetCtx.fillStyle = 'rgba(10,20,40,0.7)'
+        sheetCtx.fillRect(x + 1, y + CELL - 17, CELL - 2, 16)
+        sheetCtx.fillStyle = '#9ee'
+        sheetCtx.font      = `bold ${Math.max(9, CELL / 8)}px sans-serif`
+        sheetCtx.textAlign = 'center'
+        sheetCtx.fillText(coordMap[key], x + CELL / 2, y + CELL - 4, CELL - 4)
+      }
+    }
+  }
+}
+
+function drawSelPreview() {
+  selCtx.clearRect(0, 0, 64, 64)
+  const img = _activeImg()
+  if (_selCol < 0 || !img) return
+  selCtx.imageSmoothingEnabled = false
+  selCtx.drawImage(img,
+    _selCol * TILE, _selRow * TILE, TILE, TILE,
+    0, 0, 64, 64)
+}
+
+// ── Cell click ────────────────────────────────────────────────────────────────
+sheetCanvas.addEventListener('click', e => {
+  const rect = sheetCanvas.getBoundingClientRect()
+  const COLS_D = window._COLS ?? COLS
+  const ROWS_D = window._ROWS ?? ROWS
+  const col  = Math.floor((e.clientX - rect.left) / (rect.width  / COLS_D))
+  const row  = Math.floor((e.clientY - rect.top)  / (rect.height / ROWS_D))
+  if (col < 0 || col >= COLS_D || row < 0 || row >= ROWS_D) return
+
+  _selCol = col
+  _selRow = row
+
+  const dict = _activeDict()
+  const existing = Object.entries(dict).find(([, raw]) => {
+    const [c, r] = Array.isArray(raw) ? raw : raw.icon
+    return c === col && r === row
+  })
+  const name     = existing?.[0] ?? ''
+
+  selCoord.textContent    = `[${col}, ${row}]`
+  selNameDisp.textContent = name || '—'
+  nameInput.value         = name
+  nameInput.focus()
+  btnAssign.disabled = false
+  btnRemove.disabled = !existing
+
+  drawSelPreview()
+  drawSheet()
+  highlightListRow(col, row)
+})
+
+// ── Assign ────────────────────────────────────────────────────────────────────
+function assignCurrent() {
+  if (_selCol < 0) return
+  const name = _mode === 'crafting'
+    ? nameInput.value.trim().replace(/\s+/g, ' ')
+    : nameInput.value.trim().toLowerCase().replace(/\s+/g, '_')
+  if (!name) { setStatus('Enter an item ID first.', true); return }
+  const dict = _activeDict()
+
+  // Remove any old entry at this coord
+  for (const [k, raw] of Object.entries(dict)) {
+    const [c, r] = Array.isArray(raw) ? raw : raw.icon
+    if (c === _selCol && r === _selRow) delete dict[k]
+  }
+  // Remove any existing entry with this name
+  delete dict[name]
+
+  // Preserve existing metadata if re-assigning; otherwise use shorthand array
+  const existing = _items[name]
+  if (existing && !Array.isArray(existing)) {
+    dict[name] = { icon: [_selCol, _selRow], type: existing.type ?? 'material', bonuses: existing.bonuses ?? {} }
+  } else {
+    dict[name] = [_selCol, _selRow]
+  }
+  selNameDisp.textContent = name
+  btnRemove.disabled = false
+
+  refreshList()
+  drawSheet()
+  setStatus(`Assigned "${name}" → [${_selCol}, ${_selRow}]`)
+}
+
+btnAssign.addEventListener('click', assignCurrent)
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') assignCurrent() })
+
+// ── Remove ────────────────────────────────────────────────────────────────────
+btnRemove.addEventListener('click', () => {
+  if (_selCol < 0) return
+  const dict = _activeDict()
+  let removed = null
+  for (const [k, [c, r]] of Object.entries(dict)) {
+    if (c === _selCol && r === _selRow) { removed = k; delete dict[k]; break }
+  }
+  if (removed) {
+    selNameDisp.textContent = '—'
+    nameInput.value = ''
+    btnRemove.disabled = true
+    refreshList()
+    drawSheet()
+    setStatus(`Removed "${removed}"`)
+  }
+})
+
+// ── List ──────────────────────────────────────────────────────────────────────
+function refreshList() {
+  const dict = _activeDict()
+  const img  = _activeImg()
+  itemsList.innerHTML = ''
+  const sorted = Object.entries(dict).sort(([a], [b]) => a.localeCompare(b))
+  itemCount.textContent = sorted.length
+
+  for (const [name, raw] of sorted) {
+    const [col, row] = Array.isArray(raw) ? raw : raw.icon
+    const row_el = document.createElement('div')
+    row_el.className = 'item-row'
+    if (col === _selCol && row === _selRow) row_el.classList.add('active')
+
+    const cv = document.createElement('canvas')
+    cv.width  = TILE
+    cv.height = TILE
+    const cx  = cv.getContext('2d')
+    cx.imageSmoothingEnabled = false
+    if (img) cx.drawImage(img, col * TILE, row * TILE, TILE, TILE, 0, 0, TILE, TILE)
+
+    const nameSpan  = document.createElement('span')
+    nameSpan.className   = 'item-name'
+    nameSpan.textContent = name
+
+    const coordSpan  = document.createElement('span')
+    coordSpan.className   = 'item-coord'
+    coordSpan.textContent = `[${col},${row}]`
+
+    const delBtn = document.createElement('button')
+    delBtn.className   = 'del-btn'
+    delBtn.textContent = '×'
+    delBtn.title       = `Remove "${name}"`
+    delBtn.addEventListener('click', e => {
+      e.stopPropagation()
+      const d = _activeDict()
+      delete d[name]
+      if (_selCol === col && _selRow === row) {
+        selNameDisp.textContent = '—'
+        nameInput.value = ''
+        btnRemove.disabled = true
+      }
+      refreshList()
+      drawSheet()
+      setStatus(`Removed "${name}"`)
+    })
+
+    row_el.append(cv, nameSpan, coordSpan, delBtn)
+    row_el.addEventListener('click', () => {
+      _selCol = col; _selRow = row
+      selCoord.textContent    = `[${col}, ${row}]`
+      selNameDisp.textContent = name
+      nameInput.value         = name
+      btnAssign.disabled      = false
+      btnRemove.disabled      = false
+      drawSelPreview()
+      drawSheet()
+      highlightListRow(col, row)
+    })
+    itemsList.appendChild(row_el)
+  }
+}
+
+function highlightListRow(col, row) {
+  for (const el of itemsList.querySelectorAll('.item-row')) el.classList.remove('active')
+  const all = [...itemsList.querySelectorAll('.item-row')]
+  const sorted = Object.entries(_activeDict()).sort(([a], [b]) => a.localeCompare(b))
+  const idx = sorted.findIndex(([, raw]) => {
+    const [c, r] = Array.isArray(raw) ? raw : raw.icon
+    return c === col && r === row
+  })
+  if (idx >= 0) {
+    all[idx]?.classList.add('active')
+    all[idx]?.scrollIntoView({ block: 'nearest' })
+  }
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+btnSave.addEventListener('click', async () => {
+  function serialize(v) {
+    if (Array.isArray(v)) return `[${v[0]}, ${v[1]}]`
+    // Object format: { icon: [c, r], type?, bonuses? }
+    let s = `{ "icon": [${v.icon[0]}, ${v.icon[1]}]`
+    if (v.type && v.type !== 'material') s += `, "type": "${v.type}"`
+    if (v.bonuses && Object.keys(v.bonuses).length) s += `, "bonuses": ${JSON.stringify(v.bonuses)}`
+    return s + ' }'
+  }
+  const itemsEntries = Object.entries(_items)
+    .map(([k, v]) => `    "${k}": ${serialize(v)}`)
+    .join(',\n')
+  const craftEntries = Object.entries(_crafting)
+    .map(([k, v]) => `    "${k}": [${v[0]}, ${v[1]}]`)
+    .join(',\n')
+  const json = `{\n  "items": {\n${itemsEntries}\n  },\n  "crafting":{\n${craftEntries}\n  }\n}\n`
+
+  // Try File System Access API (Chromium) for direct overwrite
+  if ('showSaveFilePicker' in window) {
+    try {
+      if (!_fileHandle) {
+        _fileHandle = await window.showSaveFilePicker({
+          suggestedName: 'items.json',
+          types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }],
+        })
+      }
+      const writable = await _fileHandle.createWritable()
+      await writable.write(json)
+      await writable.close()
+      setStatus('Saved to items.json ✓')
+      return
+    } catch (e) {
+      if (e.name === 'AbortError') { _fileHandle = null; return }
+      _fileHandle = null // fall through to download
+    }
+  }
+
+  // Fallback: download
+  const blob = new Blob([json], { type: 'application/json' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = 'items.json'; a.click()
+  URL.revokeObjectURL(url)
+  setStatus('Downloaded items.json — replace the file in assets/')
+})
+
+// ── Keyboard shortcut: Enter to assign, Escape to clear ──────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.activeElement !== nameInput) {
+    _selCol = _selRow = -1
+    selCoord.textContent    = 'No cell selected'
+    selNameDisp.textContent = '—'
+    nameInput.value = ''
+    btnAssign.disabled = btnRemove.disabled = true
+    selCtx.clearRect(0, 0, 64, 64)
+    drawSheet()
+    highlightListRow(-1, -1)
+  }
+})
+
+function setStatus(msg, isErr = false) {
+  statusEl.textContent  = msg
+  statusEl.className    = isErr ? 'err' : ''
+}
+
+// ── Mode switching ────────────────────────────────────────────────────────────
+function switchMode(newMode) {
+  _mode = newMode
+  const img = _activeImg()
+  if (!img) { setStatus(`Cannot switch: ${newMode}.png not loaded`, true); return }
+
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === newMode))
+  document.getElementById('path-label').textContent = `assets/${newMode}.png`
+  document.getElementById('list-heading').textContent = newMode === 'items' ? 'Items' : 'Crafting Materials'
+
+  const cols = Math.floor(img.naturalWidth  / TILE)
+  const rows = Math.floor(img.naturalHeight / TILE)
+  sheetCanvas.width  = cols * CELL
+  sheetCanvas.height = rows * CELL
+  sheetCtx.imageSmoothingEnabled = false
+
+  // Persist current grid dimensions for drawSheet
+  window._COLS = cols
+  window._ROWS = rows
+
+  // Clear stale selection
+  _selCol = _selRow = -1
+  selCoord.textContent    = 'No cell selected'
+  selNameDisp.textContent = '—'
+  nameInput.value = ''
+  btnAssign.disabled = btnRemove.disabled = true
+  selCtx.clearRect(0, 0, 64, 64)
+
+  drawSheet()
+  refreshList()
+  setStatus(`Switched to ${newMode} (${cols}×${rows} tiles)`)
+}
+
+init().catch(e => setStatus(e.message, true))
+</script>
+</body>
+</html>

@@ -1,0 +1,5808 @@
+{
+  "tilesets": [
+    {
+      "id": "sand",
+      "file": "sand.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "grass",
+      "file": "grass.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "flowers",
+      "file": "flowers.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "trees",
+      "file": "trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "pine_trees",
+      "file": "pine_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "birch_trees",
+      "file": "birch_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "maple_trees",
+      "file": "maple_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "willow_trees",
+      "file": "willow_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "palm_trees",
+      "file": "palm_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "dead_trees",
+      "file": "dead_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "bushes",
+      "file": "bushes.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "rocks",
+      "file": "rocks.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "downed_trees",
+      "file": "downed_trees.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "fungi",
+      "file": "fungi.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "caves",
+      "file": "caves.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "houses",
+      "file": "houses.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "walls",
+      "file": "walls.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "interiors",
+      "file": "interiors.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "cave_entrances",
+      "file": "cave_entrances.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "campfires",
+      "file": "campfires.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "monuments",
+      "file": "monuments.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "ships",
+      "file": "ships.png",
+      "size": [32, 32]
+    },
+    {
+      "id": "bridges",
+      "file": "bridges.png",
+      "size": [32, 32]
+    }
+  ],
+  "assets": [
+    {
+      "id": "sand_1",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10
+    },
+    {
+      "id": "sand_2",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10
+    },
+    {
+      "id": "sand_10",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10
+    },
+    {
+      "id": "sand_4",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_5",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_6",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_7",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_8",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_9",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_3",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_11",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_13",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "sand_12",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3]
+        }
+      ],
+      "defaultState": "default",
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "sand_14",
+      "tileset_id": "sand",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default"
+    },
+    {
+      "id": "grass_1",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_2",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_3",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_4",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_5",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_6",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_7",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_8",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_9",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_10",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_11",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_12",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.5, 0.85],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "grass_13",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_14",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_15",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.5, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "grass_16",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_17",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_18",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_19",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_20",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_21",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_22",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_23",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_24",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_25",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_26",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_27",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_28",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_29",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_30",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_31",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_32",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_33",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_34",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_35",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_36",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_37",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_38",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_39",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_40",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_41",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_42",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_43",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_44",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_45",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_46",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_47",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_48",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 7]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_49",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_50",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_51",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_52",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_53",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_54",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 8]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_55",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 9]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_56",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 9]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_57",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 9]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "grass_58",
+      "tileset_id": "grass",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 9]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_1",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_2",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_3",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_4",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_5",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_6",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_7",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_8",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_9",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_10",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_11",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_12",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_13",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_14",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_15",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_16",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 5, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_17",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 5, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_18",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 5, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_19",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_20",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_21",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "flowers_22",
+      "tileset_id": "flowers",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "trees_1",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_2",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_3",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_4",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_5",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_6",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_7",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "trees_8",
+      "tileset_id": "trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_1",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_2",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_3",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_4",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_5",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_6",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_7",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "pine_trees_8",
+      "tileset_id": "pine_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_1",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_2",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_3",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_4",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_5",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_6",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_7",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_8",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_9",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "birch_trees_10",
+      "tileset_id": "birch_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_1",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_2",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_3",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_4",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_5",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_6",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_7",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "maple_trees_8",
+      "tileset_id": "maple_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "willow_trees_1",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_2",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.86],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_3",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.86],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_4",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.86],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_5",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_6",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_7",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.68],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_8",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "willow_trees_9",
+      "tileset_id": "willow_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "palm_trees_1",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.92],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_2",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_3",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.28, 0.92],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_4",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.85],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_5",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_6",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_7",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.95],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_8",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.95],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "palm_trees_9",
+      "tileset_id": "palm_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "wind": [9, 2, 2]
+    },
+    {
+      "id": "dead_trees_1",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_2",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_3",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_4",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_5",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "shadow": [10, 4, 0.35]
+    },
+    {
+      "id": "dead_trees_6",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_7",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_8",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_9",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35,
+      "shadow": [10, 4, 0.35]
+    },
+    {
+      "id": "dead_trees_10",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 4, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_11",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_12",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.45, 0.91],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_13",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 6, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_14",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 6, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_15",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 8, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.51, 0.86],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_16",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 8, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.92],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_17",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 8, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.53, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_18",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 10, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.92],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_19",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 10, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.91],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "dead_trees_20",
+      "tileset_id": "dead_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 10, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.89],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "bushes_1",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_2",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_3",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_4",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_5",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_6",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_7",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_8",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_9",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_10",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_11",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_12",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_13",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_14",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_15",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_16",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_17",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_18",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_19",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_20",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_21",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_22",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_23",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_24",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_25",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_26",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_27",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_28",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_29",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_30",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 4]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_31",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 5]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_32",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 5]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_33",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 5]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bushes_34",
+      "tileset_id": "bushes",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 5]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_1",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_2",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_3",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_4",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_5",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_6",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0],
+          "traversable": "A"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.52, 0.45],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_7",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_8",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_9",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_10",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_11",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_12",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_13",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_14",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_15",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_16",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_17",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_18",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_19",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_20",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_21",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_22",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_23",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_24",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_25",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_26",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_27",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_28",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_29",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_30",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 4]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_31",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_32",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_33",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_34",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_35",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_36",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 5]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_37",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_38",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_39",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_40",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_41",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "rocks_42",
+      "tileset_id": "rocks",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 6]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_1",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_2",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_3",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_4",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_5",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_6",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_7",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_8",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_9",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_10",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_11",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_12",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_13",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_14",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_15",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_16",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_17",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_18",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_19",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_20",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_21",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_22",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_23",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "downed_trees_24",
+      "tileset_id": "downed_trees",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 3]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 5,
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_1",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.78],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_2",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.78],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_3",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.78],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_4",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.52, 0.77],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_5",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.48, 0.7],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_6",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.78],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_7",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.46, 0.78],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_8",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.51, 0.74],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_9",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.64],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_10",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.69],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_11",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.48, 0.56],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "fungi_12",
+      "tileset_id": "fungi",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.53, 0.67],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "cave_1",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 3, 3],
+          "traversable": "BBB|BBB|___"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.58, 0.6],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "caves_2",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0, 3, 3],
+          "traversable": "BBB|BBB|___"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.54, 0.67],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_3",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.79],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_4",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.79],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_5",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.52, 0.78],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_6",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.49, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_7",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 9, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.79],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_8",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 9, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.52, 0.81],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_9",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 12, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.83],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "cave_10",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 12, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.49, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_1",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_2",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_3",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_4",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_5",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_6",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 15]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_7",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_8",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_9",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_10",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_11",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "portal_12",
+      "tileset_id": "caves",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 16]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.49, 0.94],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_1",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 3, 3],
+          "traversable": "BBB|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.75],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_2",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0, 3, 3],
+          "traversable": "BBB|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.75],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_3",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 3, 3],
+          "traversable": "BBB|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_4",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3, 3, 3],
+          "traversable": "BBB|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_5",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_6",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 0.9],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_7",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 9, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_8",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 9, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_9",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 12, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.85],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_10",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 12, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.82],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_11",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 15, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_12",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 15, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_13",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 18, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.43, 0.83],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_14",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 18, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.48, 0.85],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_15",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 21, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.47, 0.78],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "house_16",
+      "tileset_id": "houses",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 21, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.49, 0.79],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "gate_1",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "open",
+          "region": [0, 0, 3, 3],
+          "traversable": "B_B|B_B|B_B"
+        },
+        {
+          "id": "closed",
+          "region": [0, 3, 3, 3],
+          "traversable": "B_B|BBB|BBB"
+        }
+      ],
+      "defaultState": "open",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "gate_2",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "open",
+          "region": [3, 0, 3, 3],
+          "traversable": "B_B|B_B|B_B"
+        },
+        {
+          "id": "closed",
+          "region": [3, 3, 3, 3],
+          "traversable": "BBB|BBB|BBB"
+        }
+      ],
+      "defaultState": "open",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "tower_1",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [6, 0, 1, 3],
+          "traversable": "B|B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "tower_2",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [6, 3, 1, 3],
+          "traversable": "B|B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.8],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_TL",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_TR",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_LC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_RC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "wall_LO",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_RO",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_1",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [6, 6, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_2",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_3",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_4",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [6, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_BL",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_BR",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_BLC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_BRC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 8, 1, 2],
+          "traversable": "B|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_TLC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 10],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_TRC",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 10],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_L",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 10],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "walls_R",
+      "tileset_id": "walls",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 10],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 1],
+      "rayTracedShadow": [45, 44, 0.35]
+    },
+    {
+      "id": "interiors_1",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.25]
+    },
+    {
+      "id": "interiors_2",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.25]
+    },
+    {
+      "id": "interiors_3",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 1, 2],
+          "traversable": "_|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.75]
+    },
+    {
+      "id": "interiors_4",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 4, 1, 2],
+          "traversable": "_|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.75]
+    },
+    {
+      "id": "interiors_5",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 4, 2, 2],
+          "traversable": "__|BB"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.3, 0.75]
+    },
+    {
+      "id": "interiors_6",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0, 1, 2],
+          "traversable": "_|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.65]
+    },
+    {
+      "id": "interiors_7",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 1, 2],
+          "traversable": "_|B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.65]
+    },
+    {
+      "id": "interiors_8",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0],
+          "traversable": "B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 5,
+      "pivot": [0.55, 0.65]
+    },
+    {
+      "id": "interiors_9",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4, 2, 2],
+          "traversable": "__|_B"
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.6]
+    },
+    {
+      "id": "interiors_10",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.3, 0.7]
+    },
+    {
+      "id": "interiors_11",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.7, 0.7]
+    },
+    {
+      "id": "interiors_12",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 0.8]
+    },
+    {
+      "id": "interiors_13",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 0.2]
+    },
+    {
+      "id": "interiors_14",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.5]
+    },
+    {
+      "id": "interiors_15",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.5]
+    },
+    {
+      "id": "interiors_16",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "flip": false,
+      "pivot": [0.5, 0.5]
+    },
+    {
+      "id": "interiors_17",
+      "tileset_id": "interiors",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.85]
+    },
+    {
+      "id": "cave_entrance_top",
+      "tileset_id": "cave_entrances",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 1]
+    },
+    {
+      "id": "cave_entrance_bottom",
+      "tileset_id": "cave_entrances",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "pivot": [0.5, 1]
+    },
+    {
+      "id": "campfire_1",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.51, 0.51],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_2",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 0.5],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_3",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0, 2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_4",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_5",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_6",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_7",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_8",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "campfire_9",
+      "tileset_id": "campfires",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.5, 1],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "monument_1",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "jitter": 10,
+      "pivot": [0.48, 0.74],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_2",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_3",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.51, 0.73],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_4",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.76],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_5",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.56, 0.84],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_6",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 0]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_7",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.43, 0.62],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_8",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.46, 0.67],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_9",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.44, 0.68],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_10",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.51, 0.74],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_11",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.62, 0.74],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "monument_12",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.51, 0.76],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_13",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.71, 0.72],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_14",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_15",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_16",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.51, 0.71],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_17",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.62, 0.85],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_18",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.67, 0.75],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_19",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.54, 0.77],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_20",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [1, 3, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_21",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [2, 3, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.58, 0.82],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_22",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3, 1, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.53, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "monument_23",
+      "tileset_id": "monuments",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 3, 2, 2]
+        }
+      ],
+      "defaultState": "default",
+      "surface": ["ground"],
+      "pivot": [0.5, 0.68],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "ship_1",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 0, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.5, 0.87],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "shipwreck_1",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.51, 0.79],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "ship_2",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3, 3, 2],
+          "traversable": "BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.5, 0.84],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "shipwreck_2",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 3, 3, 2],
+          "traversable": "BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.42, 0.66],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "ship_3",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 5, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.48, 0.8],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "shipwreck_3",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 5, 3, 3],
+          "traversable": "___|BBB|BBB"
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.51, 0.75],
+      "skewShadow": 0.35
+    },
+    {
+      "id": "shipwreck_4",
+      "tileset_id": "ships",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 8, 3, 2]
+        }
+      ],
+      "defaultState": "default",
+      "jitter": 10,
+      "pivot": [0.5, 0.73],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_1_L",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 1, 1, 2],
+          "traversable": "_|A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.75],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_1_C",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [4, 1, 1, 2],
+          "traversable": "_|A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.75],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_1_R",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [5, 1, 1, 2],
+          "traversable": "_|A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.75],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_planks",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [3, 0],
+          "traversable": "A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.5],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_2_T",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 2],
+          "traversable": "A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.5],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_2_C",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 3],
+          "traversable": "A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.5],
+      "spriteShadow": [2, 0.35]
+    },
+    {
+      "id": "bridge_2_B",
+      "tileset_id": "bridges",
+      "states": [
+        {
+          "id": "default",
+          "region": [0, 4],
+          "traversable": "A"
+        }
+      ],
+      "defaultState": "default",
+      "flip": false,
+      "pivot": [0.5, 0.5],
+      "spriteShadow": [2, 0.35]
+    }
+  ]
+}

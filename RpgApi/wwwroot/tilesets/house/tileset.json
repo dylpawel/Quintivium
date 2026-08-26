@@ -1,0 +1,10 @@
+{
+  "id": "house",
+  "name": "House",
+  "tileSize": 32,
+  "terrains": [
+    { "id": 0, "name": "empty", "base": true },
+    { "id": 1, "name": "floor", "sprite": "room.png", "topSprite": "room_top.png", "tags": ["ground"] }
+  ],
+  "priority": [0,1]
+}

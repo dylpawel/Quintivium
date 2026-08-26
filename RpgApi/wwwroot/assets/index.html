@@ -1,0 +1,2686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Library Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --bg2: #13151a;
+    --bg3: #1a1d24;
+    --bg4: #21252f;
+    --border: #2a2f3d;
+    --border2: #353c4e;
+    --text: #e2e6f0;
+    --text2: #8b92a8;
+    --text3: #555d72;
+    --accent: #4f8ef7;
+    --accent2: #2d5fd4;
+    --accent-dim: rgba(79,142,247,0.12);
+    --green: #3ecf74;
+    --green-dim: rgba(62,207,116,0.12);
+    --red: #f75f5f;
+    --red-dim: rgba(247,95,95,0.12);
+    --yellow: #f7c14f;
+    --yellow-dim: rgba(247,193,79,0.12);
+    --radius: 6px;
+    --radius2: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+    height: 48px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--accent); }
+
+  .header-sep { flex: 1; }
+
+  .header-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.3s;
+  }
+  .status-dot.saved { background: var(--green); }
+  .status-dot.unsaved { background: var(--yellow); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg4); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn.sm { padding: 4px 8px; font-size: 11px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── LAYOUT ─────────────────────────────────────── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 280px 4px 1fr 4px 300px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── SPLITTER ────────────────────────────────────── */
+  .splitter {
+    width: 4px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    position: relative;
+    z-index: 5;
+  }
+  .splitter::after {
+    content: '';
+    position: absolute;
+    inset: 0 -3px;
+  }
+  .splitter:hover, .splitter.dragging { background: var(--accent); }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text2);
+    flex: 1;
+  }
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── EMPTY STATE ─────────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    padding: 32px;
+    text-align: center;
+  }
+  .empty-icon { font-size: 40px; opacity: 0.3; }
+  .empty-title { font-size: 13px; font-weight: 700; color: var(--text2); }
+  .empty-sub { font-size: 12px; color: var(--text3); line-height: 1.6; }
+
+  /* ── OPEN FOLDER OVERLAY ─────────────────────────── */
+  #overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    z-index: 100;
+  }
+  .overlay-logo {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .overlay-logo span { color: var(--accent); }
+  .overlay-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 400px;
+    text-align: center;
+  }
+  .overlay-card h2 { font-size: 18px; font-weight: 700; }
+  .overlay-card p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .overlay-card .btn { font-size: 14px; padding: 10px 24px; }
+
+  /* ── TILESET PANEL ───────────────────────────────── */
+  .tileset-select-wrap {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  select {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 5px 8px;
+    outline: none;
+    cursor: pointer;
+  }
+  select:focus { border-color: var(--accent); }
+
+  #tileset-canvas-wrap {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    background: repeating-conic-gradient(#1a1d24 0% 25%, #13151a 0% 50%) 0 0 / 16px 16px;
+  }
+  #tileset-canvas-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+  #tileset-canvas-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  #tileset-canvas {
+    cursor: crosshair;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  .tileset-info {
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ── ASSET LIST ──────────────────────────────────── */
+  .asset-search-wrap {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+  }
+  .asset-search-wrap input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    padding: 5px 8px;
+    outline: none;
+  }
+  .asset-search-wrap input:focus { border-color: var(--accent); }
+  .asset-search-wrap input::placeholder { color: var(--text3); }
+
+  .asset-list {
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    align-content: flex-start;
+  }
+
+  .asset-item {
+    width: 64px; height: 64px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.12s;
+    background: repeating-conic-gradient(#1a1d24 0% 25%, #13151a 0% 50%) 0 0 / 8px 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .asset-item:hover { border-color: var(--border2); }
+  .asset-item.selected { border-color: var(--accent); }
+  .asset-item.has-warning { border-color: var(--yellow); }
+  .asset-item canvas { display: block; image-rendering: pixelated; }
+
+  .asset-thumb {
+    width: 64px; height: 64px;
+    image-rendering: pixelated;
+    display: block;
+  }
+  .tag {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.2);
+  }
+
+  .warn-badge {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: var(--yellow-dim);
+    color: var(--yellow);
+    border: 1px solid rgba(247,193,79,0.2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── ASSET EDITOR ────────────────────────────────── */
+  .editor-body { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 4px; }
+  .field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .field-label .optional {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+    color: var(--text3);
+    opacity: 0.6;
+  }
+
+  input[type=text], input[type=number] {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus, input[type=number]:focus { border-color: var(--accent); }
+  input.error { border-color: var(--red) !important; }
+
+  .input-row { display: flex; gap: 6px; }
+  .input-row input { flex: 1; }
+
+  .field-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .field-error { font-size: 11px; color: var(--red); margin-top: 2px; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .checkbox-row:hover { border-color: var(--accent); }
+  .checkbox-row input[type=checkbox] { accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; }
+  .checkbox-label { font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Traversable grid */
+  #ed-traversable-wrap {
+    display: flex;
+    justify-content: center;
+  }
+  .traversable-grid {
+    display: grid;
+    gap: 2px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    width: fit-content;
+  }
+  .trav-cell {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s, color 0.1s;
+    border: 1px solid transparent;
+  }
+  .trav-_ { background: var(--bg4); color: var(--text3); }
+  .trav-_:hover { background: var(--border2); color: var(--text2); }
+  .trav-B { background: var(--red-dim); color: var(--red); border-color: rgba(247,95,95,0.3); }
+  .trav-A { background: var(--green-dim); color: var(--green); border-color: rgba(62,207,116,0.3); }
+
+  /* State items */
+  .states-section { display: flex; flex-direction: column; gap: 8px; }
+  .state-item {
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: var(--bg4);
+  }
+  .state-item.state-active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-dim); }
+  .state-item-header { display: flex; align-items: center; gap: 6px; }
+  .state-pick-link {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
+    margin-left: 6px;
+    opacity: 0.8;
+  }
+  .state-pick-link:hover { opacity: 1; }
+
+  /* Tags input */
+  .tags-input-wrap {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 4px 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    cursor: text;
+    min-height: 36px;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .tags-input-wrap:focus-within { border-color: var(--accent); }
+  .tags-input-wrap .tag { cursor: default; display: flex; align-items: center; gap: 3px; }
+  .tags-input-wrap .tag-remove { cursor: pointer; opacity: 0.6; font-size: 12px; line-height: 1; }
+  .tags-input-wrap .tag-remove:hover { opacity: 1; }
+  .tags-input-wrap input {
+    border: none;
+    background: transparent;
+    padding: 2px 4px;
+    font-size: 12px;
+    min-width: 80px;
+    flex: 1;
+    width: auto;
+  }
+  .tag-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    z-index: 20;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .tag-suggestion-item {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .tag-suggestion-item:hover { background: var(--accent-dim); color: var(--accent); }
+
+  /* Preview */
+  .preview-wrap {
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    min-height: 80px;
+    border: 1px solid var(--border2);
+    position: relative;
+    background: repeating-conic-gradient(#1a1d24 0% 25%, #13151a 0% 50%) 0 0 / 12px 12px;
+  }
+  .preview-state-nav {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+  .preview-state-nav button {
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 3px 6px;
+    font-size: 11px;
+    line-height: 1;
+    transition: background 0.1s, color 0.1s;
+  }
+  .preview-state-nav button:hover { background: var(--accent-dim); color: var(--accent); }
+  .preview-state-nav button:disabled { opacity: 0.25; cursor: default; }
+  .preview-state-label {
+    padding: 2px 6px;
+    color: var(--text);
+    font-size: 10px;
+    white-space: nowrap;
+    border-left: 1px solid var(--border2);
+    border-right: 1px solid var(--border2);
+  }
+  #preview-canvas {
+    image-rendering: pixelated;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2px 0;
+  }
+
+  /* Bottom action bar in editor */
+  .editor-actions {
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── JSON PREVIEW ────────────────────────────────── */
+  .json-panel {
+    height: 180px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .json-panel .panel-header { padding: 7px 12px; }
+  .json-pre {
+    flex: 1;
+    overflow: auto;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.6;
+    background: var(--bg);
+    white-space: pre;
+  }
+  .json-pre::-webkit-scrollbar { width: 4px; height: 4px; }
+  .json-pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── TILESET MANAGER ─────────────────────────────── */
+  .tileset-list { padding: 6px; }
+  .tileset-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+    background: var(--bg3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .tileset-entry .te-id { flex: 1; font-weight: 600; color: var(--text); }
+  .tileset-entry .te-file { color: var(--text3); font-size: 11px; }
+  .tileset-entry .te-loaded { color: var(--green); font-size: 11px; }
+  .tileset-entry .te-missing { color: var(--red); font-size: 11px; }
+
+  .add-tileset-form {
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .add-tileset-form .form-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 2px;
+  }
+
+  /* ── MODAL ───────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+  }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius2);
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modal h3 { font-size: 16px; font-weight: 700; }
+  .modal p { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 16px; right: 16px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    z-index: 300;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+  .tab-content.active { display: flex; }
+
+  /* Keyboard hint */
+  kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    color: var(--text3);
+  }
+
+  /* Scale range slider */
+  .scale-range-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+  }
+  .scale-range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .scale-range-label-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    width: 28px;
+    flex-shrink: 0;
+  }
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .scale-range-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+    width: 38px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .scale-range-summary {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div class="overlay-logo">Asset <span>Editor</span></div>
+  <div class="overlay-card">
+    <h2>Open Assets Folder</h2>
+    <p>Select your <code>assets/</code> folder. The editor will load all PNG files and detect <code>definitions.json</code> automatically.</p>
+    <button class="btn primary" onclick="openFolder()">📂 Open Folder</button>
+  </div>
+  <div style="font-size:12px;color:var(--text3);">Requires Chrome or Edge for File System Access API</div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Asset <span>Editor</span></div>
+  <div class="header-sep"></div>
+  <div class="header-status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">No file</span>
+  </div>
+  <button class="btn sm" onclick="saveFile()" id="btn-save" title="Ctrl+S"><kbd>Ctrl+S</kbd> Save</button>
+  <button class="btn sm" onclick="exportFile()">Export JSON</button>
+  <button class="btn sm" onclick="openFolder()">📂 Folder</button>
+</header>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT: Tileset Viewer -->
+  <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="tabs" id="left-tabs">
+      <div class="tab active" onclick="switchLeftTab('viewer')">Viewer</div>
+      <div class="tab" onclick="switchLeftTab('tilesets')">Tilesets</div>
+    </div>
+
+    <!-- Viewer tab -->
+    <div class="tab-content active" id="tab-viewer">
+      <div class="tileset-select-wrap">
+        <select id="tileset-select" onchange="onTilesetChange()">
+          <option value="">— select tileset —</option>
+        </select>
+        <select id="ts-viewer-bg" onchange="onTsBgChange()" style="width:90px">
+          <option value="checker">checker</option>
+          <option value="white">white</option>
+          <option value="black">black</option>
+          <option value="grey">grey</option>
+          <option value="green">#205925</option>
+        </select>
+      </div>
+      <div id="tileset-canvas-wrap">
+        <div class="empty-state" id="tileset-empty">
+          <div class="empty-icon">🗂</div>
+          <div class="empty-title">No tileset loaded</div>
+          <div class="empty-sub">Open a folder with PNG files, then select a tileset above.</div>
+        </div>
+        <canvas id="tileset-canvas" style="display:none;"></canvas>
+      </div>
+      <div class="tileset-info" id="tileset-info">No tileset</div>
+    </div>
+
+    <!-- Tilesets tab -->
+    <div class="tab-content" id="tab-tilesets">
+      <div class="panel-body">
+        <div class="tileset-list" id="tileset-list"></div>
+      </div>
+      <div class="add-tileset-form">
+        <div class="form-title">Add Tileset</div>
+        <input type="text" id="new-ts-id" placeholder="id (e.g. stones)" />
+        <input type="text" id="new-ts-file" placeholder="file (e.g. stones.png)" />
+        <div class="input-row">
+          <input type="number" id="new-ts-w" placeholder="tile W" value="16" min="1" />
+          <input type="number" id="new-ts-h" placeholder="tile H" value="16" min="1" />
+        </div>
+        <button class="btn primary sm" onclick="addTileset()">+ Add Tileset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="splitter" id="splitter-left"></div>
+
+  <!-- CENTER: Asset List -->
+  <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="panel-header">
+      <div class="panel-title">Assets <span id="asset-count" style="color:var(--text3);font-weight:400;"></span></div>
+      <button class="btn sm primary" onclick="addAsset()">+ Add</button>
+    </div>
+    <div class="asset-search-wrap">
+      <input type="text" id="asset-search" placeholder="Filter by id or tag…" oninput="renderAssetList()" />
+    </div>
+    <div class="panel-body">
+      <div class="asset-list" id="asset-list">
+        <div class="empty-state">
+          <div class="empty-icon">📦</div>
+          <div class="empty-title">No assets yet</div>
+          <div class="empty-sub">Select a region on the tileset viewer, then click + Add.</div>
+        </div>
+      </div>
+    </div>
+    <!-- JSON preview -->
+    <div class="json-panel">
+      <div class="panel-header">
+        <div class="panel-title">JSON Preview</div>
+        <button class="btn sm" onclick="copyJson()">Copy</button>
+      </div>
+      <div class="json-pre" id="json-preview"></div>
+    </div>
+  </div>
+
+  <div class="splitter" id="splitter-right"></div>
+
+  <!-- RIGHT: Asset Editor -->
+  <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="panel-header">
+      <div class="panel-title">Asset Editor</div>
+      <select id="preview-zoom" onchange="onPreviewZoomChange()" style="font-size:11px;padding:3px 5px;">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+        <option value="4">4x</option>
+      </select>
+      <select id="preview-bg" onchange="onPreviewBgChange()" style="font-size:11px;padding:3px 5px;">
+        <option value="checker">checker</option>
+        <option value="white">white</option>
+        <option value="black">black</option>
+        <option value="grey">grey</option>
+        <option value="green">#205925</option>
+      </select>
+    </div>
+    <div class="panel-body" id="editor-wrap">
+      <div class="empty-state">
+        <div class="empty-icon">✏️</div>
+        <div class="empty-title">No asset selected</div>
+        <div class="empty-sub">Click an asset in the list or add a new one.</div>
+      </div>
+    </div>
+    <div class="editor-actions" id="editor-actions" style="display:none;">
+      <button class="btn primary" style="flex:1" onclick="applyAsset()">Apply Changes</button>
+      <button class="btn danger" onclick="deleteAsset()">Delete</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+let state = {
+  tilesets: [],
+  assets: []
+};
+let pngFiles = {}; // filename → File object
+let pngImages = {}; // filename → HTMLImageElement
+let tilesetCanvases = {}; // tileset id → offscreen canvas
+let folderHandle = null;
+let fileHandle = null; // definitions.json handle
+let selectedAssetIdx = null;
+let selectedAssetIdxs = new Set(); // multi-select
+let selectedRegion = null; // {x,y,w,h} in tile units
+let isDragging = false;
+let dragStart = null;
+let isUnsaved = false;
+let currentTilesetId = null;
+let showPivot = false;
+let tsBg = 'checker';
+let previewBg = 'checker';
+let previewZoom = 1;
+let editingStateIdx = null; // null = editing base region; number = index into editorStates
+let editorStates = []; // live copy of states being edited
+let editorDefaultState = ''; // id of the default state
+let previewStateIdx = 0; // which state is shown in the preview
+
+// ═══════════════════════════════════════════════════
+//  FOLDER / FILE ACCESS
+// ═══════════════════════════════════════════════════
+async function openFolder() {
+  try {
+    folderHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    document.getElementById('overlay').style.display = 'none';
+    await scanFolder();
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Failed to open folder: ' + e.message, 'error');
+  }
+}
+
+async function scanFolder() {
+  pngFiles = {};
+  fileHandle = null;
+
+  for await (const [name, handle] of folderHandle.entries()) {
+    if (handle.kind === 'file') {
+      if (name.toLowerCase().endsWith('.png')) pngFiles[name] = handle;
+      if (name === 'definitions.json') fileHandle = handle;
+    }
+  }
+
+  if (fileHandle) {
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    try {
+      const loaded = JSON.parse(text);
+      if (loaded.tilesets && loaded.assets) {
+        state = loaded;
+        showToast('Loaded definitions.json', 'success');
+      }
+    } catch(e) {
+      showToast('definitions.json parse error', 'error');
+    }
+  }
+
+  await loadPngImages();
+  const migrated = migrateAssets();
+  renderAll();
+  setUnsaved(migrated > 0);
+  if (migrated > 0) showToast(`Migrated ${migrated} asset(s) to states format — save to persist`, 'success');
+}
+
+async function loadPngImages() {
+  pngImages = {};
+  for (const [name, handle] of Object.entries(pngFiles)) {
+    const file = await handle.getFile();
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = url; });
+    pngImages[name] = img;
+  }
+}
+
+function getImageForTileset(ts) {
+  if (!ts) return null;
+  const fname = ts.file.split('/').pop();
+  return pngImages[fname] || pngImages[ts.file] || null;
+}
+
+async function saveFile() {
+  const json = buildJson();
+  if (!fileHandle) {
+    // create definitions.json in folder
+    try {
+      fileHandle = await folderHandle.getFileHandle('definitions.json', { create: true });
+    } catch(e) {
+      showToast('Cannot create file: ' + e.message, 'error'); return;
+    }
+  }
+  try {
+    const writable = await fileHandle.createWritable();
+    await writable.write(json);
+    await writable.close();
+    setUnsaved(false);
+    showToast('Saved definitions.json', 'success');
+    localStorage.setItem('asseteditor_autosave', json);
+  } catch(e) {
+    showToast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function exportFile() {
+  const json = buildJson();
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'definitions.json';
+  a.click();
+}
+
+function buildJson() {
+  // Canonical property order for assets and states
+  const ASSET_KEYS  = ['id', 'tileset_id', 'states', 'defaultState', 'tags', 'surface',
+                       'jitter', 'weight', 'flip', 'scaleMin', 'scaleMax', 'pivot',
+                       'ovalShadow', 'spriteShadow', 'skewShadow', 'rayTracedShadow', 'wind'];
+  const STATE_KEYS  = ['id', 'region', 'traversable'];
+
+  function reorder(obj, keyOrder) {
+    const out = {};
+    for (const k of keyOrder)      if (k in obj) out[k] = obj[k];
+    for (const k of Object.keys(obj)) if (!(k in out)) out[k] = obj[k]; // preserve unknown keys at end
+    return out;
+  }
+
+  // Sort assets so they appear grouped by tileset (same order as state.tilesets)
+  const tsOrder = Object.fromEntries(state.tilesets.map((ts, i) => [ts.id, i]));
+  const sortedAssets = [...state.assets].sort((a, b) => {
+    const ai = tsOrder[a.tileset_id] ?? Infinity;
+    const bi = tsOrder[b.tileset_id] ?? Infinity;
+    if (ai !== bi) return ai - bi;
+    return state.assets.indexOf(a) - state.assets.indexOf(b); // stable within same tileset
+  });
+
+  const orderedAssets = sortedAssets.map(asset => {
+    const a = reorder(asset, ASSET_KEYS);
+    if (a.states) a.states = a.states.map(s => reorder(s, STATE_KEYS));
+    return a;
+  });
+
+  let json = JSON.stringify({ tilesets: state.tilesets, assets: orderedAssets }, null, 2);
+  // Collapse arrays of numbers onto one line: [0, 1] or [0, 1, 2, 3]
+  json = json.replace(/\[\s*([\d.]+(?:,\s*[\d.]+)*)\s*\]/g,
+    (_, nums) => '[' + nums.replace(/\s+/g, ' ').trim() + ']');
+  // Collapse arrays of quoted strings onto one line: ["stones", "grass"]
+  json = json.replace(/\[\s*("[\w-]+"(?:,\s*"[\w-]+")*)\s*\]/g,
+    (_, strs) => '[' + strs.replace(/\s+/g, ' ').trim() + ']');
+  return json;
+}
+
+function setUnsaved(v) {
+  isUnsaved = v;
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  if (v) {
+    dot.className = 'status-dot unsaved';
+    txt.textContent = 'Unsaved changes';
+  } else {
+    dot.className = 'status-dot saved';
+    txt.textContent = fileHandle ? 'definitions.json' : 'No file';
+  }
+  if (v) {
+    localStorage.setItem('asseteditor_autosave', buildJson());
+  }
+}
+
+function copyJson() {
+  navigator.clipboard.writeText(buildJson());
+  showToast('JSON copied to clipboard', 'success');
+}
+
+// ═══════════════════════════════════════════════════
+//  TILESET VIEWER
+// ═══════════════════════════════════════════════════
+const ZOOM = 1;
+const SKEW_SHADOW_SKEW  = 0.7;  // default horizontal skew factor
+const SKEW_SHADOW_SCALE = 0.5;  // default vertical scale factor
+const DEFAULT_OPACITY   = 0.35;
+const DEFAULT_SPRITE_D  = 2;
+const RAY_SHADOW_ANGLE  = 45;   // default angle degrees (light from top-left → shadow to bottom-right)
+const RAY_SHADOW_LENGTH = 20;   // default shadow length in pixels
+
+// ── Wind animation preview ────────────────────────────────
+const windPreviewSheetCache = new Map();
+let previewWindRaf = null;
+
+function generateWindPreviewSheet(img, sx, sy, W, H, pivotYn, wind) {
+  const frames = wind[0], amplitude = wind[1], rigidity = wind[2];
+  const rootRow = Math.round(pivotYn * H);
+  const src = document.createElement('canvas');
+  src.width = W; src.height = H;
+  const srcCtx = src.getContext('2d');
+  srcCtx.drawImage(img, sx, sy, W, H, 0, 0, W, H);
+  const pixels = srcCtx.getImageData(0, 0, W, H).data;
+  function getPixel(x, y) {
+    if (x < 0 || x >= W || y < 0 || y >= H) return [0, 0, 0, 0];
+    const i = (y * W + x) * 4;
+    return [pixels[i], pixels[i+1], pixels[i+2], pixels[i+3]];
+  }
+  function cubicCR(p0, p1, p2, p3, t) {
+    const t2 = t*t, t3 = t2*t;
+    return Math.max(0, Math.min(255,
+      0.5*(2*p1+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3)
+    ))|0;
+  }
+  function sampleCubic(x, y) {
+    const x1 = Math.floor(x), ft = x - x1;
+    const c = [-1,0,1,2].map(dd => getPixel(x1+dd, y));
+    return [0,1,2,3].map(ch => cubicCR(c[0][ch],c[1][ch],c[2][ch],c[3][ch],ft));
+  }
+  const sheet = document.createElement('canvas');
+  sheet.width = W * frames; sheet.height = H;
+  const sheetCtx = sheet.getContext('2d');
+  for (let i = 0; i < frames; i++) {
+    const t = frames > 1 ? i / (frames - 1) : 0;
+    const swing = -Math.cos(t * Math.PI) * amplitude;
+    const out = sheetCtx.createImageData(W, H);
+    for (let row = 0; row < H; row++) {
+      let sway = 0;
+      if (row < rootRow) {
+        const frac = row / rootRow;
+        sway = swing * Math.pow(1 - frac, rigidity);
+      }
+      for (let col = 0; col < W; col++) {
+        const [r, g, b, a] = sampleCubic(col - sway, row);
+        const idx = (row * W + col) * 4;
+        out.data[idx] = r; out.data[idx+1] = g; out.data[idx+2] = b; out.data[idx+3] = a;
+      }
+    }
+    sheetCtx.putImageData(out, i * W, 0);
+  }
+  return sheet;
+}
+
+function getWindPreviewSheet(img, sx, sy, W, H, pivotYn, wind) {
+  const key = `${img.src}:${sx}:${sy}:${W}:${H}:${pivotYn.toFixed(3)}:${wind}`;
+  if (!windPreviewSheetCache.has(key)) windPreviewSheetCache.set(key, generateWindPreviewSheet(img, sx, sy, W, H, pivotYn, wind));
+  return windPreviewSheetCache.get(key);
+}
+
+function getWindFramePreview(frames, fps = 12) {
+  const cycleLen = (frames - 1) * 2;
+  if (cycleLen <= 0) return 0;
+  const t = Math.floor(performance.now() / (1000 / fps)) % cycleLen;
+  return t < frames ? t : cycleLen - t;
+}
+
+function scheduleWindPreview() {
+  if (previewWindRaf) { cancelAnimationFrame(previewWindRaf); previewWindRaf = null; }
+  const frames    = parseInt(document.getElementById('ed-wind-frames')?.value);
+  const amplitude = parseFloat(document.getElementById('ed-wind-amplitude')?.value);
+  const rigidity  = parseFloat(document.getElementById('ed-wind-rigidity')?.value);
+  const active = !isNaN(frames) && !isNaN(amplitude) && !isNaN(rigidity) && frames >= 2 && amplitude > 0 && rigidity > 0;
+  if (active) {
+    function tick() { renderPreview(); previewWindRaf = requestAnimationFrame(tick); }
+    previewWindRaf = requestAnimationFrame(tick);
+  } else {
+    renderPreview();
+  }
+}
+
+const windShadowCache = new Map();
+
+function getWindSilhouetteFrames(wsheet, frames, sw, sh, sprW, sprH, sheetKey) {
+  const key = `${sheetKey}:sil:${sprW}:${sprH}`;
+  if (!windShadowCache.has(key)) {
+    windShadowCache.set(key, Array.from({length: frames}, (_, fi) =>
+      makeSilhouette(wsheet, fi * sw, 0, sw, sh, sprW, sprH)));
+  }
+  return windShadowCache.get(key);
+}
+
+function getWindRayTracedFrames(wsheet, frames, sw, sh, sheetKey, angleRad, length) {
+  const key = `${sheetKey}:ray:${angleRad.toFixed(5)}:${length}`;
+  if (!windShadowCache.has(key)) {
+    windShadowCache.set(key, Array.from({length: frames}, (_, fi) =>
+      computeRayTracedShadow(wsheet, fi * sw, 0, sw, sh, angleRad, length)));
+  }
+  return windShadowCache.get(key);
+}
+
+function onTilesetChange() {
+  currentTilesetId = document.getElementById('tileset-select').value || null;
+  selectedRegion = null;
+  renderTilesetViewer();
+}
+
+function renderTilesetViewer() {
+  const sel = document.getElementById('tileset-select');
+  // rebuild options
+  sel.innerHTML = '<option value="">— select tileset —</option>';
+  state.tilesets.forEach(ts => {
+    const opt = document.createElement('option');
+    opt.value = ts.id;
+    opt.textContent = ts.id;
+    if (ts.id === currentTilesetId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  const canvas = document.getElementById('tileset-canvas');
+  const empty = document.getElementById('tileset-empty');
+  const info = document.getElementById('tileset-info');
+
+  if (!currentTilesetId) {
+    canvas.style.display = 'none';
+    empty.style.display = 'flex';
+    info.textContent = 'No tileset selected';
+    return;
+  }
+
+  const ts = state.tilesets.find(t => t.id === currentTilesetId);
+  if (!ts) return;
+
+  const img = getImageForTileset(ts);
+  if (!img) {
+    canvas.style.display = 'none';
+    empty.style.display = 'flex';
+    info.textContent = `PNG not found: ${ts.file}`;
+    return;
+  }
+
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+
+  const tw = ts.size[0], th = ts.size[1];
+  const cols = Math.floor(img.width / tw);
+  const rows = Math.floor(img.height / th);
+
+  canvas.width = img.width * ZOOM;
+  canvas.height = img.height * ZOOM;
+
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  // background
+  const tsvWrap = document.getElementById('tileset-canvas-wrap');
+  const bgFills = { white: '#ffffff', black: '#000000', grey: '#888888', green: '#205925' };
+  if (tsBg === 'checker') {
+    tsvWrap.style.background = 'repeating-conic-gradient(#1a1d24 0% 25%, #13151a 0% 50%) 0 0 / 16px 16px';
+  } else {
+    const fill = bgFills[tsBg];
+    tsvWrap.style.background = fill;
+    ctx.fillStyle = fill;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(img, 0, 0, img.width * ZOOM, img.height * ZOOM);
+
+  // grid
+  ctx.strokeStyle = 'rgba(79,142,247,0.25)';
+  ctx.lineWidth = 0.5;
+  for (let c = 0; c <= cols; c++) {
+    ctx.beginPath(); ctx.moveTo(c * tw * ZOOM, 0); ctx.lineTo(c * tw * ZOOM, img.height * ZOOM); ctx.stroke();
+  }
+  for (let r = 0; r <= rows; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r * th * ZOOM); ctx.lineTo(img.width * ZOOM, r * th * ZOOM); ctx.stroke();
+  }
+
+  // existing asset regions
+  state.assets.filter(a => a.tileset_id === currentTilesetId).forEach(a => {
+    const reg = getAssetRegion(a);
+    ctx.fillStyle = 'rgba(62,207,116,0.15)';
+    ctx.strokeStyle = 'rgba(62,207,116,0.6)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(reg.x * tw * ZOOM, reg.y * th * ZOOM, reg.w * tw * ZOOM, reg.h * th * ZOOM);
+    ctx.strokeRect(reg.x * tw * ZOOM + 0.5, reg.y * th * ZOOM + 0.5, reg.w * tw * ZOOM - 1, reg.h * th * ZOOM - 1);
+  });
+
+  // selected region — blue highlight (base region or active state region)
+  const blueRegion = editingStateIdx !== null ? getStateRegionFromInputs(editingStateIdx) : selectedRegion;
+  if (blueRegion) {
+    const r = blueRegion;
+    ctx.fillStyle = 'rgba(79,142,247,0.25)';
+    ctx.strokeStyle = 'rgba(79,142,247,0.9)';
+    ctx.lineWidth = 2;
+    ctx.fillRect(r.x * tw * ZOOM, r.y * th * ZOOM, r.w * tw * ZOOM, r.h * th * ZOOM);
+    ctx.strokeRect(r.x * tw * ZOOM + 1, r.y * th * ZOOM + 1, r.w * tw * ZOOM - 2, r.h * th * ZOOM - 2);
+  }
+
+  // shadow then redraw sprite on top (only for base region editing)
+  if (selectedRegion && editingStateIdx === null) {
+    const r = selectedRegion;
+    const spx = parseFloat(document.getElementById('ed-pivot-x')?.value);
+    const spy = parseFloat(document.getElementById('ed-pivot-y')?.value);
+    const pvx = isNaN(spx) ? 0.5 : spx;
+    const pvy = isNaN(spy) ? 1.0 : spy;
+    const ex = (r.x + pvx * r.w) * tw * ZOOM;
+    const ey = (r.y + pvy * r.h) * th * ZOOM;
+    const dw = r.w * tw * ZOOM, dh = r.h * th * ZOOM;
+    const sdw = readShadowFromEditor();
+    if (sdw.type === 'ovalShadow') {
+      const [rx, ry, opacity] = sdw.v;
+      if (rx > 0 && ry > 0 && !isNaN(opacity)) {
+        ctx.beginPath();
+        ctx.ellipse(ex, ey, rx * ZOOM, ry * ZOOM, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+        ctx.fill();
+      }
+    } else if (sdw.type === 'spriteShadow') {
+      const [d, opacity] = sdw.v;
+      if (!isNaN(d) && !isNaN(opacity)) {
+        const sil = makeSilhouette(img, r.x * tw, r.y * th, r.w * tw, r.h * th, dw, dh);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(sil, r.x * tw * ZOOM + d * ZOOM, r.y * th * ZOOM + d * ZOOM);
+        ctx.restore();
+      }
+    } else if (sdw.type === 'skewShadow') {
+      const [skew, sscale, opacity] = sdw.v;
+      if (!isNaN(skew) && !isNaN(sscale) && !isNaN(opacity)) {
+        const sil = makeSilhouette(img, r.x * tw, r.y * th, r.w * tw, r.h * th, dw, dh);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.translate(r.x * tw * ZOOM, r.y * th * ZOOM);
+        ctx.transform(1, 0, -skew, -sscale, pvy * dh * skew, pvy * dh * (1 + sscale));
+        ctx.drawImage(sil, 0, 0);
+        ctx.restore();
+      }
+    } else if (sdw.type === 'rayTracedShadow') {
+      const [angleDeg, length, opacity] = sdw.v;
+      if (!isNaN(angleDeg) && !isNaN(length) && !isNaN(opacity)) {
+        const angleRad = angleDeg * Math.PI / 180;
+        const shadow = getRayTracedShadow(img, r.x * tw, r.y * th, r.w * tw, r.h * th, angleRad, length);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(shadow.canvas, r.x * tw * ZOOM + shadow.ox * ZOOM, r.y * th * ZOOM + shadow.oy * ZOOM, shadow.canvas.width * ZOOM, shadow.canvas.height * ZOOM);
+        ctx.restore();
+      }
+    }
+    // redraw selected sprite on top of shadow
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, r.x * tw, r.y * th, r.w * tw, r.h * th, r.x * tw * ZOOM, r.y * th * ZOOM, dw, dh);
+  }
+
+  // pivot dot
+  if (showPivot && selectedRegion && editingStateIdx === null) {
+    const r = selectedRegion;
+    const px = parseFloat(document.getElementById('ed-pivot-x')?.value) ?? 0.5;
+    const py = parseFloat(document.getElementById('ed-pivot-y')?.value) ?? 1.0;
+    const dotX = (r.x + px * r.w) * tw * ZOOM;
+    const dotY = (r.y + py * r.h) * th * ZOOM;
+    ctx.beginPath();
+    ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#f75f5f';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  info.textContent = `${cols}×${rows} tiles · ${tw}×${th}px · zoom ${ZOOM}x`;
+}
+
+function getTileAtEvent(e) {
+  const canvas = document.getElementById('tileset-canvas');
+  const rect = canvas.getBoundingClientRect();
+  const ts = state.tilesets.find(t => t.id === currentTilesetId);
+  if (!ts) return null;
+  const tw = ts.size[0], th = ts.size[1];
+  const x = Math.floor((e.clientX - rect.left) / (tw * ZOOM));
+  const y = Math.floor((e.clientY - rect.top) / (th * ZOOM));
+  const img = getImageForTileset(ts);
+  const cols = Math.floor(img.width / tw);
+  const rows = Math.floor(img.height / th);
+  return { x: Math.max(0, Math.min(x, cols-1)), y: Math.max(0, Math.min(y, rows-1)) };
+}
+
+const tilesetCanvas = document.getElementById('tileset-canvas');
+
+tilesetCanvas.addEventListener('mousedown', e => {
+  const t = getTileAtEvent(e);
+  if (!t) return;
+  isDragging = true;
+  dragStart = t;
+  selectedRegion = { x: t.x, y: t.y, w: 1, h: 1 };
+  renderTilesetViewer();
+  updateEditorRegion();
+});
+
+tilesetCanvas.addEventListener('mousemove', e => {
+  if (!isDragging || !dragStart) return;
+  const t = getTileAtEvent(e);
+  if (!t) return;
+  const x = Math.min(dragStart.x, t.x);
+  const y = Math.min(dragStart.y, t.y);
+  const w = Math.abs(t.x - dragStart.x) + 1;
+  const h = Math.abs(t.y - dragStart.y) + 1;
+  selectedRegion = { x, y, w, h };
+  renderTilesetViewer();
+  updateEditorRegion();
+});
+
+tilesetCanvas.addEventListener('mouseup', () => { isDragging = false; });
+tilesetCanvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+function updateEditorRegion() {
+  if (selectedRegion === null) return;
+
+  const targetIdx = editingStateIdx !== null ? editingStateIdx : 0;
+  const el = document.querySelector(`.state-item[data-state-idx="${targetIdx}"]`);
+  if (el) {
+    el.querySelector('.state-rx').value = selectedRegion.x;
+    el.querySelector('.state-ry').value = selectedRegion.y;
+    el.querySelector('.state-rw').value = selectedRegion.w;
+    el.querySelector('.state-rh').value = selectedRegion.h;
+    const existingTrav = getTraversableStringFromEl(el.querySelector('.state-trav-wrap'));
+    buildTraversableGrid(el.querySelector('.state-trav-wrap'), existingTrav, selectedRegion.w, selectedRegion.h);
+  }
+  // auto-suggest asset id when dragging without explicit state pick
+  if (editingStateIdx === null) {
+    const idInput = document.getElementById('ed-id');
+    if (idInput && (!idInput.value || idInput.dataset.autofilled === 'true')) {
+      const ts = document.getElementById('ed-tileset-id');
+      const tsid = ts ? ts.value : (currentTilesetId || '');
+      idInput.value = `${tsid}_${selectedRegion.x}_${selectedRegion.y}`;
+      idInput.dataset.autofilled = 'true';
+    }
+    renderPreview();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  ASSET LIST
+// ═══════════════════════════════════════════════════
+function renderAssetList() {
+  const filter = document.getElementById('asset-search').value.toLowerCase();
+  const list = document.getElementById('asset-list');
+  const count = document.getElementById('asset-count');
+  count.textContent = `(${state.assets.length})`;
+
+  const filtered = state.assets.map((a, i) => ({ a, i }))
+    .filter(({ a }) => {
+      if (!filter) return true;
+      return a.id.toLowerCase().includes(filter) ||
+        (a.tags || []).some(t => t.toLowerCase().includes(filter));
+    });
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">${state.assets.length === 0 ? 'No assets yet' : 'No matches'}</div><div class="empty-sub">${state.assets.length === 0 ? 'Select a region on the tileset viewer, then click + Add.' : 'Try a different filter.'}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(({ a, i }) => {
+    const warn = getDuplicateWarning(a, i);
+    const div = document.createElement('div');
+    div.className = `asset-item ${selectedAssetIdxs.has(i) ? 'selected' : ''} ${warn ? 'has-warning' : ''}`;
+    div.title = a.id;
+    div.onclick = (e) => selectAsset(i, e.ctrlKey || e.metaKey);
+    const tc = buildThumbCanvas(a, 64);
+    if (tc) div.appendChild(tc);
+    list.appendChild(div);
+  });
+}
+
+function getDuplicateWarning(asset, idx) {
+  const dupId = state.assets.find((a, i) => i !== idx && a.id === asset.id);
+  if (dupId) return 'dup id';
+  const reg = getAssetRegion(asset);
+  const dupReg = state.assets.find((a, i) => {
+    if (i === idx || a.tileset_id !== asset.tileset_id) return false;
+    const r = getAssetRegion(a);
+    return r.x === reg.x && r.y === reg.y && r.w === reg.w && r.h === reg.h;
+  });
+  if (dupReg) return 'dup region';
+  return null;
+}
+
+function buildThumbCanvas(asset, size) {
+  const ts = state.tilesets.find(t => t.id === asset.tileset_id);
+  if (!ts) return null;
+  const img = getImageForTileset(ts);
+  if (!img) return null;
+  const reg = getAssetRegion(asset);
+  const tw = ts.size[0], th = ts.size[1];
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const sw = reg.w * tw, sh = reg.h * th;
+  const scale = Math.min(size / sw, size / sh);
+  const dw = sw * scale, dh = sh * scale;
+  const dx = (size - dw) / 2, dy = (size - dh) / 2;
+  ctx.drawImage(img, reg.x * tw, reg.y * th, sw, sh, dx, dy, dw, dh);
+  return c;
+}
+
+// ═══════════════════════════════════════════════════
+//  ASSET SELECTION & EDITOR
+// ═══════════════════════════════════════════════════
+function selectAsset(idx, ctrl = false) {
+  if (ctrl) {
+    if (selectedAssetIdxs.has(idx)) {
+      selectedAssetIdxs.delete(idx);
+      if (selectedAssetIdx === idx) {
+        selectedAssetIdx = selectedAssetIdxs.size > 0 ? [...selectedAssetIdxs].at(-1) : null;
+      }
+    } else {
+      selectedAssetIdxs.add(idx);
+      selectedAssetIdx = idx;
+    }
+  } else {
+    selectedAssetIdxs = new Set([idx]);
+    selectedAssetIdx = idx;
+  }
+  if (selectedAssetIdx !== null) {
+    const asset = state.assets[selectedAssetIdx];
+    selectedRegion = getAssetRegion(asset);
+    currentTilesetId = asset.tileset_id;
+    editingStateIdx = null;
+    previewStateIdx = 0;
+    renderAssetList();
+    renderEditor(asset);
+    renderTilesetViewer();
+  } else {
+    editingStateIdx = null;
+    renderAssetList();
+    renderEditorEmpty();
+    renderTilesetViewer();
+  }
+}
+
+function addAsset() {
+  const ts = currentTilesetId || (state.tilesets[0] ? state.tilesets[0].id : '');
+  const reg = selectedRegion ? [selectedRegion.x, selectedRegion.y, selectedRegion.w, selectedRegion.h] : [0, 0, 1, 1];
+  const id = ts && selectedRegion
+    ? `${ts}_${selectedRegion.x}_${selectedRegion.y}`
+    : `asset_${state.assets.length}`;
+  const asset = { id, tileset_id: ts, states: [{ id: 'default', region: reg }], defaultState: 'default', tags: [] };
+  state.assets.push(asset);
+  selectedAssetIdx = state.assets.length - 1;
+  selectedAssetIdxs = new Set([selectedAssetIdx]);
+  setUnsaved(true);
+  renderAll();
+  renderEditor(asset);
+}
+
+function deleteAsset() {
+  if (selectedAssetIdxs.size === 0 && selectedAssetIdx === null) return;
+  const toDelete = selectedAssetIdxs.size > 0 ? [...selectedAssetIdxs] : [selectedAssetIdx];
+  // remove highest indices first to preserve lower indices
+  toDelete.sort((a, b) => b - a).forEach(i => state.assets.splice(i, 1));
+  selectedAssetIdx = null;
+  selectedAssetIdxs = new Set();
+  setUnsaved(true);
+  renderAll();
+  renderEditorEmpty();
+}
+
+function renderEditorEmpty() {
+  document.getElementById('editor-wrap').innerHTML = `<div class="empty-state"><div class="empty-icon">✏️</div><div class="empty-title">No asset selected</div><div class="empty-sub">Click an asset in the list or add a new one.</div></div>`;
+  document.getElementById('editor-actions').style.display = 'none';
+}
+
+function renderEditor(asset) {
+  if (previewWindRaf) { cancelAnimationFrame(previewWindRaf); previewWindRaf = null; }
+  const wrap = document.getElementById('editor-wrap');
+  const allTags = getAllTags();
+  const allSurfaces = getAllSurfaces();
+  const shadowType = asset.ovalShadow ? 'ovalShadow' : asset.spriteShadow ? 'spriteShadow' : (asset.skewShadow != null) ? 'skewShadow' : asset.rayTracedShadow ? 'rayTracedShadow' : 'none';
+
+  wrap.innerHTML = `
+    <div class="editor-body">
+      <div class="preview-wrap">
+        <div class="preview-state-nav" id="preview-state-nav" style="display:none">
+          <button onclick="stepPreviewState(-1)" id="preview-prev">◄</button>
+          <span class="preview-state-label" id="preview-state-label"></span>
+          <button onclick="stepPreviewState(1)" id="preview-next">►</button>
+        </div>
+        <canvas id="preview-canvas"></canvas>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">ID</div>
+        <input type="text" id="ed-id" value="${esc(asset.id)}" oninput="this.dataset.autofilled='false'" />
+        <div class="field-error" id="ed-id-error"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Tileset</div>
+        <select id="ed-tileset-id" onchange="onEditorTilesetChange()">
+          ${state.tilesets.map(ts=>`<option value="${esc(ts.id)}" ${ts.id===asset.tileset_id?'selected':''}>${esc(ts.id)}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="field-group" id="pivot-group">
+        <div class="field-label">Pivot <span class="optional">normalized x·y — click preview to set</span></div>
+        <div class="input-row">
+          <input type="number" id="ed-pivot-x" value="${asset.pivot ? asset.pivot[0] : 0.5}" min="0" max="1" step="0.05" />
+          <input type="number" id="ed-pivot-y" value="${asset.pivot ? asset.pivot[1] : 1.0}" min="0" max="1" step="0.05" />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Tags <span class="optional">optional</span></div>
+        ${buildTagsInput('ed-tags', asset.tags || [], allTags)}
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Surface <span class="optional">omit = anywhere</span></div>
+        ${buildTagsInput('ed-surface', asset.surface || [], allSurfaces, 'surface')}
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">States <span class="optional">_ inherit · B block · A allow</span></div>
+        <div class="states-section" id="ed-states-list"></div>
+        <button class="btn sm" onclick="addState()" style="margin-top:2px;align-self:flex-start">+ Add State</button>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Jitter <span class="optional">px, 0 = off</span></div>
+        <input type="number" id="ed-jitter" value="${asset.jitter !== undefined ? asset.jitter : 0}" min="0" />
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Weight <span class="optional">scatter freq, default 1</span></div>
+        <input type="number" id="ed-weight" value="${asset.weight !== undefined ? asset.weight : 1}" min="0" step="0.1" />
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Flip <span class="optional">horizontal mirror on place</span></div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="ed-flip" ${asset.flip !== false ? 'checked' : ''} />
+          <span class="checkbox-label">Allow random horizontal flip</span>
+        </label>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Scale Range <span class="optional">80–120%, default 100%</span></div>
+        <div class="scale-range-wrap">
+          <div class="scale-range-row">
+            <span class="scale-range-label-text">min</span>
+            <input type="range" id="ed-scale-min" min="80" max="120" step="1" value="${Math.round((asset.scaleMin ?? 1.0) * 100)}" oninput="onScaleRangeChange()" />
+            <span class="scale-range-val" id="ed-scale-min-val">${Math.round((asset.scaleMin ?? 1.0) * 100)}%</span>
+          </div>
+          <div class="scale-range-row">
+            <span class="scale-range-label-text">max</span>
+            <input type="range" id="ed-scale-max" min="80" max="120" step="1" value="${Math.round((asset.scaleMax ?? 1.0) * 100)}" oninput="onScaleRangeChange()" />
+            <span class="scale-range-val" id="ed-scale-max-val">${Math.round((asset.scaleMax ?? 1.0) * 100)}%</span>
+          </div>
+          <div class="scale-range-summary" id="ed-scale-summary">${buildScaleSummary(asset.scaleMin ?? 1.0, asset.scaleMax ?? 1.0)}</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Shadow <span class="optional">omit to disable</span></div>
+        <select id="ed-shadow-type" onchange="onShadowTypeChange()">
+          <option value="none" ${shadowType==='none'?'selected':''}>none</option>
+          <option value="ovalShadow" ${shadowType==='ovalShadow'?'selected':''}>ovalShadow</option>
+          <option value="spriteShadow" ${shadowType==='spriteShadow'?'selected':''}>spriteShadow</option>
+          <option value="skewShadow" ${shadowType==='skewShadow'?'selected':''}>skewShadow</option>
+          <option value="rayTracedShadow" ${shadowType==='rayTracedShadow'?'selected':''}>rayTracedShadow</option>
+        </select>
+        <div id="ed-shadow-oval" style="${shadowType==='ovalShadow'?'':'display:none'}">
+          <div class="input-row" style="margin-top:4px">
+            <input type="number" id="ed-oval-rx" value="${asset.ovalShadow ? asset.ovalShadow[0] : ''}" min="0" placeholder="rx" oninput="renderPreview();renderTilesetViewer();" />
+            <input type="number" id="ed-oval-ry" value="${asset.ovalShadow ? asset.ovalShadow[1] : ''}" min="0" placeholder="ry" oninput="renderPreview();renderTilesetViewer();" />
+            <input type="number" id="ed-oval-a" value="${asset.ovalShadow ? asset.ovalShadow[2] : ''}" min="0" max="1" step="0.05" placeholder="0.35" oninput="renderPreview();renderTilesetViewer();" />
+          </div>
+          <div class="field-hint">rx · ry · opacity (def 0.35)</div>
+        </div>
+        <div id="ed-shadow-sprite" style="${shadowType==='spriteShadow'?'':'display:none'}">
+          <div class="input-row" style="margin-top:4px">
+            <input type="number" id="ed-sprite-d" value="${asset.spriteShadow ? asset.spriteShadow[0] : ''}" placeholder="2" oninput="renderPreview();renderTilesetViewer();" />
+            <input type="number" id="ed-sprite-a" value="${asset.spriteShadow ? asset.spriteShadow[1] : ''}" min="0" max="1" step="0.05" placeholder="0.35" oninput="renderPreview();renderTilesetViewer();" />
+          </div>
+          <div class="field-hint">d (def 2) · opacity (def 0.35)</div>
+        </div>
+        <div id="ed-shadow-skew" style="${shadowType==='skewShadow'?'':'display:none'}">
+          <div class="input-row" style="margin-top:4px">
+            <input type="number" id="ed-skew-a" value="${typeof asset.skewShadow === 'number' ? asset.skewShadow : ''}" min="0" max="1" step="0.05" placeholder="0.35" oninput="renderPreview();renderTilesetViewer();" />
+          </div>
+          <div class="field-hint">opacity (def 0.35)</div>
+        </div>
+        <div id="ed-shadow-raytrace" style="${shadowType==='rayTracedShadow'?'':'display:none'}">
+          <div class="input-row" style="margin-top:4px">
+            <input type="number" id="ed-ray-angle" value="${asset.rayTracedShadow ? asset.rayTracedShadow[0] : RAY_SHADOW_ANGLE}" min="0" max="360" placeholder="45" oninput="rayTracedCache.clear();renderPreview();renderTilesetViewer();" />
+            <input type="number" id="ed-ray-length" value="${asset.rayTracedShadow ? asset.rayTracedShadow[1] : RAY_SHADOW_LENGTH}" min="1" placeholder="20" oninput="rayTracedCache.clear();renderPreview();renderTilesetViewer();" />
+            <input type="number" id="ed-ray-a" value="${asset.rayTracedShadow ? asset.rayTracedShadow[2] : ''}" min="0" max="1" step="0.05" placeholder="0.35" oninput="renderPreview();renderTilesetViewer();" />
+          </div>
+          <div class="field-hint">angle° (45=top-left) · length · opacity (def 0.35)</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Wind <span class="optional">leave blank to disable</span></div>
+        <div class="input-row">
+          <input type="number" id="ed-wind-frames" value="${asset.wind ? asset.wind[0] : ''}" min="2" max="30" step="1" placeholder="frames" oninput="scheduleWindPreview()" />
+          <input type="number" id="ed-wind-amplitude" value="${asset.wind ? asset.wind[1] : ''}" min="0.5" max="20" step="0.5" placeholder="ampl" oninput="scheduleWindPreview()" />
+          <input type="number" id="ed-wind-rigidity" value="${asset.wind ? asset.wind[2] : ''}" min="0.1" max="10" step="0.1" placeholder="rigid" oninput="scheduleWindPreview()" />
+        </div>
+        <div class="field-hint">frames · amplitude px · rigidity — e.g. 9 · 4 · 2.5</div>
+      </div>
+    </div>`;
+
+  document.getElementById('editor-actions').style.display = 'flex';
+  initTagsInput('ed-tags');
+  initTagsInput('ed-surface');
+  editingStateIdx = null;
+  previewStateIdx = 0;
+  editorDefaultState = asset.defaultState || '';
+  editorStates = (asset.states && asset.states.length > 0)
+    ? JSON.parse(JSON.stringify(asset.states))
+    : [{ id: 'default', region: asset.region || [0, 0, 1, 1], ...(asset.traversable ? { traversable: asset.traversable } : {}) }];
+  renderStatesList();
+  updatePreviewNav();
+  requestAnimationFrame(() => scheduleWindPreview());
+  wrap.scrollTop = 0;
+
+  const pivotXInput = document.getElementById('ed-pivot-x');
+  const pivotYInput = document.getElementById('ed-pivot-y');
+  if (pivotXInput && pivotYInput) {
+    [pivotXInput, pivotYInput].forEach(input => {
+      input.addEventListener('focus', () => { showPivot = true; renderTilesetViewer(); renderPreview(); if (previewCanvas) previewCanvas.style.cursor = 'crosshair'; });
+      input.addEventListener('blur', () => { showPivot = false; renderTilesetViewer(); renderPreview(); if (previewCanvas) previewCanvas.style.cursor = 'default'; });
+      input.addEventListener('input', () => { if (showPivot) { renderTilesetViewer(); renderPreview(); } });
+    });
+  }
+
+  const previewCanvas = document.getElementById('preview-canvas');
+  if (previewCanvas) {
+    previewCanvas.style.cursor = 'default';
+    // Use mousedown so it fires BEFORE blur on the pivot inputs (blur would set showPivot=false first).
+    // preventDefault() keeps focus on the pivot input so showPivot stays true.
+    previewCanvas.addEventListener('mousedown', e => {
+      if (!showPivot) return;
+      e.preventDefault();
+      const rect = previewCanvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const padL = parseFloat(previewCanvas.dataset.padL) || 0;
+      const padT = parseFloat(previewCanvas.dataset.padT) || 0;
+      const sprW = parseFloat(previewCanvas.dataset.sprW) || 1;
+      const sprH = parseFloat(previewCanvas.dataset.sprH) || 1;
+      // scale from CSS pixels to canvas pixels
+      const scaleX = previewCanvas.width / rect.width;
+      const scaleY = previewCanvas.height / rect.height;
+      const canvasX = cx * scaleX;
+      const canvasY = cy * scaleY;
+      const nx = Math.max(0, Math.min(1, (canvasX - padL) / sprW));
+      const ny = Math.max(0, Math.min(1, (canvasY - padT) / sprH));
+      pivotXInput.value = Math.round(nx * 100) / 100;
+      pivotYInput.value = Math.round(ny * 100) / 100;
+      renderTilesetViewer();
+      renderPreview();
+    });
+  }
+}
+
+function onEditorTilesetChange() {
+  currentTilesetId = document.getElementById('ed-tileset-id').value;
+  renderTilesetViewer();
+}
+
+function onPreviewZoomChange() {
+  previewZoom = parseInt(document.getElementById('preview-zoom').value) || 1;
+  scheduleWindPreview();
+}
+
+function onPreviewBgChange() {
+  previewBg = document.getElementById('preview-bg').value;
+  renderPreview();
+}
+
+function onTsBgChange() {
+  tsBg = document.getElementById('ts-viewer-bg').value;
+  renderTilesetViewer();
+}
+
+function buildScaleSummary(minVal, maxVal) {
+  const mn = Math.round(minVal * 100), mx = Math.round(maxVal * 100);
+  if (mn === mx) return mn === 100 ? 'no scaling' : `fixed ${mn}%`;
+  return `random ${mn}% – ${mx}%`;
+}
+
+function onScaleRangeChange() {
+  const minEl = document.getElementById('ed-scale-min');
+  const maxEl = document.getElementById('ed-scale-max');
+  if (!minEl || !maxEl) return;
+  let mn = parseInt(minEl.value);
+  let mx = parseInt(maxEl.value);
+  if (mn > mx) { maxEl.value = mn; mx = mn; }
+  document.getElementById('ed-scale-min-val').textContent = mn + '%';
+  document.getElementById('ed-scale-max-val').textContent = mx + '%';
+  document.getElementById('ed-scale-summary').textContent = buildScaleSummary(mn / 100, mx / 100);
+}
+
+function onShadowTypeChange() {
+  const type = document.getElementById('ed-shadow-type')?.value;
+  if (!type) return;
+  document.getElementById('ed-shadow-oval').style.display = type === 'ovalShadow' ? '' : 'none';
+  document.getElementById('ed-shadow-sprite').style.display = type === 'spriteShadow' ? '' : 'none';
+  document.getElementById('ed-shadow-skew').style.display = type === 'skewShadow' ? '' : 'none';
+  document.getElementById('ed-shadow-raytrace').style.display = type === 'rayTracedShadow' ? '' : 'none';
+  renderPreview();
+  renderTilesetViewer();
+}
+
+function readShadowFromEditor() {
+  const type = document.getElementById('ed-shadow-type')?.value;
+  if (type === 'ovalShadow') {
+    const rx = parseFloat(document.getElementById('ed-oval-rx')?.value);
+    const ry = parseFloat(document.getElementById('ed-oval-ry')?.value);
+    const a  = parseFloat(document.getElementById('ed-oval-a')?.value);
+    return { type, v: [rx, ry, isNaN(a) ? DEFAULT_OPACITY : a] };
+  }
+  if (type === 'spriteShadow') {
+    const d = parseFloat(document.getElementById('ed-sprite-d')?.value);
+    const a = parseFloat(document.getElementById('ed-sprite-a')?.value);
+    return { type, v: [isNaN(d) ? DEFAULT_SPRITE_D : d, isNaN(a) ? DEFAULT_OPACITY : a] };
+  }
+  if (type === 'skewShadow') {
+    const a = parseFloat(document.getElementById('ed-skew-a')?.value);
+    return { type, v: [SKEW_SHADOW_SKEW, SKEW_SHADOW_SCALE, isNaN(a) ? DEFAULT_OPACITY : a] };
+  }
+  if (type === 'rayTracedShadow') {
+    const angle  = parseFloat(document.getElementById('ed-ray-angle')?.value);
+    const length = parseFloat(document.getElementById('ed-ray-length')?.value);
+    const a      = parseFloat(document.getElementById('ed-ray-a')?.value);
+    return { type, v: [isNaN(angle) ? RAY_SHADOW_ANGLE : angle, isNaN(length) ? RAY_SHADOW_LENGTH : length, isNaN(a) ? DEFAULT_OPACITY : a] };
+  }
+  return { type: 'none', v: [] };
+}
+
+function makeSilhouette(img, sx, sy, sw, sh, dw, dh) {
+  const tmp = document.createElement('canvas');
+  tmp.width = dw; tmp.height = dh;
+  const tc = tmp.getContext('2d');
+  tc.imageSmoothingEnabled = false;
+  tc.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh);
+  tc.globalCompositeOperation = 'source-in';
+  tc.fillStyle = '#000';
+  tc.fillRect(0, 0, dw, dh);
+  return tmp;
+}
+
+// ── RAY TRACED SHADOW ───────────────────────────────
+const rayTracedCache = new Map();
+
+function computeRayTracedShadow(img, sx, sy, sw, sh, angleRad, length) {
+  const cos = Math.cos(angleRad), sin = Math.sin(angleRad);
+  const extraR = cos > 0 ? Math.ceil(cos * length) : 0;
+  const extraL = cos < 0 ? Math.ceil(-cos * length) : 0;
+  const extraB = sin > 0 ? Math.ceil(sin * length) : 0;
+  const extraT = sin < 0 ? Math.ceil(-sin * length) : 0;
+
+  const src = document.createElement('canvas');
+  src.width = sw; src.height = sh;
+  const srcCtx = src.getContext('2d');
+  srcCtx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const data = srcCtx.getImageData(0, 0, sw, sh).data;
+
+  const isSolid = (x, y) => x >= 0 && x < sw && y >= 0 && y < sh && data[(y * sw + x) * 4 + 3] > 10;
+
+  const out = document.createElement('canvas');
+  out.width = sw + extraL + extraR;
+  out.height = sh + extraT + extraB;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = 'rgb(0,0,0)';
+
+  for (let py = 0; py < sh; py++) {
+    for (let px = 0; px < sw; px++) {
+      if (!isSolid(px, py)) continue;
+      let isEdge = false;
+      outer: for (let ny = -1; ny <= 1; ny++) {
+        for (let nx = -1; nx <= 1; nx++) {
+          if (nx === 0 && ny === 0) continue;
+          if (!isSolid(px + nx, py + ny)) { isEdge = true; break outer; }
+        }
+      }
+      if (!isEdge) continue;
+      for (let s = 0.5; s <= length; s += 0.5) {
+        ctx.fillRect(Math.round(extraL + px + cos * s), Math.round(extraT + py + sin * s), 1, 1);
+      }
+    }
+  }
+
+  return { canvas: out, ox: -extraL, oy: -extraT };
+}
+
+function getRayTracedShadow(img, sx, sy, sw, sh, angleRad, length) {
+  const key = `${img.src}:${sx}:${sy}:${sw}:${sh}:${angleRad.toFixed(5)}:${length}`;
+  if (!rayTracedCache.has(key)) {
+    rayTracedCache.set(key, computeRayTracedShadow(img, sx, sy, sw, sh, angleRad, length));
+  }
+  return rayTracedCache.get(key);
+}
+
+function onRegionEdit() { /* no-op: region lives in states */ }
+
+function stepPreviewState(dir) {
+  const count = editorStates.length;
+  if (count <= 1) return;
+  previewStateIdx = (previewStateIdx + dir + count) % count;
+  renderPreview();
+}
+
+function updatePreviewNav() {
+  const nav = document.getElementById('preview-state-nav');
+  const label = document.getElementById('preview-state-label');
+  if (!nav || !label) return;
+  const count = editorStates.length;
+  if (count > 1) {
+    nav.style.display = 'flex';
+    const s = editorStates[Math.min(previewStateIdx, count - 1)];
+    label.textContent = s ? s.id : '';
+    document.getElementById('preview-prev').disabled = false;
+    document.getElementById('preview-next').disabled = false;
+  } else {
+    nav.style.display = 'none';
+  }
+}
+
+function renderPreview() {
+  const canvas = document.getElementById('preview-canvas');
+  if (!canvas) return;
+  const tsId = document.getElementById('ed-tileset-id') ? document.getElementById('ed-tileset-id').value : currentTilesetId;
+  const ts = state.tilesets.find(t => t.id === tsId);
+  if (!ts) { canvas.style.display = 'none'; return; }
+  const img = getImageForTileset(ts);
+  if (!img) { canvas.style.display = 'none'; return; }
+  const { x, y, w, h } = (() => {
+    // preview uses its own cycling index, independent of tileset-pick state
+    const idx = Math.min(previewStateIdx, editorStates.length - 1);
+    // try DOM first (has live edits), fall back to editorStates array
+    const el = document.querySelector(`.state-item[data-state-idx="${idx}"]`);
+    if (el) return {
+      x: parseInt(el.querySelector('.state-rx').value) || 0,
+      y: parseInt(el.querySelector('.state-ry').value) || 0,
+      w: Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1),
+      h: Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1)
+    };
+    const s = editorStates[idx];
+    if (s) { const r = normalizeRegion(s.region); return r; }
+    return selectedRegion || { x: 0, y: 0, w: 1, h: 1 };
+  })();
+
+  // update nav bar
+  updatePreviewNav();
+  const tw = ts.size[0], th = ts.size[1];
+  const sw = w * tw, sh = h * th;
+
+  const maxW = 200, maxH = 140;
+  const scale = Math.min(maxW / sw, maxH / sh, 6) * previewZoom;
+  const sprW = Math.round(sw * scale);
+  const sprH = Math.round(sh * scale);
+
+  // make canvas visible early so even a partial render is shown
+  canvas.style.display = 'block';
+
+  const sdw = readShadowFromEditor();
+  const px0 = parseFloat(document.getElementById('ed-pivot-x')?.value);
+  const py0 = parseFloat(document.getElementById('ed-pivot-y')?.value);
+  const pivotXn = isNaN(px0) ? 0.5 : px0;
+  const pivotYn = isNaN(py0) ? 1.0 : py0;
+
+  // compute per-side padding from actual shadow geometry
+  const MIN = 8;
+  let padT = MIN, padB = MIN, padL = MIN, padR = MIN;
+
+  if (sdw.type === 'ovalShadow' && !sdw.v.some(isNaN)) {
+    const [rx, ry] = sdw.v;
+    const ocx = pivotXn * sprW, ocy = pivotYn * sprH;
+    padL = Math.max(padL, Math.ceil(Math.max(0, rx * scale - ocx)) + MIN);
+    padR = Math.max(padR, Math.ceil(Math.max(0, ocx + rx * scale - sprW)) + MIN);
+    padT = Math.max(padT, Math.ceil(Math.max(0, ry * scale - ocy)) + MIN);
+    padB = Math.max(padB, Math.ceil(Math.max(0, ocy + ry * scale - sprH)) + MIN);
+  } else if (sdw.type === 'spriteShadow' && !sdw.v.some(isNaN)) {
+    const ds = sdw.v[0] * scale;
+    padR = Math.max(padR, Math.ceil(Math.max(0,  ds)) + MIN);
+    padB = Math.max(padB, Math.ceil(Math.max(0,  ds)) + MIN);
+    padL = Math.max(padL, Math.ceil(Math.max(0, -ds)) + MIN);
+    padT = Math.max(padT, Math.ceil(Math.max(0, -ds)) + MIN);
+  } else if (sdw.type === 'skewShadow' && !sdw.v.some(isNaN)) {
+    const [skew, sscale] = sdw.v;
+    // transform: canvas_x = px - skew*(py - pivotYn*sprH)
+    //            canvas_y = pivotYn*sprH + sscale*(pivotYn*sprH - py)
+    const corners = [[0,0],[sprW,0],[0,sprH],[sprW,sprH]];
+    const xs = corners.map(([px,py]) => px - skew * (py - pivotYn * sprH));
+    const ys = corners.map(([px,py]) => pivotYn * sprH + sscale * (pivotYn * sprH - py));
+    padL = Math.max(padL, Math.ceil(Math.max(0, -Math.min(...xs))) + MIN);
+    padR = Math.max(padR, Math.ceil(Math.max(0,  Math.max(...xs) - sprW)) + MIN);
+    padT = Math.max(padT, Math.ceil(Math.max(0, -Math.min(...ys))) + MIN);
+    padB = Math.max(padB, Math.ceil(Math.max(0,  Math.max(...ys) - sprH)) + MIN);
+  } else if (sdw.type === 'rayTracedShadow' && !sdw.v.some(isNaN)) {
+    const [angleDeg, length] = sdw.v;
+    const angleRad = angleDeg * Math.PI / 180;
+    const cos = Math.cos(angleRad), sin = Math.sin(angleRad);
+    padR = Math.max(padR, (cos > 0 ? Math.ceil(cos * length * scale) : 0) + MIN);
+    padL = Math.max(padL, (cos < 0 ? Math.ceil(-cos * length * scale) : 0) + MIN);
+    padB = Math.max(padB, (sin > 0 ? Math.ceil(sin * length * scale) : 0) + MIN);
+    padT = Math.max(padT, (sin < 0 ? Math.ceil(-sin * length * scale) : 0) + MIN);
+  }
+
+  canvas.width  = sprW + padL + padR;
+  canvas.height = sprH + padT + padB;
+  canvas.style.display = 'block';
+  // store layout for pivot-click handler
+  canvas.dataset.padL = padL;
+  canvas.dataset.padT = padT;
+  canvas.dataset.sprW = sprW;
+  canvas.dataset.sprH = sprH;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  // preview background
+  const previewWrap = canvas.parentElement;
+  const bgMap = { checker: 'repeating-conic-gradient(#1a1d24 0% 25%, #13151a 0% 50%) 0 0 / 12px 12px', white: '#ffffff', black: '#000000', grey: '#888888', green: '#205925' };
+  if (previewWrap) previewWrap.style.background = bgMap[previewBg] || bgMap.checker;
+
+  const cx = pivotXn * sprW + padL;
+  const cy = pivotYn * sprH + padT;
+
+  // wind setup — computed once, shared by shadow and sprite draw
+  const wf2 = parseInt(document.getElementById('ed-wind-frames')?.value);
+  const wa2 = parseFloat(document.getElementById('ed-wind-amplitude')?.value);
+  const wr2 = parseFloat(document.getElementById('ed-wind-rigidity')?.value);
+  const windActive = !isNaN(wf2) && !isNaN(wa2) && !isNaN(wr2) && wf2 >= 2 && wa2 > 0 && wr2 > 0;
+  let wsheet = null, wfi = 0, wsheetKey = '';
+  if (windActive) {
+    wsheet = getWindPreviewSheet(img, x * tw, y * th, sw, sh, pivotYn, [wf2, wa2, wr2]);
+    wfi = getWindFramePreview(wf2);
+    wsheetKey = `${img.src}:${x*tw}:${y*th}:${sw}:${sh}:${pivotYn.toFixed(3)}:${wf2},${wa2},${wr2}`;
+  }
+
+  // shadow (before sprite)
+  if (sdw.type === 'ovalShadow') {
+    const [rx, ry, opacity] = sdw.v;
+    if (rx > 0 && ry > 0 && !isNaN(opacity)) {
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * scale, ry * scale, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+      ctx.fill();
+    }
+  } else if (sdw.type === 'spriteShadow') {
+    const [d, opacity] = sdw.v;
+    if (!isNaN(d) && !isNaN(opacity)) {
+      const sil = windActive
+        ? getWindSilhouetteFrames(wsheet, wf2, sw, sh, sprW, sprH, wsheetKey)[wfi]
+        : makeSilhouette(img, x * tw, y * th, sw, sh, sprW, sprH);
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(sil, padL + d * scale, padT + d * scale);
+      ctx.restore();
+    }
+  } else if (sdw.type === 'skewShadow') {
+    const [skew, sscale, opacity] = sdw.v;
+    if (!isNaN(skew) && !isNaN(sscale) && !isNaN(opacity)) {
+      const sil = windActive
+        ? getWindSilhouetteFrames(wsheet, wf2, sw, sh, sprW, sprH, wsheetKey)[wfi]
+        : makeSilhouette(img, x * tw, y * th, sw, sh, sprW, sprH);
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.translate(padL, padT);
+      ctx.transform(1, 0, -skew, -sscale, pivotYn * sprH * skew, pivotYn * sprH * (1 + sscale));
+      ctx.drawImage(sil, 0, 0);
+      ctx.restore();
+    }
+  } else if (sdw.type === 'rayTracedShadow') {
+    const [angleDeg, length, opacity] = sdw.v;
+    if (!isNaN(angleDeg) && !isNaN(length) && !isNaN(opacity)) {
+      const angleRad = angleDeg * Math.PI / 180;
+      const shadow = windActive
+        ? getWindRayTracedFrames(wsheet, wf2, sw, sh, wsheetKey, angleRad, length)[wfi]
+        : getRayTracedShadow(img, x * tw, y * th, sw, sh, angleRad, length);
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(shadow.canvas, padL + shadow.ox * scale, padT + shadow.oy * scale, shadow.canvas.width * scale, shadow.canvas.height * scale);
+      ctx.restore();
+    }
+  }
+
+  // draw sprite
+  if (windActive) {
+    ctx.drawImage(wsheet, wfi * sw, 0, sw, sh, padL, padT, sprW, sprH);
+  } else {
+    ctx.drawImage(img, x * tw, y * th, sw, sh, padL, padT, sprW, sprH);
+  }
+
+  // pivot dot
+  if (showPivot) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#f75f5f';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+function applyAsset() {
+  const targets = selectedAssetIdxs.size > 0 ? [...selectedAssetIdxs] : (selectedAssetIdx !== null ? [selectedAssetIdx] : []);
+  if (targets.length === 0) return;
+  const isMulti = targets.length > 1;
+
+  const idVal = document.getElementById('ed-id').value.trim();
+  const errEl = document.getElementById('ed-id-error');
+
+  if (!isMulti) {
+    if (!idVal) { errEl.textContent = 'ID is required'; document.getElementById('ed-id').classList.add('error'); return; }
+    const dupId = state.assets.find((a, i) => !targets.includes(i) && a.id === idVal);
+    if (dupId) { errEl.textContent = 'ID already exists'; document.getElementById('ed-id').classList.add('error'); return; }
+  }
+  errEl.textContent = '';
+  document.getElementById('ed-id').classList.remove('error');
+
+  const tags = getTagsFromInput('ed-tags');
+  const surface = getTagsFromInput('ed-surface');
+  const jitter = parseFloat(document.getElementById('ed-jitter').value) || 0;
+  const weight = parseFloat(document.getElementById('ed-weight').value);
+  const flip = document.getElementById('ed-flip')?.checked !== false;
+  const scaleMin = parseInt(document.getElementById('ed-scale-min')?.value ?? 100) / 100;
+  const scaleMax = parseInt(document.getElementById('ed-scale-max')?.value ?? 100) / 100;
+  const pivotX = parseFloat(document.getElementById('ed-pivot-x')?.value);
+  const pivotY = parseFloat(document.getElementById('ed-pivot-y')?.value);
+  const sdwInfo = readShadowFromEditor();
+
+  targets.forEach(idx => {
+    const existing = state.assets[idx];
+    const updated = { ...existing };
+
+    if (!isMulti) {
+      updated.id = idVal;
+      delete updated.region;
+      updated.tileset_id = document.getElementById('ed-tileset-id').value;
+    }
+
+    if (tags.length) updated.tags = tags; else delete updated.tags;
+    if (surface.length) updated.surface = surface; else delete updated.surface;
+    delete updated.traversable;
+    if (jitter > 0) updated.jitter = jitter; else delete updated.jitter;
+    if (!isNaN(weight) && weight !== 1) updated.weight = weight; else delete updated.weight;
+    if (!flip) updated.flip = false; else delete updated.flip;
+    if (scaleMin !== 1.0 || scaleMax !== 1.0) { updated.scaleMin = scaleMin; updated.scaleMax = Math.max(scaleMin, scaleMax); }
+    else { delete updated.scaleMin; delete updated.scaleMax; }
+    if (!isNaN(pivotX) && !isNaN(pivotY)) updated.pivot = [pivotX, pivotY]; else delete updated.pivot;
+    delete updated.ovalShadow; delete updated.spriteShadow; delete updated.skewShadow; delete updated.rayTracedShadow;
+    if (sdwInfo.type === 'ovalShadow' && sdwInfo.v[0] > 0 && sdwInfo.v[1] > 0) updated.ovalShadow = sdwInfo.v;
+    else if (sdwInfo.type === 'spriteShadow') updated.spriteShadow = sdwInfo.v;
+    else if (sdwInfo.type === 'skewShadow') updated.skewShadow = sdwInfo.v[2];
+    else if (sdwInfo.type === 'rayTracedShadow') updated.rayTracedShadow = sdwInfo.v;
+    const wfA = parseInt(document.getElementById('ed-wind-frames')?.value);
+    const waA = parseFloat(document.getElementById('ed-wind-amplitude')?.value);
+    const wrA = parseFloat(document.getElementById('ed-wind-rigidity')?.value);
+    delete updated.wind;
+    if (!isNaN(wfA) && !isNaN(waA) && !isNaN(wrA) && wfA >= 2 && waA > 0 && wrA > 0) updated.wind = [wfA, waA, wrA];
+
+    if (!isMulti) {
+      const states = collectStates();
+      if (states.length) updated.states = states; else delete updated.states;
+      if (editorDefaultState) updated.defaultState = editorDefaultState; else delete updated.defaultState;
+    }
+
+    state.assets[idx] = updated;
+  });
+
+  setUnsaved(true);
+  renderAll();
+  renderEditor(state.assets[selectedAssetIdx]);
+  showToast(isMulti ? `Updated ${targets.length} assets` : 'Asset updated', 'success');
+}
+
+// ═══════════════════════════════════════════════════
+//  TAGS INPUT WIDGET
+// ═══════════════════════════════════════════════════
+function buildTagsInput(id, tags, suggestions, type = 'tag') {
+  const tagsHtml = tags.map(t => `<span class="tag">${esc(t)}<span class="tag-remove" data-tag="${esc(t)}">×</span></span>`).join('');
+  return `<div class="tags-input-wrap" id="${id}-wrap">
+    ${tagsHtml}
+    <input type="text" id="${id}-input" placeholder="add ${type}…" autocomplete="off" />
+    <div class="tag-suggestions" id="${id}-suggestions" style="display:none;"></div>
+  </div>`;
+}
+
+function initTagsInput(id) {
+  const wrap = document.getElementById(`${id}-wrap`);
+  const input = document.getElementById(`${id}-input`);
+  const sugg = document.getElementById(`${id}-suggestions`);
+  if (!wrap || !input) return;
+
+  wrap.addEventListener('click', e => {
+    if (e.target.classList.contains('tag-remove')) {
+      const tag = e.target.dataset.tag;
+      const span = e.target.parentElement;
+      span.remove();
+    } else {
+      input.focus();
+    }
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,/g, '');
+      if (val) addTagToInput(id, val);
+      input.value = '';
+      sugg.style.display = 'none';
+    } else if (e.key === 'Backspace' && !input.value) {
+      const tags = wrap.querySelectorAll('.tag');
+      if (tags.length) tags[tags.length - 1].remove();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim().toLowerCase();
+    const all = id === 'ed-surface' ? getAllSurfaces() : getAllTags();
+    const existing = getTagsFromInput(id);
+    const matches = all.filter(t => t.toLowerCase().includes(val) && !existing.includes(t));
+    if (val && matches.length) {
+      sugg.innerHTML = matches.map(t => `<div class="tag-suggestion-item" data-val="${esc(t)}">${esc(t)}</div>`).join('');
+      sugg.style.display = 'block';
+    } else {
+      sugg.style.display = 'none';
+    }
+  });
+
+  sugg.addEventListener('click', e => {
+    if (e.target.dataset.val) {
+      addTagToInput(id, e.target.dataset.val);
+      input.value = '';
+      sugg.style.display = 'none';
+      input.focus();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) sugg.style.display = 'none';
+  });
+}
+
+function addTagToInput(id, val) {
+  const wrap = document.getElementById(`${id}-wrap`);
+  const input = document.getElementById(`${id}-input`);
+  const existing = getTagsFromInput(id);
+  if (existing.includes(val)) return;
+  const span = document.createElement('span');
+  span.className = 'tag';
+  span.innerHTML = `${esc(val)}<span class="tag-remove" data-tag="${esc(val)}">×</span>`;
+  span.querySelector('.tag-remove').addEventListener('click', () => span.remove());
+  wrap.insertBefore(span, input);
+}
+
+function getTagsFromInput(id) {
+  const wrap = document.getElementById(`${id}-wrap`);
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('.tag')).map(s => s.childNodes[0].textContent.trim());
+}
+
+function getAllTags() {
+  const set = new Set();
+  state.assets.forEach(a => (a.tags || []).forEach(t => set.add(t)));
+  return Array.from(set).sort();
+}
+
+function getAllSurfaces() {
+  const set = new Set();
+  state.assets.forEach(a => (a.surface || []).forEach(t => set.add(t)));
+  return Array.from(set).sort();
+}
+
+// ═══════════════════════════════════════════════════
+//  TRAVERSABLE MAP
+// ═══════════════════════════════════════════════════
+function parseTraversable(str, w, h) {
+  const grid = [];
+  const rows = (typeof str === 'string' && str.length) ? str.split('|') : [];
+  for (let r = 0; r < h; r++) {
+    const rowStr = rows[r] || '';
+    const row = [];
+    for (let c = 0; c < w; c++) {
+      const ch = rowStr[c];
+      row.push(ch === 'B' || ch === 'A' ? ch : '_');
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+
+function buildTraversableGrid(container, travStr, w, h) {
+  if (!container) return;
+  const grid = parseTraversable(travStr, w, h);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'traversable-grid';
+  wrapper.style.gridTemplateColumns = `repeat(${w}, 28px)`;
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      const val = grid[r][c];
+      const cell = document.createElement('div');
+      cell.dataset.val = val;
+      cell.className = `trav-cell trav-${val}`;
+      cell.textContent = val;
+      cell.addEventListener('click', () => {
+        const cycle = { '_': 'B', 'B': 'A', 'A': '_' };
+        const next = cycle[cell.dataset.val] || 'B';
+        cell.dataset.val = next;
+        cell.textContent = next;
+        cell.className = `trav-cell trav-${next}`;
+      });
+      wrapper.appendChild(cell);
+    }
+  }
+  container.innerHTML = '';
+  container.appendChild(wrapper);
+}
+
+function refreshTraversableGrid() { /* no-op: traversability lives in states */ }
+
+function getTraversableStringFromEl(container) {
+  if (!container) return null;
+  const gridEl = container.querySelector('.traversable-grid');
+  if (!gridEl) return null;
+  const cells = Array.from(gridEl.querySelectorAll('.trav-cell'));
+  if (!cells.length) return null;
+  const match = gridEl.style.gridTemplateColumns.match(/repeat\((\d+)/);
+  const w = match ? parseInt(match[1]) : 1;
+  const h = cells.length / w;
+  const rows = [];
+  for (let r = 0; r < h; r++) {
+    let rowStr = '';
+    for (let c = 0; c < w; c++) {
+      rowStr += cells[r * w + c].dataset.val || '_';
+    }
+    rows.push(rowStr);
+  }
+  const str = rows.join('|');
+  // omit if all inherit
+  return /^[_|]+$/.test(str) ? null : str;
+}
+
+// ═══════════════════════════════════════════════════
+//  STATES
+// ═══════════════════════════════════════════════════
+
+function getStateRegionFromInputs(idx) {
+  const el = document.querySelector(`.state-item[data-state-idx="${idx}"]`);
+  if (!el) return null;
+  return {
+    x: parseInt(el.querySelector('.state-rx').value) || 0,
+    y: parseInt(el.querySelector('.state-ry').value) || 0,
+    w: Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1),
+    h: Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1)
+  };
+}
+
+function syncEditorStates() {
+  document.querySelectorAll('.state-item').forEach((el, i) => {
+    const id = el.querySelector('.state-id-input').value.trim();
+    const x = parseInt(el.querySelector('.state-rx').value) || 0;
+    const y = parseInt(el.querySelector('.state-ry').value) || 0;
+    const w = Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1);
+    const h = Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1);
+    const travStr = getTraversableStringFromEl(el.querySelector('.state-trav-wrap'));
+    editorStates[i] = { id, region: [x, y, w, h], ...(travStr ? { traversable: travStr } : {}) };
+  });
+}
+
+function renderStatesList() {
+  const listEl = document.getElementById('ed-states-list');
+  if (!listEl) return;
+
+  let html = editorStates.map((s, i) => {
+    const reg = normalizeRegion(s.region);
+    const isActive = editingStateIdx === i;
+    const isDefault = editorDefaultState === s.id;
+    return `<div class="state-item ${isActive ? 'state-active' : ''}" data-state-idx="${i}">
+      <div class="state-item-header">
+        <div class="field-label" style="font-size:9px;margin:0">State ID</div>
+        <button class="btn sm ${isDefault ? 'primary' : ''}" onclick="setDefaultState(${i})" title="Set as default state" style="margin-left:auto;padding:2px 6px;font-size:10px">${isDefault ? '★ default' : '☆'}</button>
+        <button class="btn sm danger" onclick="deleteState(${i})">✕</button>
+      </div>
+      <input type="text" class="state-id-input" value="${esc(s.id)}" placeholder="e.g. open, closed" oninput="onStateIdInput(${i})" />
+      <div class="field-label" style="font-size:9px;margin-top:2px">
+        Region
+        <span class="state-pick-link" onclick="startStateRegionEdit(${i})">▣ pick from tileset</span>
+      </div>
+      <div class="input-row" style="gap:4px">
+        <input type="number" class="state-rx" value="${reg.x}" min="0" placeholder="X" oninput="onStateRegionEdit(${i})" />
+        <input type="number" class="state-ry" value="${reg.y}" min="0" placeholder="Y" oninput="onStateRegionEdit(${i})" />
+        <input type="number" class="state-rw" value="${reg.w}" min="1" placeholder="W" oninput="onStateRegionEdit(${i})" />
+        <input type="number" class="state-rh" value="${reg.h}" min="1" placeholder="H" oninput="onStateRegionEdit(${i})" />
+      </div>
+      <div class="field-label" style="font-size:9px;margin-top:2px">Traversable <span class="optional">_ B A</span></div>
+      <div class="state-trav-wrap"></div>
+    </div>`;
+  }).join('');
+
+  listEl.innerHTML = html;
+
+  // build traversable grids for states
+  editorStates.forEach((s, i) => {
+    const el = listEl.querySelector(`.state-item[data-state-idx="${i}"]`);
+    if (!el) return;
+    const reg = normalizeRegion(s.region);
+    buildTraversableGrid(el.querySelector('.state-trav-wrap'), s.traversable || null, reg.w, reg.h);
+  });
+}
+
+function setDefaultState(idx) {
+  const id = document.querySelector(`.state-item[data-state-idx="${idx}"] .state-id-input`)?.value.trim();
+  editorDefaultState = (editorDefaultState === id) ? '' : (id || '');
+  // re-render just the header buttons without full re-render
+  document.querySelectorAll('.state-item').forEach((el, i) => {
+    const sid = el.querySelector('.state-id-input')?.value.trim();
+    const isDefault = editorDefaultState === sid && sid;
+    const btn = el.querySelector('.state-item-header .btn:not(.danger)');
+    if (btn) { btn.textContent = isDefault ? '★ default' : '☆'; btn.className = `btn sm ${isDefault ? 'primary' : ''}`; }
+  });
+}
+
+function onStateIdInput(idx) {
+  // if this state was the default, update editorDefaultState to the new id
+  const el = document.querySelector(`.state-item[data-state-idx="${idx}"]`);
+  const btn = el?.querySelector('.state-item-header .btn:not(.danger)');
+  if (btn?.classList.contains('primary')) {
+    editorDefaultState = el.querySelector('.state-id-input')?.value.trim() || '';
+  }
+}
+
+function addState() {
+  syncEditorStates();
+  editorStates.push({ id: `state_${editorStates.length}`, region: [0, 0, 1, 1] });
+  renderStatesList();
+}
+
+function deleteState(idx) {
+  syncEditorStates();
+  editorStates.splice(idx, 1);
+  if (editingStateIdx === idx) {
+    editingStateIdx = null;
+    renderTilesetViewer();
+  } else if (editingStateIdx !== null && editingStateIdx > idx) {
+    editingStateIdx--;
+  }
+  renderStatesList();
+}
+
+function startStateRegionEdit(idx) {
+  editingStateIdx = idx;
+  document.querySelectorAll('.state-item').forEach((el, i) => el.classList.toggle('state-active', i === idx));
+  renderTilesetViewer();
+}
+
+function onStateRegionEdit(idx) {
+  editingStateIdx = idx;
+  document.querySelectorAll('.state-item').forEach((el, i) => el.classList.toggle('state-active', i === idx));
+  const el = document.querySelector(`.state-item[data-state-idx="${idx}"]`);
+  if (el) {
+    const w = Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1);
+    const h = Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1);
+    const existingTrav = getTraversableStringFromEl(el.querySelector('.state-trav-wrap'));
+    buildTraversableGrid(el.querySelector('.state-trav-wrap'), existingTrav, w, h);
+  }
+  renderTilesetViewer();
+}
+
+function collectStates() {
+  return Array.from(document.querySelectorAll('.state-item')).map(el => {
+    const id = el.querySelector('.state-id-input').value.trim();
+    if (!id) return null;
+    const x = parseInt(el.querySelector('.state-rx').value) || 0;
+    const y = parseInt(el.querySelector('.state-ry').value) || 0;
+    const w = Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1);
+    const h = Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1);
+    const region = (w === 1 && h === 1) ? [x, y] : [x, y, w, h];
+    const travStr = getTraversableStringFromEl(el.querySelector('.state-trav-wrap'));
+    const s = { id, region };
+    if (travStr) s.traversable = travStr;
+    return s;
+  }).filter(Boolean);
+}
+
+// ═══════════════════════════════════════════════════
+//  TILESET MANAGER
+// ═══════════════════════════════════════════════════
+function renderTilesetManager() {
+  const list = document.getElementById('tileset-list');
+  if (!list) return;
+  if (state.tilesets.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:24px;"><div class="empty-icon">🗂</div><div class="empty-title">No tilesets</div><div class="empty-sub">Add one below.</div></div>`;
+    return;
+  }
+  list.innerHTML = state.tilesets.map((ts, i) => {
+    const img = getImageForTileset(ts);
+    const status = img ? `<span class="te-loaded">✓ loaded</span>` : `<span class="te-missing">✗ missing</span>`;
+    return `<div class="tileset-entry">
+      <div style="flex:1;">
+        <div class="te-id">${esc(ts.id)}</div>
+        <div class="te-file">${esc(ts.file)} · ${ts.size[0]}×${ts.size[1]}</div>
+      </div>
+      ${status}
+      <button class="btn sm danger" onclick="removeTileset(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addTileset() {
+  const id = document.getElementById('new-ts-id').value.trim();
+  const file = document.getElementById('new-ts-file').value.trim();
+  const w = parseInt(document.getElementById('new-ts-w').value) || 16;
+  const h = parseInt(document.getElementById('new-ts-h').value) || 16;
+  if (!id || !file) { showToast('ID and file are required', 'error'); return; }
+  if (state.tilesets.find(t => t.id === id)) { showToast('Tileset ID already exists', 'error'); return; }
+  state.tilesets.push({ id, file, size: [w, h] });
+  document.getElementById('new-ts-id').value = '';
+  document.getElementById('new-ts-file').value = '';
+  setUnsaved(true);
+  renderAll();
+}
+
+function removeTileset(idx) {
+  const ts = state.tilesets[idx];
+  const refs = state.assets.filter(a => a.tileset_id === ts.id).length;
+  if (refs > 0) {
+    if (!confirm(`Tileset "${ts.id}" is referenced by ${refs} asset(s). Remove anyway?`)) return;
+  }
+  state.tilesets.splice(idx, 1);
+  if (currentTilesetId === ts.id) currentTilesetId = null;
+  setUnsaved(true);
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════
+function switchLeftTab(name) {
+  document.querySelectorAll('#left-tabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'tilesets') renderTilesetManager();
+}
+
+// ═══════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════
+function normalizeRegion(r) {
+  if (Array.isArray(r)) return { x: r[0]||0, y: r[1]||0, w: r[2]||1, h: r[3]||1 };
+  return { x: r.x||0, y: r.y||0, w: r.w||1, h: r.h||1 };
+}
+
+// Returns the primary (first) state's region for an asset, with old-style region as fallback.
+function getAssetRegion(asset) {
+  if (asset.states && asset.states.length > 0) return normalizeRegion(asset.states[0].region);
+  return normalizeRegion(asset.region || [0, 0, 1, 1]);
+}
+
+// Migrate all assets that still use old-style top-level region/traversable.
+function migrateAssets() {
+  let count = 0;
+  state.assets.forEach(a => {
+    if (!a.states || a.states.length === 0) {
+      const s = { id: 'default', region: a.region || [0, 0, 1, 1] };
+      if (a.traversable) s.traversable = a.traversable;
+      a.states = [s];
+      if (!a.defaultState) a.defaultState = 'default';
+      delete a.region;
+      delete a.traversable;
+      count++;
+    }
+  });
+  return count;
+}
+
+// Returns the region {x,y,w,h} currently being previewed: active state, or state 0 as fallback.
+function getActiveEditRegion() {
+  const idx = editingStateIdx !== null ? editingStateIdx : 0;
+  const el = document.querySelector(`.state-item[data-state-idx="${idx}"]`);
+  if (el) {
+    return {
+      x: parseInt(el.querySelector('.state-rx').value) || 0,
+      y: parseInt(el.querySelector('.state-ry').value) || 0,
+      w: Math.max(1, parseInt(el.querySelector('.state-rw').value) || 1),
+      h: Math.max(1, parseInt(el.querySelector('.state-rh').value) || 1)
+    };
+  }
+  return selectedRegion || { x: 0, y: 0, w: 1, h: 1 };
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 2500);
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════
+function renderAll() {
+  renderTilesetViewer();
+  renderAssetList();
+  renderTilesetManager();
+  renderJsonPreview();
+}
+
+function renderJsonPreview() {
+  document.getElementById('json-preview').textContent = buildJson();
+}
+
+// ═══════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveFile(); }
+  if (e.key === 'Delete' && selectedAssetIdxs.size > 0 && document.activeElement.tagName !== 'INPUT') {
+    deleteAsset();
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  SPLITTERS
+// ═══════════════════════════════════════════════════
+(function initSplitters() {
+  const workspace = document.querySelector('.workspace');
+  const MIN = 160, MAX = 700;
+
+  function makeSplitter(splitterId, which) {
+    const splitter = document.getElementById(splitterId);
+    let dragging = false;
+    let startX = 0;
+    let startSize = 0;
+
+    splitter.addEventListener('mousedown', e => {
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX;
+      const cols = getComputedStyle(workspace).gridTemplateColumns.split(' ').map(parseFloat);
+      // cols: [leftW, 4, centerW, 4, rightW]
+      startSize = which === 'left' ? cols[0] : cols[4];
+      splitter.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const delta = e.clientX - startX;
+      const cols = getComputedStyle(workspace).gridTemplateColumns.split(' ').map(parseFloat);
+      let leftW = cols[0];
+      let rightW = cols[4];
+
+      if (which === 'left') {
+        leftW = Math.min(MAX, Math.max(MIN, startSize + delta));
+      } else {
+        rightW = Math.min(MAX, Math.max(MIN, startSize - delta));
+      }
+      workspace.style.gridTemplateColumns = `${leftW}px 4px 1fr 4px ${rightW}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      splitter.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    });
+  }
+
+  makeSplitter('splitter-left', 'left');
+  makeSplitter('splitter-right', 'right');
+})();
+
+
+// Check localStorage for autosave
+(function init() {
+  const saved = localStorage.getItem('asseteditor_autosave');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed.tilesets && parsed.assets) {
+        // We'll offer restore after folder is opened
+        window._autosave = parsed;
+      }
+    } catch(e) {}
+  }
+  renderJsonPreview();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RPG Game</title>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      color: #ccc;
+      font: 18px sans-serif;
+      letter-spacing: 0.05em;
+    }
+    #loading.hidden { display: none; }
+
+    /* ── Scenario selection screen ────────────────────────────────────────────────────── */
+    #scenario-select {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      z-index: 400;
+    }
+    #scenario-select.hidden { display: none; }
+    #scenario-select-panel {
+      width: min(520px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    #scenario-select-title {
+      text-align: center;
+      color: #7eb8f7;
+      font: 700 22px sans-serif;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    }
+    #scenario-select-subtitle {
+      text-align: center;
+      color: #556;
+      font: 14px sans-serif;
+      letter-spacing: 0.05em;
+      margin-top: -10px;
+    }
+    #scenario-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .scenario-select-btn {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      background: rgba(10, 14, 20, 0.93);
+      border: 2px solid #4a6fa5;
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #e8e8e8;
+      font: 20px sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .scenario-select-btn:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+      transform: translateY(-1px);
+    }
+    .scenario-select-key {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #4a6fa5;
+      border-radius: 6px;
+      font: 700 16px monospace;
+      color: #7eb8f7;
+      background: #0d1a2e;
+    }
+    .scenario-select-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .scenario-select-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .scenario-select-help {
+      font-size: 14px;
+      color: #aac;
+      font-weight: 400;
+    }
+
+    /* ── Category selection (second step inside scenario-select) ───────── */
+    #category-select {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid #2a3a55;
+      padding-top: 14px;
+    }
+    #category-select.hidden { display: none; }
+    #category-select-title {
+      text-align: center;
+      color: #7eb8f7;
+      font: 700 18px sans-serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+    }
+    #category-select-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .category-select-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      background: rgba(10, 14, 20, 0.93);
+      border: 2px solid #4a6fa5;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #e8e8e8;
+      font: 17px sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .category-select-btn:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+      transform: translateY(-1px);
+    }
+
+    #dialog-box {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: min(720px, 90vw);
+      background: rgba(10, 14, 20, 0.93);
+      border: 2px solid #4a6fa5;
+      border-radius: 10px;
+      padding: 18px 24px 14px;
+      color: #e8e8e8;
+      font: 20px/1.6 sans-serif;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.7);
+      z-index: 100;
+    }
+    #dialog-box.hidden { display: none; }
+    #dialog-speaker {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7eb8f7;
+      margin-bottom: 6px;
+    }
+    #dialog-speaker:empty { display: none; }
+    #dialog-text { margin-bottom: 10px; }
+    #dialog-icons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    #dialog-icons.hidden { display: none; }
+    #dialog-icons .dialog-item {
+      position: relative;
+    }
+    #dialog-icons canvas {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid #4a6fa5;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.4);
+    }
+    .dialog-item-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 1px;
+      background: #c84040;
+      color: #fff;
+      font: 8px monospace;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 0 3px;
+      line-height: 12px;
+      border: 1px solid #2a1a1a;
+    }
+    #dialog-hint {
+      font-size: 14px;
+      color: #556;
+      text-align: right;
+    }
+
+    /* ── Choice box ─────────────────────────────────────────────────────────────────────── */
+    #choice-box {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      width: min(720px, 90vw);
+      background: rgba(10, 14, 20, 0.93);
+      border: 2px solid #4a6fa5;
+      border-radius: 10px;
+      padding: 18px 24px 18px;
+      color: #e8e8e8;
+      font: 20px/1.6 sans-serif;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.7);
+      z-index: 100;
+    }
+    #choice-box.hidden { display: none; }
+
+    /* ── Level-up overlay ─────────────────────────────────────────────────────────────── */
+    #levelup-box {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(640px, 92vw);
+      background: rgba(10, 14, 20, 0.95);
+      border: 2px solid #7eb8f7;
+      border-radius: 12px;
+      padding: 22px 26px 22px;
+      color: #e8e8e8;
+      font: 18px/1.5 sans-serif;
+      box-shadow: 0 0 40px rgba(126, 184, 247, 0.35), 0 4px 32px rgba(0,0,0,0.8);
+      z-index: 110;
+      text-align: center;
+    }
+    #levelup-box.hidden { display: none; }
+    #levelup-title {
+      font: 700 24px sans-serif;
+      color: #7eb8f7;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      text-shadow: 0 0 12px rgba(126, 184, 247, 0.5);
+    }
+    #levelup-subtitle {
+      font: 16px sans-serif;
+      color: #9ab;
+      margin-bottom: 18px;
+    }
+    #levelup-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+    .levelup-btn {
+      flex: 0 1 auto;
+      max-width: 120px;
+      background: #0d1a2e;
+      border: 1px solid #263650;
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      color: #e8e8e8;
+      font: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+    .levelup-btn:hover {
+      border-color: #7eb8f7;
+      box-shadow: 0 0 16px rgba(126, 184, 247, 0.25);
+      transform: translateY(-2px);
+    }
+    .levelup-btn:active { transform: translateY(0); }
+    .levelup-btn canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .levelup-btn-vals {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+    .levelup-btn-vals canvas { position: relative; }
+    /* One stat per line: sprite + value side by side. */
+    .lv-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lv-num {
+      font: 700 14px monospace;
+      color: #7eb8f7;
+    }
+    .levelup-key {
+      font: 700 11px monospace;
+      color: #556;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* ── Cheat console (Ctrl+X) ─────────────────────────────────────────────────── */
+    #cheat-box {
+      position: fixed;
+      left: 50%; top: 32px;
+      transform: translateX(-50%);
+      width: min(480px, 92vw);
+      background: rgba(10, 14, 20, 0.97);
+      border: 2px solid #c84040;
+      border-radius: 10px;
+      padding: 14px 16px 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.8);
+      z-index: 300;
+      color: #e8e8e8;
+      font: 14px/1.5 sans-serif;
+    }
+    #cheat-box.hidden { display: none; }
+    #cheat-title {
+      font: 700 16px sans-serif;
+      color: #c84040;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #cheat-hint { font: 12px monospace; color: #789; margin-bottom: 10px; }
+    #cheat-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #0d1a2e;
+      border: 1px solid #34465e;
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: #e8e8e8;
+      font: 14px monospace;
+      outline: none;
+    }
+    #cheat-input:focus { border-color: #c84040; }
+    #cheat-feedback {
+      margin-top: 8px;
+      min-height: 16px;
+      font: 12px monospace;
+      color: #7eb8f7;
+    }
+    #cheat-feedback.err { color: #c84040; }
+
+    /* ── Toast message ──────────────────────────────────────────────────────────── */
+    #toast-message {
+      position: fixed;
+      left: 50%;
+      top: 32px;
+      transform: translateX(-50%);
+      background: rgba(10, 14, 20, 0.92);
+      border: 1px solid #4a6fa5;
+      border-radius: 8px;
+      padding: 10px 22px;
+      color: #f0d080;
+      font: 700 15px sans-serif;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.65);
+      z-index: 200;
+      pointer-events: none;
+      transition: opacity 0.4s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #toast-message.hidden { display: none; }
+    #toast-icons {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+    }
+    #toast-icons > div {
+      position: relative;
+    }
+    #toast-icons canvas {
+      width: 32px;
+      height: 32px;
+      display: block;
+    }
+    .toast-item-badge {
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+      background: #c84040;
+      color: #fff;
+      font: 8px monospace;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 0 3px;
+      line-height: 12px;
+      min-width: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+    #toast-icons.hidden { display: none; }
+
+    /* ── Learn Modal ───────────────────────────────────────────────────────────── */
+    #learn-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 400;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    #learn-modal.hidden { display: none; }
+    #learn-modal-backdrop {
+      position: absolute; inset: 0;
+    }
+    #learn-modal-panel {
+      position: relative;
+      width: min(800px, 96vw);
+      max-height: 90vh;
+      background: rgba(10,14,20,0.98);
+      border: 2px solid #4a6fa5;
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.9);
+      overflow: hidden;
+      z-index: 1;
+    }
+    #learn-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid #263650;
+      flex-shrink: 0;
+    }
+    #learn-modal-title {
+      font: 700 16px sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7eb8f7;
+    }
+    #learn-modal-close {
+      background: none; border: none; color: #7eb8f7;
+      font-size: 28px; cursor: pointer; padding: 0 8px; line-height: 1;
+    }
+    #learn-modal-close:hover { color: #fff; }
+    #learn-modal-content {
+      overflow-y: auto; padding: 20px 24px;
+      color: #e8e8e8; font: 16px/1.7 sans-serif;
+      max-height: calc(90vh - 60px);
+    }
+    #learn-modal-content svg { max-width: 100%; height: auto; display: block; margin: 0 auto 16px; }
+    #learn-modal-content img { max-width: 100%; height: auto; }
+    #learn-modal-content b, #learn-modal-content strong { color: #ffd27a; }
+    #learn-modal-content i, #learn-modal-content em { color: #aac; }
+    #learn-modal-content code { background: #0d1a2e; padding: 2px 6px; border-radius: 3px; font: 14px monospace; color: #7eb8f7; }
+    #learn-modal-content pre { background: #0d1a2e; border: 1px solid #263650; border-radius: 6px; padding: 12px; overflow-x: auto; margin: 12px 0; }
+    #learn-modal-content pre code { background: none; padding: 0; }
+
+    /* ── Question browser ─────────────────────────────────────────────────────── */
+    #q-browser {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #q-browser.hidden { display: none; }
+    #q-browser-panel {
+      width: min(820px, 96vw);
+      max-height: 88vh;
+      background: rgba(10,14,20,0.97);
+      border: 2px solid #4a6fa5;
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.85);
+      overflow: hidden;
+    }
+    #q-browser-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      border-bottom: 1px solid #263650;
+      flex-shrink: 0;
+    }
+    #q-browser-title {
+      font: 700 14px sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7eb8f7;
+      flex: 1;
+    }
+    #q-browser-controls {
+      display: flex; align-items: center; gap: 8px;
+      font: 13px sans-serif; color: #aac;
+    }
+    #q-pool-select {
+      background: #0d1a2e; border: 1px solid #4a6fa5; border-radius: 5px;
+      color: #e8e8e8; font: 13px sans-serif; padding: 3px 8px; cursor: pointer;
+    }
+    #q-filter {
+      background: #0d1a2e; border: 1px solid #4a6fa5; border-radius: 5px;
+      color: #e8e8e8; font: 13px sans-serif; padding: 3px 8px; outline: none;
+      width: 160px;
+    }
+    #q-filter:focus { border-color: #7eb8f7; }
+    #q-browser-count { color: #556; font-size: 12px; }
+    #q-browser-footer {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      padding: 10px 18px;
+      border-top: 1px solid #263650;
+      flex-shrink: 0;
+    }
+    #q-page-prev, #q-page-next {
+      background: #0d1a2e; border: 1px solid #4a6fa5; border-radius: 5px;
+      color: #7eb8f7; font: 13px sans-serif; padding: 3px 10px; cursor: pointer;
+    }
+    #q-page-prev:hover, #q-page-next:hover { background: #1a3060; }
+    #q-page-prev:disabled, #q-page-next:disabled { opacity: 0.3; cursor: default; }
+    #q-page-label { color: #aac; font: 13px sans-serif; min-width: 100px; text-align: center; }
+    #q-browser-close {
+      background: none; border: none; color: #7eb8f7;
+      font-size: 22px; cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+    #q-browser-close:hover { color: #fff; }
+    #q-browser-list {
+      overflow-y: auto; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .q-card {
+      background: #0d1a2e; border: 1px solid #263650; border-radius: 8px;
+      padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .q-card-meta {
+      font: 11px monospace; color: #4a6fa5;
+      display: flex; gap: 12px;
+    }
+    .q-card-question { color: #e8e8e8; font: 15px/1.6 sans-serif; }
+    .q-card-answers { display: flex; gap: 8px; flex-wrap: wrap; }
+    .q-card-answer {
+      background: #1a3060; border: 1px solid #3a6fa5; border-radius: 4px;
+      color: #7eb8f7; font: 12px monospace; padding: 2px 10px;
+    }
+    .q-card-hint {
+      color: #e8a83a; font: 13px/1.5 sans-serif;
+      border-left: 3px solid #e8a83a; padding-left: 8px;
+    }
+    .q-card-choices { display: flex; gap: 8px; flex-wrap: wrap; }
+    .q-card-choice {
+      background: #0d1a2e; border: 2px solid #263650; border-radius: 6px;
+      color: #aac; font: 13px sans-serif; padding: 5px 14px;
+    }
+    .q-card-choice.correct {
+      border-color: #3fa84a;
+      color: #e8e8e8;
+      box-shadow: 0 0 6px rgba(63,168,74,0.4);
+    }
+    .q-card-help {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid #4a6fa5;
+      border-radius: 4px;
+      background: #0d1a2e;
+      color: #7eb8f7;
+      font: 700 14px monospace;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .q-card-help:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+    }
+    #choice-text { margin-bottom: 14px; }
+    #choice-buttons { display: flex; flex-direction: column; gap: 8px; }
+    .choice-btn {
+      background: #0d1a2e;
+      border: 1px solid #4a6fa5;
+      border-radius: 6px;
+      color: #e8e8e8;
+      padding: 10px 16px;
+      cursor: pointer;
+      text-align: left;
+      font: 18px sans-serif;
+      transition: background 0.15s;
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .choice-btn:hover { background: #1a3060; }
+    .choice-key {
+      font: 700 16px monospace;
+      color: #7eb8f7;
+      min-width: 16px;
+    }
+
+    /* ── Battle screen ──────────────────────────────────────────────────────── */
+    #battle-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      background: rgba(5, 8, 14, 0.92);
+      z-index: 200;
+    }
+    #battle-screen.hidden { display: none; }
+
+    #battle-fighters {
+      display: flex;
+      align-items: flex-end;
+      gap: 48px;
+    }
+    .battle-fighter {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .battle-fighter-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .battle-hp-wrap {
+      width: 96px;
+      height: 10px;
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .battle-hp-fill {
+      height: 100%;
+      background: #3fa84a;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+    .battle-hp-text {
+      font: 11px monospace;
+      color: #8bc;
+    }
+    .battle-stats {
+      font: 10px monospace;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      color: #cde;
+    }
+    .battle-canvas {
+      width: 64px;
+      height: 96px;
+      margin-top: -30px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .battle-name {
+      font: 700 13px sans-serif;
+      color: #aac;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    #battle-vs {
+      font-size: 28px;
+      color: #c84040;
+      margin-bottom: 32px;
+      text-shadow: 0 0 12px #c84040;
+    }
+    #battle-help-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #4a6fa5;
+      border-radius: 4px;
+      background: #0d1a2e;
+      color: #7eb8f7;
+      font: 700 16px monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+      z-index: 10;
+    }
+    #battle-help-btn:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+    }
+    #battle-question-box {
+      position: relative;
+      width: min(640px, 90vw);
+      background: rgba(10, 14, 20, 0.95);
+      border: 2px solid #4a6fa5;
+      border-radius: 10px;
+      padding: 20px 28px 16px;
+      color: #e8e8e8;
+      font: 16px/1.6 sans-serif;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.8);
+    }
+    #battle-question-text {
+      margin-bottom: 12px;
+    }
+    #battle-hint-text {
+      font-size: 13px;
+      color: #e8a83a;
+      background: rgba(232,168,58,0.08);
+      border-left: 3px solid #e8a83a;
+      padding: 6px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    #battle-hint-text.hidden { display: none; }
+    #battle-answer-row {
+      display: flex;
+      gap: 10px;
+    }
+    #battle-answer-row.hidden { display: none; }
+    #battle-choice-row {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    }
+    #battle-choice-row.hidden { display: none; }
+    .battle-choice-btn {
+      background: #0d1a2e; border: 2px solid #4a6fa5; border-radius: 8px;
+      color: #e8e8e8; font: 15px sans-serif; padding: 10px 22px;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      min-width: 90px;
+    }
+    .battle-choice-btn:hover { background: #1a3060; border-color: #7eb8f7; }
+    .battle-choice-btn:disabled { opacity: 0.45; cursor: default; }
+    #battle-answer-input {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #4a6fa5;
+      border-radius: 6px;
+      color: #e8e8e8;
+      font: 15px sans-serif;
+      padding: 8px 12px;
+      outline: none;
+    }
+    #battle-answer-input:focus { border-color: #7eb8f7; }
+    #battle-submit-btn {
+      background: #1c3a6a;
+      border: 1px solid #4a6fa5;
+      border-radius: 6px;
+      color: #e8e8e8;
+      font: 14px sans-serif;
+      padding: 8px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #battle-submit-btn:hover { background: #2a5090; }
+
+    /* ── HUD (HP bar, XP bar, hero icon, help) ───────────────────────────────── */
+    #hud {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      pointer-events: none;
+    }
+    #hud-row1 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    #hud-save-btn, #hud-help-btn {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border: 2px solid #4a6fa5;
+      border-radius: 8px;
+      background: rgba(10, 14, 20, 0.9);
+      color: #7eb8f7;
+      font: 700 18px monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      pointer-events: auto;
+    }
+    #hud-save-btn:hover, #hud-help-btn:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+      transform: scale(1.05);
+    }
+    #hud-save-btn { font-size: 20px; line-height: 1; }
+    #hud-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 140px;
+    }
+    #hud-gold {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      background: rgba(255, 215, 0, 0.15);
+      border: 1px solid #c8a020;
+      border-radius: 4px;
+    }
+    #hud-gold-icon {
+      width: 24px; height: 24px;
+      flex-shrink: 0;
+    }
+    #hud-gold-text {
+      font: 700 14px monospace;
+      color: #ffd700;
+      text-shadow: 1px 1px 2px #000;
+    }
+    .hud-bar-wrap {
+      width: 100%;
+      height: 12px;
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hud-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+    .hud-bar-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 9px monospace;
+      color: #e8e8e8;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+      letter-spacing: 0.03em;
+    }
+    #hud-xp-text { color: #cde; }
+    #hud-hero-icon {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #4a6fa5;
+      border-radius: 8px;
+      background: rgba(10, 14, 20, 0.9);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      overflow: hidden;
+      transition: border-color 0.15s;
+      pointer-events: auto;
+    }
+    #hud-hero-icon:hover { border-color: #7eb8f7; }
+    #hud-hero-icon canvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+    #hud-level {
+      font: 700 12px sans-serif;
+      color: #7eb8f7;
+      letter-spacing: 0.05em;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      text-align: center;
+      margin-top: -2px;
+    }
+
+    /* ── Equipment panel ────────────────────────────────────────────────── */
+    #equipment-panel {
+      position: fixed;
+      top: 64px;
+      left: 8px;
+      width: 260px;
+      max-height: 70vh;
+      background: rgba(10, 14, 20, 0.95);
+      border: 2px solid #4a6fa5;
+      border-radius: 10px;
+      padding: 14px;
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.8);
+      overflow-y: auto;
+    }
+    #equipment-panel.hidden { display: none; }
+    #equip-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    #equip-help-btn {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #4a6fa5;
+      border-radius: 4px;
+      background: #0d1a2e;
+      color: #7eb8f7;
+      font: 700 14px monospace;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    #equip-help-btn:hover {
+      background: #1a3060;
+      border-color: #7eb8f7;
+    }
+    /* ── Body mannequin + slots ─────────────────────────────────────────── */
+    #equip-body-wrap {
+      position: relative;
+      width: 130px;              /* body.png at 1× (no zoom), original 130×234 */
+      height: 234px;
+      margin: 0 auto;
+      background: #0d1a2e;
+      border: 1px solid #263650;
+      border-radius: 8px;
+      /* Items in slots may overflow slightly (head slot near top edge); let
+         them be visible rather than clipped. */
+      overflow: visible;
+      flex-shrink: 0;
+    }
+    #equip-body-img {
+      width: 130px;
+      height: 234px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      pointer-events: none;      /* let slots catch events */
+      display: block;
+    }
+    .equip-slot {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      box-sizing: border-box;
+      border: 1px dashed #4a6fa5;
+      border-radius: 5px;
+      background: rgba(74, 111, 165, 0.08);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);   /* centered on the % anchor */
+    }
+    .equip-slot:hover { border-color: #7eb8f7; background: rgba(126, 184, 247, 0.12); }
+    .equip-slot.drag-over { border-color: #ffd27a; background: rgba(255, 210, 122, 0.18); border-style: solid; }
+    .equip-slot canvas {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      pointer-events: none;
+    }
+    /* ── Main row: body + stats side by side ────────────────────────────── */
+    #equip-main-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    #equip-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .equip-stat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0d1a2e;
+      border: 1px solid #263650;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font: 12px monospace;
+    }
+    .equip-stat-icon {
+      display: inline-block;
+      width: 24px; height: 24px;
+      flex-shrink: 0;
+    }
+    .equip-stat-icon canvas {
+      width: 24px; height: 24px;
+    }
+    .equip-stat-gold {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: #c8a020;
+    }
+    .equip-gold-val {
+      font: 700 14px monospace;
+      color: #ffd700;
+      text-shadow: 1px 1px 2px #000;
+    }
+    .equip-stat-val {
+      margin-left: auto;
+      color: #e8e8e8;
+      font-weight: 700;
+    }
+    .equip-stat-val .bonus { color: #7eb8f7; margin-left: 2px; }
+    /* HP bar row inside the stats column: the bar is the background and the
+       numeric value (100/100) sits on top of it. */
+    .equip-stat-hp {
+      position: relative;
+      overflow: hidden;
+      justify-content: flex-end;
+    }
+    .equip-hp-bar-wrap {
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: #1a1a2e;
+    }
+    .equip-hp-bar-fill {
+      display: block;
+      height: 100%;
+      background: #3fa84a;
+      transition: width 0.3s ease;
+    }
+    .equip-hp-val {
+      position: relative;
+      z-index: 1;
+      font-size: 11px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+      margin-left: 0;
+    }
+    /* ── Tooltip ────────────────────────────────────────────────────────── */
+    #equip-tooltip {
+      position: fixed;
+      z-index: 999;
+      pointer-events: none;
+      background: rgba(10, 14, 20, 0.95);
+      border: 1px solid #7eb8f7;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font: 12px monospace;
+      color: #e8e8e8;
+      white-space: nowrap;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      transform: translate(4px, -4px);
+    }
+    #equip-tooltip.hidden { display: none; }
+    #equip-tooltip .tt-name {
+      font-weight: 700;
+      color: #ffd27a;
+      margin-bottom: 2px;
+    }
+    #equip-tooltip .tt-bonus { color: #7eb8f7; }
+    #equipment-panel-title {
+      font: 700 13px sans-serif;
+      color: #7eb8f7;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    #equip-weapon-slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0d1a2e;
+      border: 1px solid #263650;
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+    #equip-weapon-slot canvas {
+      width: 40px;
+      height: 40px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      border: 1px solid #4a6fa5;
+      border-radius: 5px;
+      background: rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+    #equip-weapon-label {
+      font: 13px sans-serif;
+      color: #aac;
+    }
+    #equip-weapon-label .empty { color: #556; font-style: italic; }
+    #equip-inv-label {
+      font: 10px sans-serif;
+      color: #556;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: -4px;
+    }
+    #equip-inv-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    #equip-inv-grid .equip-item {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border: 1px solid #263650;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.3);
+      overflow: visible;
+    }
+    #equip-inv-grid .equip-item canvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    #equip-inv-grid .equip-item[draggable] {
+      cursor: grab;
+    }
+    #equip-inv-grid .equip-item[draggable]:active {
+      cursor: grabbing;
+    }
+    .equip-item-badge {
+      position: absolute;
+      bottom: -3px;
+      right: -3px;
+      background: #c84040;
+      color: #fff;
+      font: 8px monospace;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 0 3px;
+      line-height: 12px;
+      min-width: 14px;
+      text-align: center;
+      pointer-events: none;
+      border: 1px solid #800;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading…</div>
+
+  <!-- Scenario selection (shown at startup, before any scenario loads) -->
+  <div id="scenario-select" class="hidden">
+    <div id="scenario-select-panel">
+      <div id="scenario-select-title">Wybierz scenariusz</div>
+      <div id="scenario-select-subtitle">Kliknij lub naciśnij klawisz 1–9</div>
+      <div id="scenario-select-list"></div>
+      <div id="category-select" class="hidden">
+        <div id="category-select-title">Wybierz kategorię</div>
+        <div id="category-select-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HUD ─────────────────────────────────────────────────────────────── -->
+  <div id="hud" class="">
+    <div id="hud-row1">
+      <button id="hud-hero-icon"></button>
+      <div id="hud-stats">
+        <div class="hud-bar-wrap">
+          <div class="hud-bar-fill" id="hud-hp-fill" style="background:#c84040;width:100%"></div>
+          <span class="hud-bar-text" id="hud-hp-text">100/100</span>
+        </div>
+        <div class="hud-bar-wrap">
+          <div class="hud-bar-fill" id="hud-xp-fill" style="background:#3fa84a;width:0%"></div>
+          <span class="hud-bar-text" id="hud-xp-text">0/100</span>
+        </div>
+        <div id="hud-level">Lv. 1</div>
+      </div>
+      <div id="hud-gold" class="hud-gold">
+        <canvas id="hud-gold-icon" width="32" height="32"></canvas>
+        <span id="hud-gold-text">0</span>
+      </div>
+      <button id="hud-save-btn" title="Zapisz grę (Ctrl+S)">💾</button>
+      <button id="hud-help-btn" title="Pomoc (F1)">?</button>
+    </div>
+  </div>
+
+  <!-- ── Equipment panel ─────────────────────────────────────────────────── -->
+  <div id="equipment-panel" class="hidden">
+    <div id="equip-panel-header">
+      <div id="equipment-panel-title">Ekwipunek</div>
+      <button id="equip-help-btn" title="Pomoc (F1)">?</button>
+    </div>
+    <div id="equip-main-row">
+    <div id="equip-body-wrap">
+      <img id="equip-body-img" src="../assets/body.png" alt="" draggable="false">
+      <div class="equip-slot" data-slot="head" style="left:50%; top:  5%;" title="head" data-item="" draggable="false"></div>
+      <div class="equip-slot" data-slot="neck" style="left:50%; top: 25%;" title="neck" data-item="" draggable="false"></div>
+      <div class="equip-slot" data-slot="hand_l" style="left:13%; top: 53%;" title="hand l" data-item="" draggable="false"></div>
+      <div class="equip-slot" data-slot="hand_r" style="left:87%; top: 53%;" title="hand r: Axe" data-item="Axe" draggable="true"><canvas width="32" height="32"></canvas></div>
+      <div class="equip-slot" data-slot="torso" style="left:50%; top: 45%;" title="torso" data-item="" draggable="false"></div>
+      <div class="equip-slot" data-slot="shoes" style="left:50%; top: 86%;" title="shoes" data-item="" draggable="false"></div>
+    </div>
+    <!-- Stats column (right of body sprite): icon + value rows -->
+    <div id="equip-stats">
+      <div class="equip-stat equip-stat-gold" data-stat="gold">
+        <canvas class="equip-stat-icon" width="32" height="32"></canvas>
+        <span class="equip-stat-val equip-gold-val"></span>
+      </div>
+      <div class="equip-stat equip-stat-hp" data-stat="hp" data-item="Red Potion">
+        <span class="equip-hp-bar-wrap"><span class="equip-hp-bar-fill" id="equip-hp-fill"></span></span>
+        <span class="equip-stat-val equip-hp-val"></span>
+      </div>
+      <div class="equip-stat" data-stat="base_dmg" data-item="Leather Gloves"> <span class="equip-stat-icon"></span> <span class="equip-stat-val"></span></div>
+      <div class="equip-stat" data-stat="attack"    data-item="Double Axe">    <span class="equip-stat-icon"></span> <span class="equip-stat-val"></span></div>
+      <div class="equip-stat" data-stat="defense"   data-item="Wooden Shield"> <span class="equip-stat-icon"></span> <span class="equip-stat-val"></span></div>
+      <div class="equip-stat" data-stat="armor"     data-item="Leather Armor"> <span class="equip-stat-icon"></span> <span class="equip-stat-val"></span></div>
+      <div class="equip-stat" data-stat="agility"   data-item="Leather Shoes"> <span class="equip-stat-icon"></span> <span class="equip-stat-val"></span></div>
+    </div>
+    </div><!-- /equip-main-row -->
+    <div id="equip-inv-label">Przedmioty</div>
+    <div id="equip-inv-grid"></div>
+  </div>
+
+  <!-- Item tooltip (appears on hover over equip slot or pool item) -->
+  <div id="equip-tooltip" class="hidden"></div>
+
+  <!-- Battle screen -->
+  <div id="battle-screen" class="hidden">
+    <div id="battle-fighters">
+      <div class="battle-fighter">
+        <div class="battle-stats" id="battle-hero-stats"></div>
+        <div class="battle-fighter-main">
+          <div class="battle-hp-wrap"><div class="battle-hp-fill" id="battle-player-hp-fill"></div></div>
+          <span class="battle-hp-text" id="battle-player-hp-text">100 / 100</span>
+          <canvas id="battle-player-canvas" class="battle-canvas" width="64" height="96"></canvas>
+          <div class="battle-name">Bohater</div>
+        </div>
+      </div>
+      <div id="battle-vs">⚔</div>
+      <div class="battle-fighter">
+        <div class="battle-fighter-main">
+          <div class="battle-hp-wrap"><div class="battle-hp-fill" id="battle-enemy-hp-fill"></div></div>
+          <span class="battle-hp-text" id="battle-enemy-hp-text">20 / 20</span>
+          <canvas id="battle-enemy-canvas" class="battle-canvas" width="64" height="96"></canvas>
+          <div class="battle-name" id="battle-enemy-name">Przeciwnik</div>
+        </div>
+        <div class="battle-stats" id="battle-enemy-stats"></div>
+      </div>
+    </div>
+    <div id="battle-question-box">
+      <button id="battle-help-btn" title="Pomoc (F1)">?</button>
+      <div id="battle-question-text"></div>
+      <div id="battle-hint-text" class="hidden"></div>
+      <div id="battle-answer-row">
+        <input id="battle-answer-input" type="text" autocomplete="off" spellcheck="false" placeholder="Twoja odpowiedź…" />
+        <button id="battle-submit-btn">Odpowiedz</button>
+      </div>
+      <div id="battle-choice-row" class="hidden"></div>
+    </div>
+  </div>
+
+  <div id="toast-message" class="hidden">
+    <span id="toast-text"></span>
+    <div id="toast-icons" class="hidden"></div>
+  </div>
+
+  <div id="dialog-box" class="hidden">
+    <div id="dialog-speaker"></div>
+    <div id="dialog-text"></div>
+    <div id="dialog-icons" class="hidden"></div>
+    <div id="dialog-hint">Space / Enter to continue</div>
+  </div>
+
+  <div id="choice-box" class="hidden">
+    <div id="choice-text"></div>
+    <div id="choice-buttons"></div>
+  </div>
+
+  <!-- ── Level-up overlay (centered, icon-based choices) ───────────────── -->
+  <div id="levelup-box" class="hidden">
+    <div id="levelup-title">⬆ Level Up</div>
+    <div id="levelup-subtitle">Wybierz ulepszenie</div>
+    <div id="levelup-buttons"></div>
+  </div>
+
+  <!-- ── Cheat console (Ctrl+X) ─────────────────────────────────────────── -->
+  <div id="cheat-box" class="hidden">
+    <div id="cheat-title">💥 Cheats</div>
+    <div id="cheat-hint">item <id>  ·  xp <n>  ·  att/def/arm/agi/dmg <n>  ·  hp <n></div>
+    <input id="cheat-input" type="text" placeholder="item Red Potion" autocomplete="off" spellcheck="false" />
+    <div id="cheat-feedback"></div>
+  </div>
+
+  <!-- ── Learning Modal ───────────────────────────────────────────────── -->
+  <div id="learn-modal" class="hidden">
+    <div id="learn-modal-backdrop"></div>
+    <div id="learn-modal-panel">
+      <div id="learn-modal-header">
+        <span id="learn-modal-title">Pomoc</span>
+        <button id="learn-modal-close" title="Zamknij (Esc)">×</button>
+      </div>
+      <div id="learn-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- ── Question browser (Ctrl+Q) ─────────────────────────────────────── -->
+  <div id="q-browser" class="hidden">
+    <div id="q-browser-panel">
+      <div id="q-browser-header">
+        <span id="q-browser-title">Question Browser</span>
+        <div id="q-browser-controls">
+          <label for="q-pool-select">Pool:</label>
+          <select id="q-pool-select"></select>
+          <input id="q-filter" type="search" placeholder="Filter…" autocomplete="off" spellcheck="false" />
+          <span id="q-browser-count"></span>
+        </div>
+        <button id="q-browser-close" title="Close (Esc)">×</button>
+      </div>
+      <div id="q-browser-list"></div>
+      <div id="q-browser-footer">
+        <button id="q-page-prev">◀</button>
+        <span id="q-page-label"></span>
+        <button id="q-page-next">▶</button>
+      </div>
+    </div>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

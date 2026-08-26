@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Downscale</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: sans-serif;
+            background: #1a1a1a;
+            color: #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h2 { margin: 0 0 16px; color: #fff; }
+
+        .panel {
+            background: #252525;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        #drop-zone {
+            border: 2px dashed #555;
+            border-radius: 6px;
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+            color: #888;
+            transition: border-color 0.2s, background 0.2s;
+            font-size: 14px;
+        }
+        #drop-zone.hover { border-color: #007bff; background: #1e2a3a; color: #aad4ff; }
+        #drop-zone.loaded { border-color: #28a745; color: #aaa; padding: 10px; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        label { color: #bbb; white-space: nowrap; }
+
+        input[type="range"] {
+            width: 160px;
+            accent-color: #007bff;
+        }
+
+        .value-badge {
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 13px;
+            min-width: 48px;
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 7px 16px;
+            background: #444;
+            color: #ddd;
+            border: 1px solid #666;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+        button:hover { background: #555; }
+        button.primary { background: #007bff; border-color: #007bff; color: #fff; }
+        button.primary:hover { background: #0069d9; }
+
+        .canvases {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .canvas-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .canvas-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            display: inline-block;
+            overflow: auto;
+            border: 2px solid #444;
+            border-radius: 4px;
+            background-color: #222;
+            background-image:
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+            cursor: crosshair;
+        }
+
+        .bg-green    { background-color: #2f8136 !important; background-image: none !important; }
+        .bg-brown    { background-color: #865e40 !important; background-image: none !important; }
+        .bg-white    { background-color: #ffffff !important; background-image: none !important; }
+        .bg-black    { background-color: #000000 !important; background-image: none !important; }
+        .bg-checkers {
+            background-color: #555 !important;
+            background-image:
+                linear-gradient(45deg, #888 25%, transparent 25%),
+                linear-gradient(-45deg, #888 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #888 75%),
+                linear-gradient(-45deg, transparent 75%, #888 75%) !important;
+            background-size: 16px 16px !important;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+        }
+
+        #source-wrap {
+            max-width: 90vw;
+            max-height: 60vh;
+            overflow: auto;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #overlay-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+
+        #result-canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #666;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .info-bar {
+            font-size: 12px;
+            color: #888;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .info-bar span { color: #bbb; }
+    </style>
+</head>
+<body>
+
+<div class="panel">
+    <h2>Pixel Downscale</h2>
+    <div id="drop-zone">Drop an image here, or click to upload</div>
+    <input type="file" id="file-input" accept="image/*" style="display:none">
+</div>
+
+<div class="canvas-box" style="margin-bottom:16px;width:100%;max-width:900px;">
+    <div class="canvas-label">Source</div>
+    <div class="canvas-wrap" id="source-wrap">
+        <canvas id="source-canvas"></canvas>
+        <canvas id="overlay-canvas"></canvas>
+    </div>
+    <div class="info-bar" id="sel-info">No selection — drag to select</div>
+</div>
+
+<div class="panel">
+    <div class="controls">
+        <div class="control-group">
+            <label>Probe X:</label>
+            <input type="range" id="probe-slider" min="1" max="32" step="0.01" value="4">
+            <div class="value-badge"><span id="probe-val">4.00</span>px</div>
+        </div>
+        <div class="control-group" id="probe-y-group">
+            <label>Probe Y:</label>
+            <input type="range" id="probe-y-slider" min="1" max="32" step="0.01" value="4">
+            <div class="value-badge"><span id="probe-y-val">4.00</span>px</div>
+        </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="lock-aspect" checked> Lock aspect</label>
+        </div>
+        <div class="control-group">
+            <label>Offset X:</label>
+            <input type="range" id="offset-x-slider" min="0" max="5" step="0.1" value="0">
+            <div class="value-badge"><span id="offset-x-val">0.0</span>px</div>
+        </div>
+        <div class="control-group">
+            <label>Offset Y:</label>
+            <input type="range" id="offset-y-slider" min="0" max="5" step="0.1" value="0">
+            <div class="value-badge"><span id="offset-y-val">0.0</span>px</div>
+        </div>
+        <div class="control-group">
+            <label>Result zoom:</label>
+            <select id="result-zoom-select">
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4" selected>4x</option>
+                <option value="6">6x</option>
+                <option value="8">8x</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Sampling:</label>
+            <select id="sampling-select">
+                <option value="nearest" selected>Nearest-neighbor</option>
+                <option value="average">Average</option>
+                <option value="majority">Majority</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Dest BG:</label>
+            <select id="bg-select">
+                <option value="">(default)</option>
+                <option value="bg-green">Green</option>
+                <option value="bg-brown">Brown</option>
+                <option value="bg-checkers">Checkers</option>
+                <option value="bg-white">White</option>
+                <option value="bg-black">Black</option>
+            </select>
+        </div>
+        <button id="clear-sel-btn">Clear Selection</button>
+    </div>
+    <p class="hint">Drag on the source image to select a region. The result shows that region downscaled by the probe size.</p>
+</div>
+
+<div class="canvases">
+    <div class="canvas-box">
+        <div class="canvas-label">Result</div>
+        <div class="canvas-wrap" id="result-wrap">
+            <canvas id="result-canvas"></canvas>
+        </div>
+        <div class="info-bar" id="result-info">—</div>
+    </div>
+</div>
+
+<script>
+    const dropZone   = document.getElementById('drop-zone');
+    const fileInput  = document.getElementById('file-input');
+    const srcCanvas  = document.getElementById('source-canvas');
+    const srcCtx     = srcCanvas.getContext('2d', { willReadFrequently: true });
+    const ovlCanvas  = document.getElementById('overlay-canvas');
+    const ovlCtx     = ovlCanvas.getContext('2d');
+    const resCanvas  = document.getElementById('result-canvas');
+    const resCtx     = resCanvas.getContext('2d');
+    const probeSlider      = document.getElementById('probe-slider');
+    const probeVal         = document.getElementById('probe-val');
+    const probeYSlider     = document.getElementById('probe-y-slider');
+    const probeYVal        = document.getElementById('probe-y-val');
+    const lockAspect       = document.getElementById('lock-aspect');
+    const probeYGroup      = document.getElementById('probe-y-group');
+    const resultZoomSelect = document.getElementById('result-zoom-select');
+    const samplingSelect   = document.getElementById('sampling-select');
+    const bgSelect         = document.getElementById('bg-select');
+    const resultWrap       = document.getElementById('result-wrap');
+    const offsetXSlider    = document.getElementById('offset-x-slider');
+    const offsetXVal       = document.getElementById('offset-x-val');
+    const offsetYSlider    = document.getElementById('offset-y-slider');
+    const offsetYVal       = document.getElementById('offset-y-val');
+
+    // Hide probe Y when locked
+    function syncProbeYVisibility() {
+        probeYGroup.style.display = lockAspect.checked ? 'none' : '';
+    }
+    syncProbeYVisibility();
+    const clearSelBtn   = document.getElementById('clear-sel-btn');
+    const selInfo       = document.getElementById('sel-info');
+    const resultInfo    = document.getElementById('result-info');
+
+    let srcImage = null;
+    let imgData  = null;   // raw pixel data of full image
+    let imgW = 0, imgH = 0;
+
+    // Selection in image-pixel coords
+    let sel = null;  // { x, y, w, h }
+    let dragStart = null;
+    let isDragging = false;
+
+    // ── File loading ──────────────────────────────────────────────────────────
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = e => loadFile(e.target.files[0]);
+
+    dropZone.ondragover  = e => { e.preventDefault(); dropZone.classList.add('hover'); };
+    dropZone.ondragleave = ()  => dropZone.classList.remove('hover');
+    dropZone.ondrop = e => {
+        e.preventDefault();
+        dropZone.classList.remove('hover');
+        loadFile(e.dataTransfer.files[0]);
+    };
+
+    function loadFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                srcImage = img;
+                imgW = img.naturalWidth;
+                imgH = img.naturalHeight;
+
+                // Draw full image to source canvas to grab pixel data
+                const tmp = document.createElement('canvas');
+                tmp.width = imgW; tmp.height = imgH;
+                tmp.getContext('2d').drawImage(img, 0, 0);
+                imgData = tmp.getContext('2d').getImageData(0, 0, imgW, imgH);
+
+                sel = null;
+                dropZone.textContent = `Loaded: ${file.name}  (${imgW} × ${imgH})`;
+                dropZone.classList.add('loaded');
+                render();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Rendering ─────────────────────────────────────────────────────────────
+    function getResultZoom() { return parseInt(resultZoomSelect.value); }
+    function getProbe()      {
+        const px = parseFloat(probeSlider.value);
+        const py = lockAspect.checked ? px : parseFloat(probeYSlider.value);
+        return { x: px, y: py };
+    }
+    function getOffset()     {
+        return { x: parseFloat(offsetXSlider.value), y: parseFloat(offsetYSlider.value) };
+    }
+    function getSampling()   { return samplingSelect.value; }
+
+    function render() {
+        if (!srcImage) return;
+
+        // Source canvas: 1:1, no stretching
+        srcCanvas.width  = imgW;
+        srcCanvas.height = imgH;
+        srcCanvas.style.width  = '';
+        srcCanvas.style.height = '';
+
+        srcCtx.drawImage(srcImage, 0, 0);
+
+        // Overlay canvas matches source canvas natural size
+        ovlCanvas.width  = imgW;
+        ovlCanvas.height = imgH;
+        ovlCanvas.style.width  = '';
+        ovlCanvas.style.height = '';
+
+        drawOverlay();
+        renderResult();
+    }
+
+    function drawOverlay() {
+        ovlCtx.clearRect(0, 0, ovlCanvas.width, ovlCanvas.height);
+        if (!sel) return;
+
+        // Coords are fractional image-space; overlay canvas is 1:1 with image
+        const sx = sel.x, sy = sel.y;
+        const sw = sel.w, sh = sel.h;
+
+        // Dim outside
+        ovlCtx.fillStyle = 'rgba(0,0,0,0.45)';
+        ovlCtx.fillRect(0, 0, ovlCanvas.width, ovlCanvas.height);
+        ovlCtx.clearRect(sx, sy, sw, sh);
+
+        // Selection border
+        ovlCtx.strokeStyle = '#f0c040';
+        ovlCtx.lineWidth = 1;
+        ovlCtx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+
+        // Probe grid overlay (faint lines per probe block)
+        const probe = getProbe();
+        if (probe.x > 1 && probe.x <= sw && probe.y <= sh) {
+            ovlCtx.strokeStyle = 'rgba(255,200,0,0.35)';
+            ovlCtx.lineWidth = 0.5;
+            for (let gx = probe.x; gx < sel.w; gx += probe.x) {
+                ovlCtx.beginPath();
+                ovlCtx.moveTo(sx + gx, sy);
+                ovlCtx.lineTo(sx + gx, sy + sh);
+                ovlCtx.stroke();
+            }
+            for (let gy = probe.y; gy < sel.h; gy += probe.y) {
+                ovlCtx.beginPath();
+                ovlCtx.moveTo(sx, sy + gy);
+                ovlCtx.lineTo(sx + sw, sy + gy);
+                ovlCtx.stroke();
+            }
+        }
+
+        selInfo.innerHTML =
+            `Selection: <span>${sel.x.toFixed(2)}, ${sel.y.toFixed(2)}</span> &nbsp; ` +
+            `Size: <span>${sel.w.toFixed(2)} × ${sel.h.toFixed(2)}</span> px`;
+    }
+
+    function renderResult() {
+        if (!sel || !imgData) {
+            resCanvas.width  = 1;
+            resCanvas.height = 1;
+            resCanvas.style.width = '1px';
+            resCanvas.style.height = '1px';
+            resultInfo.textContent = '—';
+            return;
+        }
+
+        const probe = getProbe();
+        const off   = getOffset();
+        const rz    = getResultZoom();
+
+        const outW = Math.ceil(sel.w / probe.x);
+        const outH = Math.ceil(sel.h / probe.y);
+
+        resCanvas.width  = outW;
+        resCanvas.height = outH;
+        resCanvas.style.width  = (outW * rz) + 'px';
+        resCanvas.style.height = (outH * rz) + 'px';
+
+        const out = resCtx.createImageData(outW, outH);
+        const mode = getSampling();
+
+        for (let oy = 0; oy < outH; oy++) {
+            for (let ox = 0; ox < outW; ox++) {
+                const x0 = sel.x + off.x + ox * probe.x;
+                const y0 = sel.y + off.y + oy * probe.y;
+                const x1 = Math.min(x0 + probe.x, sel.x + sel.w);
+                const y1 = Math.min(y0 + probe.y, sel.y + sel.h);
+                const oi = (oy * outW + ox) * 4;
+
+                if (mode === 'nearest') {
+                    // Sample center of probe block
+                    const srcX = Math.max(0, Math.min(imgW - 1, Math.round(sel.x + off.x + (ox + 0.5) * probe.x - 0.5)));
+                    const srcY = Math.max(0, Math.min(imgH - 1, Math.round(sel.y + off.y + (oy + 0.5) * probe.y - 0.5)));
+                    const i = (srcY * imgW + srcX) * 4;
+                    out.data[oi]     = imgData.data[i];
+                    out.data[oi + 1] = imgData.data[i + 1];
+                    out.data[oi + 2] = imgData.data[i + 2];
+                    out.data[oi + 3] = imgData.data[i + 3];
+
+                } else if (mode === 'average') {
+                    let r = 0, g = 0, b = 0, a = 0, count = 0;
+                    for (let py = Math.floor(y0); py < Math.ceil(y1); py++) {
+                        for (let px = Math.floor(x0); px < Math.ceil(x1); px++) {
+                            if (px < 0 || py < 0 || px >= imgW || py >= imgH) continue;
+                            const i = (py * imgW + px) * 4;
+                            r += imgData.data[i]; g += imgData.data[i+1];
+                            b += imgData.data[i+2]; a += imgData.data[i+3];
+                            count++;
+                        }
+                    }
+                    if (count > 0) {
+                        out.data[oi]     = Math.round(r / count);
+                        out.data[oi + 1] = Math.round(g / count);
+                        out.data[oi + 2] = Math.round(b / count);
+                        out.data[oi + 3] = Math.round(a / count);
+                    }
+
+                } else if (mode === 'majority') {
+                    // Find most-frequent RGBA color in probe block
+                    const freq = new Map();
+                    for (let py = Math.floor(y0); py < Math.ceil(y1); py++) {
+                        for (let px = Math.floor(x0); px < Math.ceil(x1); px++) {
+                            if (px < 0 || py < 0 || px >= imgW || py >= imgH) continue;
+                            const i = (py * imgW + px) * 4;
+                            const key = `${imgData.data[i]},${imgData.data[i+1]},${imgData.data[i+2]},${imgData.data[i+3]}`;
+                            freq.set(key, (freq.get(key) || 0) + 1);
+                        }
+                    }
+                    let best = null, bestCount = 0;
+                    for (const [key, cnt] of freq) {
+                        if (cnt > bestCount) { bestCount = cnt; best = key; }
+                    }
+                    if (best) {
+                        const [r, g, b, a] = best.split(',').map(Number);
+                        out.data[oi] = r; out.data[oi+1] = g;
+                        out.data[oi+2] = b; out.data[oi+3] = a;
+                    }
+                }
+            }
+        }
+
+        resCtx.putImageData(out, 0, 0);
+        const modeLabel = { nearest: 'nearest-neighbor', average: 'average', majority: 'majority' }[mode];
+        const probeLabel = lockAspect.checked
+            ? `${probe.x.toFixed(2)}×${probe.x.toFixed(2)}`
+            : `${probe.x.toFixed(2)}×${probe.y.toFixed(2)}`;
+        resultInfo.innerHTML =
+            `${outW} × ${outH} px &nbsp; (probe ${probeLabel}, ${modeLabel})`;
+    }
+
+    // ── Selection drag ────────────────────────────────────────────────────────
+    const sourceWrap = document.getElementById('source-wrap');
+
+    sourceWrap.addEventListener('mousedown', e => {
+        if (!srcImage) return;
+        isDragging = true;
+        dragStart = screenToImage(e);
+        sel = null;
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', e => {
+        if (!isDragging || !dragStart) return;
+        const cur = screenToImage(e);
+        const x = Math.min(dragStart.x, cur.x);
+        const y = Math.min(dragStart.y, cur.y);
+        const w = Math.abs(cur.x - dragStart.x);
+        const h = Math.abs(cur.y - dragStart.y);
+        sel = (w > 0 && h > 0) ? { x, y, w, h } : null;
+        drawOverlay();
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) renderResult();
+        isDragging = false;
+        dragStart = null;
+    });
+
+    function screenToImage(e) {
+        const rect = srcCanvas.getBoundingClientRect();
+        // source canvas is 1:1, so CSS px == image px (no zoom scale)
+        const scaleX = imgW / rect.width;
+        const scaleY = imgH / rect.height;
+        const x = Math.round((e.clientX - rect.left) * scaleX * 100) / 100;
+        const y = Math.round((e.clientY - rect.top)  * scaleY * 100) / 100;
+        return {
+            x: Math.max(0, Math.min(imgW, x)),
+            y: Math.max(0, Math.min(imgH, y))
+        };
+    }
+
+    // ── Controls ──────────────────────────────────────────────────────────────
+    probeSlider.oninput = () => {
+        probeVal.textContent = parseFloat(probeSlider.value).toFixed(2);        if (lockAspect.checked) {
+            probeYSlider.value = probeSlider.value;
+            probeYVal.textContent = probeVal.textContent;
+        }
+        drawOverlay();
+        renderResult();
+    };
+
+    probeYSlider.oninput = () => {
+        probeYVal.textContent = parseFloat(probeYSlider.value).toFixed(2);
+        drawOverlay();
+        renderResult();
+    };
+
+    lockAspect.onchange = () => {
+        syncProbeYVisibility();
+        if (lockAspect.checked) {
+            probeYSlider.value = probeSlider.value;
+            probeYVal.textContent = probeVal.textContent;
+        }        drawOverlay();
+        renderResult();
+    };
+
+    offsetXSlider.oninput = () => {
+        offsetXVal.textContent = parseFloat(offsetXSlider.value).toFixed(1);
+        renderResult();
+    };
+
+    offsetYSlider.oninput = () => {
+        offsetYVal.textContent = parseFloat(offsetYSlider.value).toFixed(1);
+        renderResult();
+    };
+
+    resultZoomSelect.onchange = () => { renderResult(); };
+
+    samplingSelect.onchange = () => { renderResult(); };
+
+    bgSelect.onchange = () => {
+        resultWrap.className = 'canvas-wrap' + (bgSelect.value ? ' ' + bgSelect.value : '');
+    };
+
+    clearSelBtn.onclick = () => {
+        sel = null;
+        selInfo.textContent = 'No selection — drag to select';
+        drawOverlay();
+        renderResult();
+    };
+</script>
+</body>
+</html>

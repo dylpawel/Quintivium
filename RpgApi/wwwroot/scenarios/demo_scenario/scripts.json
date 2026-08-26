@@ -1,0 +1,49 @@
+[
+  {
+    "id": "intro",
+    "on": "scenario_start",
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "Welcome, adventurer. Your journey begins here." },
+      { "type": "give_item", "item_id": "bread", "qty": 3 }
+    ]
+  },
+  {
+    "id": "mage_talk",
+    "on": "npc_interact",
+    "npc": "mage",
+    "actions": [
+      { "type": "show_dialog", "speaker": "Hero-Mage", "text": "Greetings, traveller. I guard the secrets of these lands." },
+      { "type": "show_choice", "text": "What do you seek here?", "choices": [
+        { "label": "Nothing. Farewell." },
+        { "label": "Show me your power!", "actions": [
+          { "type": "fire_event", "event": "mage_power_requested" }
+        ]},
+        { "label": "Tell me about these lands.",
+          "condition": "stat(mage_skeletons >= 1)",
+          "actions": [
+            { "type": "show_dialog", "speaker": "Hero-Mage", "text": "These lands are ancient. The skeletons you have witnessed are but a shadow of what stirs in the deep." }
+          ]
+        }
+      ]}
+    ]
+  },
+  {
+    "id": "mage_power_exhausted",
+    "on": "mage_power_requested",
+    "condition": "stat(mage_skeletons >= 3)",
+    "actions": [
+      { "type": "show_dialog", "speaker": "Hero-Mage", "text": "I have exhausted my power. The dead must rest now." }
+    ]
+  },
+  {
+    "id": "mage_power_spawn",
+    "on": "mage_power_requested",
+    "condition": "!stat(mage_skeletons >= 3)",
+    "actions": [
+      { "type": "spawn_monster", "monster": "Skeleton" },
+      { "type": "add_variable", "name": "mage_skeletons", "delta": 1 },
+      { "type": "show_dialog", "speaker": "Hero-Mage", "text": "Behold! The undead rise at my command. Defeat them if you dare." }
+    ]
+  }
+]

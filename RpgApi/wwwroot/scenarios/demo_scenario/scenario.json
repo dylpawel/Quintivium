@@ -1,0 +1,24 @@
+{
+  "title": "The World",
+  "description": "A demo scenario showing the ECA engine.",
+  "start_map": "map",
+  "start_position": { "x": 5, "y": 5},
+  "questionPools": 3,
+  "scriptFiles": [
+    "scripts.json",
+    { "file": "map_scripts.json", "map": "map" },
+    { "file": "map_4_pieces.json", "map": "map" },
+    { "file": "cave_scripts.json", "map": "cave" }
+  ],
+  "weather": {
+    "map":  { "type": "rain", "intensity": 0.35, "wind": 25 }
+  },
+  "lighting": {
+    "cave": { "col": [0, 0, 0], "a": 0.95 }
+  },
+  "variables": {
+    "level": 1,
+    "hp": 100
+  },
+  "flags": {}
+}

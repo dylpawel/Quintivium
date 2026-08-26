@@ -1,0 +1,12 @@
+{
+  "id": "cave",
+  "name": "Cave",
+  "backgroundColor": "#000000",
+  "tileSize": 32,
+  "terrains": [
+    { "id": 0, "name": "empty", "base": true },
+    { "id": 1, "name": "cave", "sprite": "cave.png", "tags": ["ground"] },
+    { "id": 2, "name": "water", "sprite": "../shared/water.png", "water": true, "waterFlat": 1, "noCliff": true }
+  ],
+  "priority": [0,1,2]
+}

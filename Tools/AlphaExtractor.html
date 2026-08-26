@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Extractor Pro</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            background: #1a1a1a; 
+            color: white;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .controls-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .container { display: flex; gap: 15px; margin-bottom: 15px; }
+
+        .drop-zone {
+            width: 180px; height: 100px; border: 2px dashed #444;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; background: #333; cursor: pointer;
+            font-size: 12px; overflow: hidden;
+        }
+
+        .preview { 
+            max-width: 100%; 
+            max-height: 100%; 
+            display: none; 
+            object-fit: contain; 
+        }
+
+        /* Transparency Backgrounds */
+        .bg-checkered {
+            background-color: #222;
+            background-image: 
+                linear-gradient(45deg, #333 25%, transparent 25%), 
+                linear-gradient(-45deg, #333 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #333 75%), 
+                linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+        }
+        .bg-white { background: white !important; }
+        .bg-black { background: black !important; }
+        .bg-grey  { background: #808080 !important; }
+        .bg-blue  { background: #0047ab !important; }
+        .bg-green { background: #2F8136 !important; }
+
+        #canvas-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px auto;
+        }
+
+        #result-canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border: 2px solid #555;
+            transition: background 0.2s;
+            cursor: crosshair;
+        }
+
+        #ruler-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        #border-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #border-btn { background: #555; }
+        #border-btn.active { background: #007bff; box-shadow: 0 0 10px rgba(0,123,255,0.5); }
+        #border-btn:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; box-shadow: none; }
+        #cut-btn { background: #555; }
+        #cut-btn.active { background: #c0392b; box-shadow: 0 0 10px rgba(192,57,43,0.5); }
+        #cut-btn:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; box-shadow: none; }
+        #alpha-filter-btn { background: #555; }
+        #alpha-filter-btn:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; }
+        #rm-bg-btn { background: #555; }
+        #rm-bg-btn.active { background: #8e44ad; box-shadow: 0 0 10px rgba(142,68,173,0.5); }
+        #rm-bg-btn:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; box-shadow: none; }
+
+        .settings-row {
+            margin: 10px 0; 
+            display: flex; 
+            gap: 20px; 
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button { 
+            padding: 10px 24px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+        select, input[type="range"] {
+            padding: 5px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        input[type="number"].slider-val {
+            width: 60px;
+            padding: 4px 6px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls-header">
+        <h2>Alpha Extractor</h2>
+        <div class="container">
+            <div id="drop-white" class="drop-zone">
+                <span>Drop WHITE background</span>
+                <img class="preview" id="prev-white">
+            </div>
+            <div id="drop-black" class="drop-zone">
+                <span>Drop BLACK background</span>
+                <img class="preview" id="prev-black">
+            </div>
+        </div>
+
+        <div class="settings-row">
+            <div>
+                <label>Grouping: </label>
+                <input type="range" id="scale-factor" min="1" max="20" step="0.01" value="5.87">
+                <input type="number" id="scale-val" class="slider-val" min="1" max="20" step="0.01" value="5.87">px
+            </div>
+
+            <div>
+                <label>Preview BG: </label>
+                <select id="bg-selector">
+                    <option value="bg-grey" selected>Grey</option>
+                    <option value="bg-checkered">Checkerboard</option>
+                    <option value="bg-white">White</option>
+                    <option value="bg-black">Black</option>
+                    <option value="bg-blue">Blue</option>
+                    <option value="bg-green">Green</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Zoom: </label>
+                <select id="zoom-selector">
+                    <option value="auto" selected>Auto</option>
+                    <option value="2">2x</option>
+                    <option value="3">3x</option>
+                    <option value="4">4x</option>
+                    <option value="6">6x</option>
+                    <option value="8">8x</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-row" style="margin-top: 5px;">
+            <button id="border-btn" disabled>Add Border</button>
+            <span style="font-size: 12px; color: #aaa;">Black ≤</span>
+            <input type="number" id="border-black-threshold" class="slider-val" min="0" max="255" value="20" title="Pixels with max(R,G,B) at or below this value are treated as already-placed borders">
+            <button id="cut-btn" disabled>Cut</button>
+            <span id="border-undo-count" style="font-size: 11px; color: #aaa;"></span>
+            <span style="font-size: 11px; color: #888;">Ctrl+Z to undo</span>
+        </div>
+        <div class="settings-row" style="margin-top: 2px;">
+            <span style="font-size: 12px; color: #aaa;">Alpha Filter ≤</span>
+            <input type="number" id="alpha-threshold" class="slider-val" min="0" max="254" value="10">
+            <button id="alpha-filter-btn" disabled>Apply</button>
+        </div>
+        <div class="settings-row" style="margin-top: 2px;">
+            <button id="rm-bg-btn" disabled>Remove Background</button>
+            <span style="font-size: 12px; color: #aaa;">Tolerance</span>
+            <input type="number" id="rm-bg-tol" class="slider-val" min="0" max="255" value="15" title="Max per-channel difference to consider a pixel as background">
+        </div>
+        <p style="font-size: 11px; color: #888; margin-top: 10px;">Right-click the result below to "Save Image As"</p>
+    </div>
+
+    <div id="canvas-wrapper">
+        <canvas id="result-canvas" class="bg-grey"></canvas>
+        <canvas id="ruler-canvas"></canvas>
+        <canvas id="border-overlay"></canvas>
+    </div>
+
+    <script>
+        const dropWhite = document.getElementById('drop-white');
+        const dropBlack = document.getElementById('drop-black');
+        const wrapper = document.getElementById('canvas-wrapper');
+        const canvas = document.getElementById('result-canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const rulerCanvas = document.getElementById('ruler-canvas');
+        const rCtx = rulerCanvas.getContext('2d');
+        const bdrOverlay = document.getElementById('border-overlay');
+        const bdrCtx = bdrOverlay.getContext('2d');
+        const borderBtn = document.getElementById('border-btn');
+        const cutBtn = document.getElementById('cut-btn');
+        const alphaFilterBtn = document.getElementById('alpha-filter-btn');
+        const alphaThresholdInput = document.getElementById('alpha-threshold');
+        const rmBgBtn = document.getElementById('rm-bg-btn');
+        const rmBgTolInput = document.getElementById('rm-bg-tol');
+        const borderUndoCountEl = document.getElementById('border-undo-count');
+        const bgSelector = document.getElementById('bg-selector');
+        const zoomSelector = document.getElementById('zoom-selector');
+        const scaleSlider = document.getElementById('scale-factor');
+
+        let imgWhite = null;
+        let imgBlack = null;
+
+        // ── Border tool state ─────────────────────────────────────────────
+        let bdrMode      = false;
+        let bdrSelecting = false;
+        let bdrStart     = null;
+        let bdrEnd       = null;
+        let bdrImageData = null;   // live copy of canvas pixels
+        let bdrUndoStack = [];
+        let cutMode      = false;
+        let rmBgMode     = false;
+
+        // Background Selector logic
+        bgSelector.onchange = () => {
+            canvas.className = bgSelector.value;
+        };
+
+        // Zoom Selector logic
+        zoomSelector.onchange = () => {
+            if (canvas.width > 0 && canvas.height > 0) {
+                applyZoom(canvas.width, canvas.height);
+            }
+        };
+
+        function applyZoom(outW, outH) {
+            let finalScale;
+            const zoomVal = zoomSelector.value;
+            if (zoomVal === 'auto') {
+                const screenPadding = 60;
+                const maxScale = Math.floor((window.innerWidth - screenPadding) / outW);
+                finalScale = Math.max(1, maxScale);
+            } else {
+                finalScale = parseInt(zoomVal);
+            }
+            canvas.style.width  = (outW * finalScale) + 'px';
+            canvas.style.height = (outH * finalScale) + 'px';
+            // Keep ruler overlay in sync
+            rulerCanvas.width  = outW * finalScale;
+            rulerCanvas.height = outH * finalScale;
+            rulerCanvas.style.width  = (outW * finalScale) + 'px';
+            rulerCanvas.style.height = (outH * finalScale) + 'px';
+            // Keep border overlay in sync
+            bdrOverlay.width  = outW * finalScale;
+            bdrOverlay.height = outH * finalScale;
+            bdrOverlay.style.width  = (outW * finalScale) + 'px';
+            bdrOverlay.style.height = (outH * finalScale) + 'px';
+        }
+
+        // ── Ruler ────────────────────────────────────────────────────────────
+        let rulerStart = null;
+
+        function syncRulerSize() {
+            rulerCanvas.width  = canvas.offsetWidth;
+            rulerCanvas.height = canvas.offsetHeight;
+            rulerCanvas.style.width  = canvas.offsetWidth  + 'px';
+            rulerCanvas.style.height = canvas.offsetHeight + 'px';
+        }
+
+        function canvasPx(screenDelta, axis) {
+            // Convert CSS-pixel delta to canvas-pixel delta
+            const ratio = axis === 'x'
+                ? canvas.width  / canvas.offsetWidth
+                : canvas.height / canvas.offsetHeight;
+            return Math.abs(screenDelta) * ratio;
+        }
+
+        function drawRuler(x1, y1, x2, y2) {
+            rCtx.clearRect(0, 0, rulerCanvas.width, rulerCanvas.height);
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const cpxW = Math.round(canvasPx(dx, 'x'));
+            const cpxH = Math.round(canvasPx(dy, 'y'));
+            const dominant = cpxW >= cpxH ? 'W' : 'H';
+            const measurement = dominant === 'W' ? cpxW : cpxH;
+
+            // Line
+            rCtx.save();
+            rCtx.strokeStyle = 'rgba(255, 220, 0, 0.95)';
+            rCtx.lineWidth = 1.5;
+            rCtx.setLineDash([]);
+            rCtx.beginPath();
+            rCtx.moveTo(x1, y1);
+            rCtx.lineTo(x2, y2);
+            rCtx.stroke();
+
+            // End-cap circles
+            [x1, x2].forEach((cx, i) => {
+                const cy = i === 0 ? y1 : y2;
+                rCtx.beginPath();
+                rCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+                rCtx.fillStyle = 'rgba(255, 220, 0, 0.95)';
+                rCtx.fill();
+            });
+
+            // Tick marks every 10 canvas pixels along the dominant axis
+            const steps = Math.floor(measurement / 10);
+            const screenPerCpx = dominant === 'W'
+                ? canvas.offsetWidth  / canvas.width
+                : canvas.offsetHeight / canvas.height;
+            const tickStep = 10 * screenPerCpx;
+            const totalScreenDist = dominant === 'W'
+                ? Math.abs(dx) : Math.abs(dy);
+            if (totalScreenDist > 0) {
+                const ux = dx / totalScreenDist;  // unit vec
+                const uy = dy / totalScreenDist;
+                const perpX = -uy, perpY = ux;
+                for (let i = 1; i <= steps; i++) {
+                    const t = (i * tickStep) / totalScreenDist;
+                    if (t > 1) break;
+                    const tx = x1 + dx * t;
+                    const ty = y1 + dy * t;
+                    const big = (i % 5 === 0) ? 6 : 3;
+                    rCtx.beginPath();
+                    rCtx.moveTo(tx - perpX * big, ty - perpY * big);
+                    rCtx.lineTo(tx + perpX * big, ty + perpY * big);
+                    rCtx.strokeStyle = 'rgba(255, 220, 0, 0.7)';
+                    rCtx.lineWidth = 1;
+                    rCtx.stroke();
+                }
+            }
+
+            // Label
+            const label = `${measurement} px (${dominant})`;
+            const lx = (x1 + x2) / 2;
+            const ly = (y1 + y2) / 2;
+            rCtx.font = 'bold 13px monospace';
+            const tw = rCtx.measureText(label).width;
+            const pad = 5;
+            rCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            rCtx.beginPath();
+            rCtx.roundRect(lx - tw / 2 - pad, ly - 10 - pad, tw + pad * 2, 20 + pad, 4);
+            rCtx.fill();
+            rCtx.fillStyle = '#ffe000';
+            rCtx.textAlign = 'center';
+            rCtx.textBaseline = 'middle';
+            rCtx.fillText(label, lx, ly);
+            rCtx.restore();
+        }
+
+        wrapper.addEventListener('mousedown', (e) => {
+            if (canvas.width === 0) return;
+            if (bdrMode || cutMode) return; // ruler disabled in selection modes
+            syncRulerSize();
+            const rect = wrapper.getBoundingClientRect();
+            rulerStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!rulerStart) return;
+            const rect = wrapper.getBoundingClientRect();
+            drawRuler(rulerStart.x, rulerStart.y,
+                      e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!rulerStart) return;
+            rulerStart = null;
+            rCtx.clearRect(0, 0, rulerCanvas.width, rulerCanvas.height);
+        });
+        // ─────────────────────────────────────────────────────────────────────
+
+        // ── Border tool logic ─────────────────────────────────────────────────
+
+        borderBtn.onclick = () => {
+            bdrMode = !bdrMode;
+            if (bdrMode) { cutMode = false; cutBtn.classList.remove('active'); rmBgMode = false; rmBgBtn.classList.remove('active'); }
+            borderBtn.classList.toggle('active', bdrMode);
+            const anyMode = bdrMode || cutMode;
+            bdrOverlay.style.pointerEvents = anyMode ? 'auto' : 'none';
+            bdrOverlay.style.cursor = anyMode ? 'crosshair' : 'default';
+            if (!bdrMode) bdrClearOverlay();
+        };
+
+        function bdrGetPos(e) {
+            const rect = bdrOverlay.getBoundingClientRect();
+            const scale = bdrOverlay.width / canvas.width;
+            return {
+                x: Math.floor((e.clientX - rect.left) / scale),
+                y: Math.floor((e.clientY - rect.top)  / scale)
+            };
+        }
+
+        bdrOverlay.addEventListener('mousedown', e => {
+            if ((!bdrMode && !cutMode) || !bdrImageData) return;
+            bdrSelecting = true;
+            bdrStart = bdrGetPos(e);
+            bdrEnd   = { ...bdrStart };
+        });
+
+        bdrOverlay.addEventListener('mousemove', e => {
+            if (!bdrSelecting) return;
+            bdrEnd = bdrGetPos(e);
+            bdrDrawSelection();
+        });
+
+        bdrOverlay.addEventListener('mouseup', e => {
+            if (!bdrSelecting) return;
+            bdrSelecting = false;
+            bdrEnd = bdrGetPos(e);
+            bdrClearOverlay();
+            const x0 = Math.min(bdrStart.x, bdrEnd.x);
+            const y0 = Math.min(bdrStart.y, bdrEnd.y);
+            const x1 = Math.max(bdrStart.x, bdrEnd.x);
+            const y1 = Math.max(bdrStart.y, bdrEnd.y);
+            if (x1 <= x0 && y1 <= y0) return;
+            if (bdrMode)      bdrApply(x0, y0, x1, y1);
+            else if (cutMode) cutApply(x0, y0, x1, y1);
+        });
+
+        bdrOverlay.addEventListener('mouseleave', () => {
+            if (bdrSelecting) { bdrSelecting = false; bdrClearOverlay(); }
+        });
+
+        function bdrDrawSelection() {
+            bdrCtx.clearRect(0, 0, bdrOverlay.width, bdrOverlay.height);
+            if (!bdrStart || !bdrEnd) return;
+            const scale = bdrOverlay.width / canvas.width;
+            const x = Math.min(bdrStart.x, bdrEnd.x) * scale;
+            const y = Math.min(bdrStart.y, bdrEnd.y) * scale;
+            const w = Math.abs(bdrEnd.x - bdrStart.x) * scale;
+            const h = Math.abs(bdrEnd.y - bdrStart.y) * scale;
+            bdrCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+            bdrCtx.lineWidth = 1;
+            bdrCtx.setLineDash([4, 4]);
+            bdrCtx.lineDashOffset = 0;
+            bdrCtx.strokeRect(x + 0.5, y + 0.5, w, h);
+            bdrCtx.strokeStyle = 'rgba(0,0,0,0.6)';
+            bdrCtx.lineDashOffset = 4;
+            bdrCtx.strokeRect(x + 0.5, y + 0.5, w, h);
+            bdrCtx.setLineDash([]);
+            bdrCtx.lineDashOffset = 0;
+        }
+
+        function bdrClearOverlay() {
+            bdrCtx.clearRect(0, 0, bdrOverlay.width, bdrOverlay.height);
+        }
+
+        function bdrApply(left, top, right, bottom) {
+            if (!bdrImageData) return;
+            left   = Math.max(0, left);
+            top    = Math.max(0, top);
+            right  = Math.min(canvas.width  - 1, right);
+            bottom = Math.min(canvas.height - 1, bottom);
+
+            const blackThreshold = Math.max(0, Math.min(255,
+                parseInt(document.getElementById('border-black-threshold').value) || 0));
+            const { data, width, height } = bdrImageData;
+            const toFill = [];
+            // Only orthogonal neighbours — diagonals are intentionally excluded
+            const orthoDirs = [{dx:0,dy:-1},{dx:0,dy:1},{dx:-1,dy:0},{dx:1,dy:0}];
+
+            for (let y = top; y <= bottom; y++) {
+                for (let x = left; x <= right; x++) {
+                    const idx = (y * width + x) * 4;
+                    if (data[idx + 3] > 0) continue; // already non-transparent
+                    let hasSolid = false;
+                    for (const { dx, dy } of orthoDirs) {
+                        const nx = x + dx, ny = y + dy;
+                        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                        const ni = (ny * width + nx) * 4;
+                        // Neighbour must be opaque AND not near-black (near-black = already a border)
+                        if (data[ni + 3] > 0 &&
+                            Math.max(data[ni], data[ni + 1], data[ni + 2]) > blackThreshold) {
+                            hasSolid = true;
+                            break;
+                        }
+                    }
+                    if (hasSolid) toFill.push(idx);
+                }
+            }
+
+            if (toFill.length === 0) return;
+
+            bdrUndoStack.push(new Uint8ClampedArray(bdrImageData.data));
+            bdrUpdateUndoCount();
+
+            for (const idx of toFill) {
+                data[idx]     = 0;
+                data[idx + 1] = 0;
+                data[idx + 2] = 0;
+                data[idx + 3] = 255;
+            }
+            ctx.putImageData(bdrImageData, 0, 0);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'z' && bdrUndoStack.length > 0) {
+                e.preventDefault();
+                const prev = bdrUndoStack.pop();
+                bdrImageData.data.set(prev);
+                ctx.putImageData(bdrImageData, 0, 0);
+                bdrUpdateUndoCount();
+            }
+        });
+
+        function bdrUpdateUndoCount() {
+            borderUndoCountEl.textContent = bdrUndoStack.length > 0
+                ? `(${bdrUndoStack.length} step${bdrUndoStack.length > 1 ? 's' : ''} saved)`
+                : '';
+        }
+
+        // ── Cut tool ──────────────────────────────────────────────────────────
+
+        cutBtn.onclick = () => {
+            cutMode = !cutMode;
+            if (cutMode) { bdrMode = false; borderBtn.classList.remove('active'); rmBgMode = false; rmBgBtn.classList.remove('active'); }
+            cutBtn.classList.toggle('active', cutMode);
+            const anyMode = bdrMode || cutMode;
+            bdrOverlay.style.pointerEvents = anyMode ? 'auto' : 'none';
+            bdrOverlay.style.cursor = anyMode ? 'crosshair' : 'default';
+            if (!cutMode) bdrClearOverlay();
+        };
+
+        function cutApply(left, top, right, bottom) {
+            if (!bdrImageData) return;
+            left   = Math.max(0, left);
+            top    = Math.max(0, top);
+            right  = Math.min(canvas.width  - 1, right);
+            bottom = Math.min(canvas.height - 1, bottom);
+
+            bdrUndoStack.push(new Uint8ClampedArray(bdrImageData.data));
+            bdrUpdateUndoCount();
+
+            const { data, width } = bdrImageData;
+            for (let y = top; y <= bottom; y++) {
+                for (let x = left; x <= right; x++) {
+                    const idx = (y * width + x) * 4;
+                    data[idx]     = 0;
+                    data[idx + 1] = 0;
+                    data[idx + 2] = 0;
+                    data[idx + 3] = 0;
+                }
+            }
+            ctx.putImageData(bdrImageData, 0, 0);
+        }
+
+        // ── Alpha Filter ──────────────────────────────────────────────────────
+
+        alphaFilterBtn.onclick = () => {
+            if (!bdrImageData) return;
+            const threshold = Math.max(0, Math.min(254, parseInt(alphaThresholdInput.value) || 0));
+            const { data } = bdrImageData;
+
+            const toZero = [];
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i + 3] > 0 && data[i + 3] <= threshold) toZero.push(i);
+            }
+            if (toZero.length === 0) return;
+
+            bdrUndoStack.push(new Uint8ClampedArray(data));
+            bdrUpdateUndoCount();
+
+            for (const i of toZero) {
+                data[i]     = 0;
+                data[i + 1] = 0;
+                data[i + 2] = 0;
+                data[i + 3] = 0;
+            }
+            ctx.putImageData(bdrImageData, 0, 0);
+        };
+
+        // ── Remove Background tool ──────────────────────────────────────────────
+
+        rmBgBtn.onclick = () => {
+            rmBgMode = !rmBgMode;
+            if (rmBgMode) {
+                bdrMode = false; borderBtn.classList.remove('active');
+                cutMode = false; cutBtn.classList.remove('active');
+                // ensure overlay doesn't block canvas clicks
+                bdrOverlay.style.pointerEvents = 'none';
+                bdrOverlay.style.cursor = 'default';
+                bdrClearOverlay();
+            }
+            rmBgBtn.classList.toggle('active', rmBgMode);
+            canvas.style.cursor = rmBgMode ? 'crosshair' : '';
+        };
+
+        canvas.addEventListener('click', e => {
+            if (!rmBgMode || !bdrImageData) return;
+            const rect = canvas.getBoundingClientRect();
+            const z = canvas.offsetWidth / canvas.width;
+            const x = Math.floor((e.clientX - rect.left) / z);
+            const y = Math.floor((e.clientY - rect.top)  / z);
+            removeBgAtPixel(x, y);
+        });
+
+        function removeBgAtPixel(x, y) {
+            const { data, width, height } = bdrImageData;
+            if (x < 0 || x >= width || y < 0 || y >= height) return;
+            const srcIdx = (y * width + x) * 4;
+            const r = data[srcIdx], g = data[srcIdx + 1], b = data[srcIdx + 2], a = data[srcIdx + 3];
+            if (a === 0) return; // clicked transparent — nothing to pick
+
+            const tol = Math.max(0, Math.min(255, parseInt(rmBgTolInput.value) || 0));
+            const toZero = [];
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i + 3] === 0) continue;
+                const diff = Math.max(
+                    Math.abs(data[i]     - r),
+                    Math.abs(data[i + 1] - g),
+                    Math.abs(data[i + 2] - b)
+                );
+                if (diff <= tol) toZero.push(i);
+            }
+            if (toZero.length === 0) return;
+
+            bdrUndoStack.push(new Uint8ClampedArray(data));
+            bdrUpdateUndoCount();
+            for (const i of toZero) {
+                data[i]     = 0;
+                data[i + 1] = 0;
+                data[i + 2] = 0;
+                data[i + 3] = 0;
+            }
+            ctx.putImageData(bdrImageData, 0, 0);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+
+        // Slider logic — bidirectional sync
+        const scaleInput = document.getElementById('scale-val');
+        scaleSlider.oninput = () => {
+            scaleInput.value = parseFloat(scaleSlider.value).toFixed(2);
+            process();
+        };
+        scaleInput.oninput = () => {
+            let v = parseFloat(scaleInput.value);
+            if (isNaN(v)) return;
+            v = Math.max(1, Math.min(20, v));
+            scaleSlider.value = v;
+            process();
+        };
+
+        // File Handling
+        [dropWhite, dropBlack].forEach(zone => {
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#007bff'; });
+            zone.addEventListener('dragleave', () => zone.style.borderColor = '#444');
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.borderColor = '#444';
+                handleFile(e.dataTransfer.files[0], zone.id === 'drop-white');
+            });
+            zone.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.onchange = (e) => handleFile(e.target.files[0], zone.id === 'drop-white');
+                input.click();
+            };
+        });
+
+        function handleFile(file, isWhite) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const id = isWhite ? 'prev-white' : 'prev-black';
+                    const preview = document.getElementById(id);
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    isWhite ? (imgWhite = img) : (imgBlack = img);
+                    const zone = isWhite ? dropWhite : dropBlack;
+                    zone.querySelector('span').style.display = 'none';
+                    if (imgWhite && imgBlack) process();
+                    else processSingle(isWhite ? imgWhite : imgBlack);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Processing Logic
+        function processSingle(img) {
+            canvas.width  = img.width;
+            canvas.height = img.height;
+            applyZoom(img.width, img.height);
+            ctx.clearRect(0, 0, img.width, img.height);
+            ctx.drawImage(img, 0, 0);
+            bdrImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            bdrUndoStack = [];
+            bdrUpdateUndoCount();
+            borderBtn.disabled      = false;
+            cutBtn.disabled         = false;
+            alphaFilterBtn.disabled = false;
+            rmBgBtn.disabled        = false;
+        }
+
+        function process() {
+            if (!imgWhite || !imgBlack) return;
+
+            const groupSize = parseFloat(scaleSlider.value);
+            const w = imgWhite.width;
+            const h = imgWhite.height;
+            
+            // 1. Set actual resolution (Small)
+            const outW = Math.floor(w / groupSize);
+            const outH = Math.floor(h / groupSize);
+            canvas.width = outW;
+            canvas.height = outH;
+
+            // 2. CSS Integer Scaling (Big Preview)
+            applyZoom(outW, outH);
+
+            // 3. Setup Buffer
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCtx.drawImage(imgWhite, 0, 0);
+            const dataW = tempCtx.getImageData(0, 0, w, h).data;
+            tempCtx.drawImage(imgBlack, 0, 0);
+            const dataB = tempCtx.getImageData(0, 0, w, h).data;
+
+            const output = ctx.createImageData(outW, outH);
+            const dataOut = output.data;
+            const maxDist = Math.sqrt(3 * 255 * 255);
+
+            // 4. Point Sample Extraction
+            for (let py = 0; py < outH; py++) {
+                for (let px = 0; px < outW; px++) {
+                    const sourceX = Math.floor(px * groupSize + groupSize / 2);
+                    const sourceY = Math.floor(py * groupSize + groupSize / 2);
+                    
+                    if (sourceX >= w || sourceY >= h) continue;
+
+                    const srcIdx = (sourceY * w + sourceX) * 4;
+                    const outIdx = (py * outW + px) * 4;
+
+                    const rW = dataW[srcIdx], gW = dataW[srcIdx+1], bW = dataW[srcIdx+2];
+                    const rB = dataB[srcIdx], gB = dataB[srcIdx+1], bB = dataB[srcIdx+2];
+
+                    // Alpha Math
+                    const dist = Math.sqrt(
+                        Math.pow(rW - rB, 2) + Math.pow(gW - gB, 2) + Math.pow(bW - bB, 2)
+                    );
+
+                    let alpha = 1 - (dist / maxDist);
+                    alpha = Math.max(0, Math.min(1, alpha));
+
+                    if (alpha > 0.01) {
+                        dataOut[outIdx]     = Math.min(255, rB / alpha);
+                        dataOut[outIdx + 1] = Math.min(255, gB / alpha);
+                        dataOut[outIdx + 2] = Math.min(255, bB / alpha);
+                        dataOut[outIdx + 3] = alpha * 255;
+                    } else {
+                        dataOut[outIdx + 3] = 0;
+                    }
+                }
+            }
+            
+            ctx.putImageData(output, 0, 0);
+
+            // Capture live imageData for editing tools; reset undo history
+            bdrImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            bdrUndoStack = [];
+            bdrUpdateUndoCount();
+            borderBtn.disabled      = false;
+            cutBtn.disabled         = false;
+            alphaFilterBtn.disabled = false;
+            rmBgBtn.disabled        = false;
+        }
+    </script>
+</body>
+</html>

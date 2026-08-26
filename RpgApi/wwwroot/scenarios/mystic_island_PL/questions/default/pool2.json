@@ -1,0 +1,32 @@
+[
+  {
+    "question": "Na Wyspie Czaszek stary pirat zakopał skrzynię. Tabliczka na niej głosi: *'Liczba złotych monet spełnia równanie: $3x + 15 = 45$'.* Ile monet ukrył pirat?",
+    "choices": ["$10$", "$15$", "$20$", "$30$"],
+    "answers": ["$10$"],
+    "hint": "Musisz wyznaczyć niewiadomą $x$. Odejmij najpierw $15$ od obu stron równania, a następnie podziel wynik przez $3$."
+  },
+  {
+    "question": "Strażnik Skalnych Wrót przepuści Cię, jeśli odgadniesz brakujący element prastarego wzoru. Przyjrzyj się sekwencji symboli i liczb:\n$$\n\\begin{array}{rcc}\n\\text{Krab} & \\rightarrow & 2^1 = 2 \\\\\n\\text{Mewa} & \\rightarrow & 2^2 = 4 \\\\\n\\text{Żółw} & \\rightarrow & 2^3 = 8 \\\\\n\\text{Krab + Żółw} & \\rightarrow & 2^? = 16\n\\end{array}\n$$\nJaka liczba powinna znaleźć się w miejscu znaku zapytania?",
+    "choices": ["$4$", "$5$", "$6$", "$8$"],
+    "answers": ["$4$"],
+    "hint": "Zauważ, że wynik po prawej stronie to kolejne potęgi dwójki ($2, 4, 8, 16$). Jakiego wykładnika potrzebujesz, aby otrzymać $16$?"
+  },
+  {
+    "question": "W Zatoce Syren handlarze wymieniają towary według stałego kursu:\n$$\n\\begin{aligned}\n1 \\text{ perła} + 2 \\text{ rubiny} &= 8 \\text{ sztuk złota} \\\\\n1 \\text{ perła} + 1 \\text{ rubin} &= 5 \\text{ sztuk złota}\n\\end{aligned}\n$$\nIle sztuk złota warta jest sama perła?",
+    "choices": ["$2$ sztuki złota", "$3$ sztuki złota", "$4$ sztuki złota", "$5$ sztuk złota"],
+    "answers": ["$2$ sztuki złota"],
+    "hint": "To prosty układ równań. Jeśli odejmiesz drugie równanie od pierwszego, dowiesz się, ile wart jest jeden rubin. Potem łatwo obliczysz wartość perły."
+  },
+  {
+    "question": "Tubylcy z Wulkanicznej Wyspy zapisali mapę za pomocą tajemniczej operacji $\\star$, która działa tak: $a \\star b = a \\cdot b + a$. Dla przykładu $2 \\star 3 = 2 \\cdot 3 + 2 = 8$. Szaman prosi Cię o rozwiązanie zagadki: ile to jest $4 \\star 5$?",
+    "choices": ["$20$", "$24$", "$25$", "$29$"],
+    "answers": ["$24$"],
+    "hint": "Podstaw odpowiednio liczby do wzoru szamana. Twoje $a$ to $4$, a $b$ to $5$. Najpierw pomnóż je przez siebie, a potem dodaj $4$."
+  },
+  {
+    "question": "Na dnie zatopionego statku leży potężny totem. Aby go uruchomić, musisz podać wartość niewiadomej $y$ z poniższego układu współrzędnych zapisanego na kadłubie:\n$$\n\\begin{cases}\nx + y = 10 \\\\\nx - y = 4\n\\end{cases}\n$$",
+    "choices": ["$3$", "$4$", "$6$", "$7$"],
+    "answers": ["$3$"],
+    "hint": "Możesz dodać oba równania do siebie stronami, żeby pozbyć się $y$ i znaleźć $x$. Gdy będziesz mieć $x$, podstaw go do pierwszego równania, by obliczyć $y$ (pamiętaj, szukasz samego $y$!)."
+  }
+]

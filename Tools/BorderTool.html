@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Border Tool</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #ddd; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+
+        #drop-zone {
+            border: 2px dashed #555; padding: 20px; width: 80%; text-align: center;
+            margin-bottom: 20px; cursor: pointer; border-radius: 8px; box-sizing: border-box;
+        }
+        #drop-zone.hover { border-color: #007bff; background: #222; }
+
+        .controls {
+            background: #333; padding: 12px 20px; border-radius: 8px;
+            display: flex; gap: 15px; align-items: center; margin-bottom: 20px;
+            flex-wrap: wrap; border: 1px solid #444;
+        }
+
+        .btn {
+            padding: 9px 20px; cursor: pointer; border: none; border-radius: 4px;
+            background: #555; color: white; font-weight: bold; font-size: 0.9em;
+        }
+        .btn:hover { background: #666; }
+        .btn.active { background: #007bff; box-shadow: 0 0 10px rgba(0,123,255,0.5); }
+        .btn-green { background: #28a745; }
+        .btn-green:hover { background: #32a853; }
+        .btn:disabled { background: #3a3a3a; color: #666; cursor: not-allowed; }
+
+        select {
+            background: #444; color: white; border: 1px solid #666;
+            padding: 8px; border-radius: 4px;
+        }
+
+        .hint { font-size: 0.8em; color: #888; }
+        .undo-count { font-size: 0.8em; color: #aaa; min-width: 60px; }
+
+        .canvas-container {
+            overflow: auto;
+            max-width: 90vw;
+            max-height: 70vh;
+            background-image:
+                linear-gradient(45deg, #222 25%, transparent 25%),
+                linear-gradient(-45deg, #222 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #222 75%),
+                linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+
+        #canvas-stack { position: relative; display: inline-block; line-height: 0; }
+
+        #main-canvas, #overlay-canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            display: block;
+        }
+        #overlay-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="drop-zone">Drop PNG here or click to upload</div>
+    <input type="file" id="file-input" accept="image/png" style="display:none">
+
+    <div class="controls">
+        <label>Zoom:
+            <select id="zoom-select">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="3">3x</option>
+                <option value="4" selected>4x</option>
+                <option value="6">6x</option>
+                <option value="8">8x</option>
+            </select>
+        </label>
+        <button id="border-btn" class="btn" disabled>Add Border</button>
+        <button id="download-btn" class="btn btn-green" disabled>Save PNG</button>
+        <span class="hint">Ctrl+Z to undo</span>
+        <span class="undo-count" id="undo-count"></span>
+    </div>
+
+    <div class="canvas-container" id="canvas-container">
+        <div id="canvas-stack">
+            <canvas id="main-canvas"></canvas>
+            <canvas id="overlay-canvas"></canvas>
+        </div>
+    </div>
+
+<script>
+    const dropZone      = document.getElementById('drop-zone');
+    const fileInput     = document.getElementById('file-input');
+    const mainCanvas    = document.getElementById('main-canvas');
+    const overlayCanvas = document.getElementById('overlay-canvas');
+    const ctx           = mainCanvas.getContext('2d', { willReadFrequently: true });
+    const oCtx          = overlayCanvas.getContext('2d');
+    const zoomSelect    = document.getElementById('zoom-select');
+    const borderBtn     = document.getElementById('border-btn');
+    const downloadBtn   = document.getElementById('download-btn');
+    const undoCountEl   = document.getElementById('undo-count');
+
+    let imageData    = null;   // live ImageData on the canvas
+    let undoStack    = [];     // array of Uint8ClampedArray snapshots
+    let isBorderMode = false;
+    let isSelecting  = false;
+    let selStart     = null;
+    let selEnd       = null;
+
+    // ── File handling ────────────────────────────────────────────────────────
+
+    dropZone.onclick = () => fileInput.click();
+    fileInput.onchange = e => handleFile(e.target.files[0]);
+    dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('hover'); };
+    dropZone.ondragleave = () => dropZone.classList.remove('hover');
+    dropZone.ondrop = e => {
+        e.preventDefault();
+        dropZone.classList.remove('hover');
+        handleFile(e.dataTransfer.files[0]);
+    };
+
+    function handleFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const img = new Image();
+        img.onload = () => {
+            mainCanvas.width    = img.width;
+            mainCanvas.height   = img.height;
+            overlayCanvas.width  = img.width;
+            overlayCanvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            imageData  = ctx.getImageData(0, 0, img.width, img.height);
+            undoStack  = [];
+            updateUndoCount();
+            borderBtn.disabled   = false;
+            downloadBtn.disabled = false;
+            applyZoom();
+        };
+        img.src = URL.createObjectURL(file);
+    }
+
+    // ── Zoom ─────────────────────────────────────────────────────────────────
+
+    zoomSelect.onchange = applyZoom;
+
+    function applyZoom() {
+        if (!mainCanvas.width) return;
+        const z = parseInt(zoomSelect.value);
+        const w = (mainCanvas.width  * z) + 'px';
+        const h = (mainCanvas.height * z) + 'px';
+        mainCanvas.style.width    = w;
+        mainCanvas.style.height   = h;
+        overlayCanvas.style.width  = w;
+        overlayCanvas.style.height = h;
+    }
+
+    // ── Border mode toggle ───────────────────────────────────────────────────
+
+    borderBtn.onclick = () => {
+        isBorderMode = !isBorderMode;
+        borderBtn.classList.toggle('active', isBorderMode);
+        overlayCanvas.style.cursor = isBorderMode ? 'crosshair' : 'default';
+        if (!isBorderMode) clearOverlay();
+    };
+
+    // ── Mouse interaction on overlay ─────────────────────────────────────────
+
+    function getCanvasPos(e) {
+        const rect = overlayCanvas.getBoundingClientRect();
+        const z    = parseInt(zoomSelect.value);
+        return {
+            x: Math.floor((e.clientX - rect.left) / z),
+            y: Math.floor((e.clientY - rect.top)  / z)
+        };
+    }
+
+    overlayCanvas.addEventListener('mousedown', e => {
+        if (!isBorderMode || !imageData) return;
+        isSelecting = true;
+        selStart = getCanvasPos(e);
+        selEnd   = { ...selStart };
+    });
+
+    overlayCanvas.addEventListener('mousemove', e => {
+        if (!isSelecting) return;
+        selEnd = getCanvasPos(e);
+        drawSelectionRect();
+    });
+
+    overlayCanvas.addEventListener('mouseup', e => {
+        if (!isSelecting) return;
+        isSelecting = false;
+        selEnd = getCanvasPos(e);
+        clearOverlay();
+
+        const x0 = Math.min(selStart.x, selEnd.x);
+        const y0 = Math.min(selStart.y, selEnd.y);
+        const x1 = Math.max(selStart.x, selEnd.x);
+        const y1 = Math.max(selStart.y, selEnd.y);
+
+        // Require at least a 1-pixel region
+        if (x1 <= x0 && y1 <= y0) return;
+
+        applyBorder(x0, y0, x1, y1);
+    });
+
+    // Cancel drag if mouse leaves the overlay
+    overlayCanvas.addEventListener('mouseleave', () => {
+        if (isSelecting) {
+            isSelecting = false;
+            clearOverlay();
+        }
+    });
+
+    function drawSelectionRect() {
+        oCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        if (!selStart || !selEnd) return;
+
+        const x = Math.min(selStart.x, selEnd.x);
+        const y = Math.min(selStart.y, selEnd.y);
+        const w = Math.abs(selEnd.x - selStart.x);
+        const h = Math.abs(selEnd.y - selStart.y);
+
+        // White dashes
+        oCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+        oCtx.lineWidth   = 1;
+        oCtx.setLineDash([4, 4]);
+        oCtx.lineDashOffset = 0;
+        oCtx.strokeRect(x + 0.5, y + 0.5, w, h);
+
+        // Black dashes offset to create marching-ants look
+        oCtx.strokeStyle = 'rgba(0,0,0,0.6)';
+        oCtx.lineDashOffset = 4;
+        oCtx.strokeRect(x + 0.5, y + 0.5, w, h);
+
+        oCtx.setLineDash([]);
+        oCtx.lineDashOffset = 0;
+    }
+
+    function clearOverlay() {
+        oCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    }
+
+    // ── Border algorithm ─────────────────────────────────────────────────────
+    //
+    //  For every transparent pixel inside the selection that has at least one
+    //  non-transparent neighbour (all 8 directions), paint it solid black.
+    //  Existing non-transparent pixels are never modified.
+
+    function applyBorder(left, top, right, bottom) {
+        if (!imageData) return;
+
+        // Clamp to image bounds
+        left   = Math.max(0, left);
+        top    = Math.max(0, top);
+        right  = Math.min(mainCanvas.width  - 1, right);
+        bottom = Math.min(mainCanvas.height - 1, bottom);
+
+        const { data, width, height } = imageData;
+        const toFill = [];
+
+        for (let y = top; y <= bottom; y++) {
+            for (let x = left; x <= right; x++) {
+                const idx = (y * width + x) * 4;
+
+                // Skip non-transparent pixels — "do not change existing border"
+                if (data[idx + 3] > 0) continue;
+
+                // Check all 8 neighbours for a solid pixel
+                let hasSolid = false;
+                outer:
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                        if (data[(ny * width + nx) * 4 + 3] > 0) {
+                            hasSolid = true;
+                            break outer;
+                        }
+                    }
+                }
+
+                if (hasSolid) toFill.push(idx);
+            }
+        }
+
+        if (toFill.length === 0) return; // Nothing to do, skip undo entry
+
+        // Save snapshot for undo BEFORE writing
+        undoStack.push(new Uint8ClampedArray(imageData.data));
+        updateUndoCount();
+
+        for (const idx of toFill) {
+            data[idx]     = 0;   // R
+            data[idx + 1] = 0;   // G
+            data[idx + 2] = 0;   // B
+            data[idx + 3] = 255; // A
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    }
+
+    // ── Undo (Ctrl+Z) ────────────────────────────────────────────────────────
+
+    document.addEventListener('keydown', e => {
+        if (e.ctrlKey && e.key === 'z' && undoStack.length > 0) {
+            e.preventDefault();
+            const prev = undoStack.pop();
+            imageData.data.set(prev);
+            ctx.putImageData(imageData, 0, 0);
+            updateUndoCount();
+        }
+    });
+
+    function updateUndoCount() {
+        undoCountEl.textContent = undoStack.length > 0
+            ? `(${undoStack.length} step${undoStack.length > 1 ? 's' : ''} saved)`
+            : '';
+    }
+
+    // ── Download ─────────────────────────────────────────────────────────────
+
+    downloadBtn.onclick = () => {
+        if (!imageData) return;
+        const link = document.createElement('a');
+        link.download = 'bordered.png';
+        link.href = mainCanvas.toDataURL('image/png');
+        link.click();
+    };
+</script>
+</body>
+</html>

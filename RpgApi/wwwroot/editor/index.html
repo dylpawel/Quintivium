@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Map Editor</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="editor.css">
+</head>
+
+<body>
+    <div id="toolbar">
+        <select id="tilesetSelect"></select>
+        <div class="sep"></div>
+        <button id="btnPaint" class="active" title="Paint (P)">🖌️</button>
+        <button id="btnErase" title="Erase (E)">🧹</button>
+        <button id="btnFill" title="Fill (F)">💧</button>
+        <button id="btnRaise" title="Raise terrain">⬆️</button>
+        <button id="btnLower" title="Lower terrain">⬇️</button>
+        <button id="btnRamp" title="Ramp edge (click an edge between two cells)">🔀</button>
+        <button id="btnMark" title="Named Mark (M)">📍</button>
+        <button id="btnSelect" title="Select decoration (V)">✋</button>
+        <button id="btnEffect" title="Place/remove effect (✨)">✨</button>
+        <button id="btnBrushShape" title="Brush shape (S)">⭕</button>
+        <div class="sep"></div>
+        <label class="switch">
+            <input type="checkbox" id="previewToggle" checked>
+            <span>Preview</span>
+        </label>
+        <label class="switch">
+            <input type="checkbox" id="showLevelsToggle">
+            <span>Levels</span>
+        </label>
+        <label class="switch">
+            <input type="checkbox" id="traversableToggle">
+            <span>Traversable</span>
+        </label>
+        <input id="mapWidth" type="number" value="20" min="4" max="200" style="width:52px">
+        <span style="font-size:12px">×</span>
+        <input id="mapHeight" type="number" value="15" min="4" max="200" style="width:52px">
+        <button id="btnNew">New</button>
+        <div class="sep"></div>
+        <label style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:16px">🔍</span>
+            <select id="zoomSelect">
+                <option value="0.5">50%</option>
+                <option value="1" selected>100%</option>
+                <option value="1.5">150%</option>
+                <option value="2">200%</option>
+            </select>
+        </label>
+        <div class="sep"></div>
+        <input id="mapName" value="untitled" />
+        <button id="btnSave" title="Save map to the server (Ctrl+S)">💾</button>
+        <button id="btnSaveLocal" title="Save map to a file on local disk">🖥️</button>
+        <button id="btnLoad" title="Load map from the server by name (L)">📂</button>
+    </div>
+    <div id="main">
+        <div id="assetPanel">
+            <div id="terrainSection">
+                <div id="terrainPalette"></div>
+            </div>
+            <div id="scrollableSection">
+                <hr style="border-color:#3a3a3a;margin:6px 0">
+                <div class="marks-header">Fences</div>
+                <div id="fencePalette"></div>
+                <hr style="border-color:#3a3a3a;margin:6px 0">
+                <div class="marks-header">Effects</div>
+                <div id="effectPalette"></div>
+                <hr style="border-color:#3a3a3a;margin:6px 0">
+                <div id="assetPalette"></div>
+                <hr style="border-color:#3a3a3a;margin:6px 0">
+                <div class="marks-header">📍 Named Marks</div>
+                <div id="marksList"></div>
+            </div>
+        </div>
+        <div id="mapContainer">
+            <div id="mapSpacer"></div>
+            <canvas id="mapCanvas"></canvas>
+        </div>
+        <div id="propPanel"></div>
+    </div>
+    <script type="module" src="editor.js"></script>
+</body>
+
+</html>

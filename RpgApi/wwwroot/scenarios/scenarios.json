@@ -1,0 +1,10 @@
+{
+  "demo_scenario": {
+    "name": "DEMO",
+    "help": "DEMO scenario to test different ideas"
+  },
+  "mystic_island_PL": {
+    "name": "Mistyczna Wyspa",
+    "help": "Podróż po tajemniczej wyspie."
+  }
+}

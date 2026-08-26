@@ -1,0 +1,28 @@
+[
+  {
+    "id": "cave_map_enter",
+    "on": "map_enter",
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "The cave closes in around you. Dripping water and distant echoes fill the damp air. Your torch casts dancing shadows on the stone walls." }
+    ]
+  },
+  {
+    "id": "cave_exit",
+    "on": "tile_approach",
+    "tile": "Exit",
+    "actions": [
+      { "type": "show_dialog", "text": "You climb back toward the light..." },
+      { "type": "change_map", "map_id": "map", "x": 23, "y": 4 }
+    ]
+  },
+  {
+    "id": "cave_water",
+    "on": "tile_approach",
+    "tile": "Water",
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "A crystal pool shimmers with an otherworldly light — the Water of Life. Legends say a single drop can mend any wound and lift any curse." }
+    ]
+  }
+]

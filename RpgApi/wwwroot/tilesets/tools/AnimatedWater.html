@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Animated Water</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 16px;
+      background: #08151f; color: #c0d8e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    h2 { margin: 0; font-size: 14px; font-weight: 500; color: #90c8e0; }
+    canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+    #mapCanvas { border: 1px solid #0a3a50; cursor: crosshair; }
+
+    .toolbar { display: flex; gap: 6px; align-items: center; }
+    .tile-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px 4px 6px; border-radius: 5px;
+      border: 1.5px solid transparent; cursor: pointer;
+      font-size: 12px; color: #7a9ab0; background: none; user-select: none;
+    }
+    .tile-btn:hover { color: #dce8f0; }
+    .tile-btn.active { border-color: #15a0d0; color: #dce8f0; }
+    .tile-btn canvas { border-radius: 2px; border: 0.5px solid #1a4060; }
+    .hint { font-size: 11px; color: #4a6a80; }
+    #cacheInfo { font-size: 11px; color: #4a7090; font-variant-numeric: tabular-nums; }
+    .controls { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #7a9ab0; }
+    .controls input[type=range] { width: 120px; accent-color: #15a0d0; cursor: pointer; }
+    .grid-btn { background: #0f2030; border: 1px solid #2a5070; color: #7a9ab0;
+                font-size: 11px; padding: 3px 10px; cursor: pointer; border-radius: 3px; }
+    .grid-btn:hover { background: #1a3040; color: #a0c0d0; }
+  </style>
+</head>
+<body>
+  <h2>Animated Water · 16 × 10</h2>
+
+  <div class="toolbar">
+    <div class="tile-btn active" id="btnGrass">
+      <canvas id="previewGrass" width="32" height="32" style="width:22px;height:22px;"></canvas>
+      Grass
+    </div>
+    <div class="tile-btn" id="btnSand">
+      <canvas id="previewSand" width="32" height="32" style="width:22px;height:22px;"></canvas>
+      Sand
+    </div>
+    <div class="tile-btn" id="btnWater">
+      <canvas id="previewWater" width="32" height="32" style="width:22px;height:22px;"></canvas>
+      Water
+    </div>
+  </div>
+
+  <div class="controls">
+    <span>Shore foam</span>
+    <input type="range" id="foamSlider" min="0" max="32" value="32">
+    <span id="foamVal">32</span>
+    <span style="margin-left:8px">Width</span>
+    <input type="range" id="foamWidth" min="4" max="28" value="20">
+    <span id="foamWidthVal">20</span>
+    <span style="margin-left:8px">Height</span>
+    <input type="range" id="foamHeight" min="1" max="14" value="4">
+    <span id="foamHeightVal">4</span>
+    <span style="margin-left:8px">Blend</span>
+    <input type="range" id="foamBlend" min="20" max="100" value="50">
+    <span id="foamBlendVal">50</span>%
+    <button class="grid-btn" id="btnGrid" style="margin-left:12px">Grid: None</button>
+  </div>
+
+  <canvas id="mapCanvas" width="512" height="320"
+    style="width:1024px;height:640px;"></canvas>
+
+  <div class="hint">left-drag · paint &nbsp;|&nbsp; right-drag · erase → grass</div>
+  <div id="cacheInfo">tile cache: —</div>
+
+<script>
+  const COLS = 16, ROWS = 10, GT = 32;
+  const W = COLS * GT, H = ROWS * GT;  // 512 × 320
+
+  // ── terrain definitions ────────────────────────────────────────────────────────────
+  // IDs from tileset.json.  Priority draw order: [2,5,0,1,4,6,7,3]
+  // We load grass(0), sand(1), dirt(2), water(7); absent terrains are simply skipped.
+  const T = {  // keyed by terrain id
+    0: { id: 0, name: 'grass', variants: 9, img: null },  // 9 rows in grass.png
+    1: { id: 1, name: 'sand',  variants: 1, img: null },  // 1 row  in sand.png
+    2: { id: 2, name: 'dirt',  variants: 1, img: null },  // 1 row  in dirt.png (base fill)
+    7: { id: 7, name: 'water', variants: 1, img: null },  // 1 row  in water.png
+  }
+  // Draw order matches editor.js priority = [2,5,0,1,4,6,7,3] (skipping absent IDs)
+  // Water (id 7) is rendered as a separate animated layer — excluded from tile cache.
+  const PRIORITY = [ T[2], T[0], T[1] ]         // dirt → grass → sand
+  const NFRAMES     = 16;                         // water animation frame count
+  const WATER_BASE  = 'rgb(21,108,153)';          // deep water base colour
+  const SHIMMER_CLR = ['rgb(0,152,178)', 'rgb(0,207,223)'];  // shimmer colours (dim → bright)
+  const SHIMMER_RGB = [[0,152,178], [0,207,223]];             // same as raw [r,g,b] for stamp baking
+  const FOAM_BAND   = 4;                                      // shore foam zone radius (px)
+
+  // ── grid ─────────────────────────────────────────────────────────────────────
+  const grid = new Uint8Array(COLS * ROWS);  // terrain IDs: 0=grass, 1=sand, 7=water
+
+  // Default: water centre → sand ring → grass outside
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++) {
+      const dx = x - 7.5, dy = y - 4.5, r2 = dx * dx * 0.75 + dy * dy;
+      grid[y * COLS + x] = r2 < 7 ? 7 : r2 < 13 ? 1 : 0;
+    }
+
+  // ── canvas ────────────────────────────────────────────────────────────────
+  const canvas = document.getElementById('mapCanvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  // ── image loading ────────────────────────────────────────────────────────────────────
+  let loaded = 0;
+  function loadImg(src, terrainId) {
+    const img = new Image();
+    img.onload = () => { if (++loaded === 4) { rebuild(); drawPreviews(); render(); } };
+    img.src = src;
+    T[terrainId].img = img;
+    return img;
+  }
+  loadImg('../world/grass.png', 0);  // 512 × 288 px → 16 cols × 9 rows
+  loadImg('../world/sand.png',  1);  // 512 × 32 px  → 16 cols × 1 row
+  loadImg('../world/dirt.png',  2);  // 512 × 32 px  → 16 cols × 1 row (base fill)
+  loadImg('../world/water.png', 7);  // 512 × 32 px  → 16 cols × 1 row
+
+  // ── helpers ───────────────────────────────────────────────────────────────
+  function cellAt(x, y) {
+    if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return 0;  // grass border
+    return grid[y * COLS + x];
+  }
+
+  // Deterministic node hash — identical to editor.js tileHash()
+  function nodeHash(rx, ry) {
+    let s = Math.imul(rx + 1, 0x9e3779b9) ^ Math.imul(ry + 1, 0x85ebca6b);
+    s = Math.imul(s ^ (s >>> 16), 0x45d9f3b);
+    s = Math.imul(s ^ (s >>> 16), 0x45d9f3b);
+    return (s ^ (s >>> 16)) >>> 0;
+  }
+
+  // ── water animation ───────────────────────────────────────────────────────────────────
+  // Per wMask (1–15), NFRAMES pre-baked canvases: flat WATER_BASE + shimmer dashes,
+  // clipped to water.png’s alpha.  Separate from the terrain tile cache.
+  let waterFrameMap = null;
+  let currentFrame  = 0;
+
+  // Tiny xorshift32 seeded RNG — fully deterministic, no Math.random()
+  function makeRNG(seed) {
+    let s = (seed >>> 0) || 1;
+    return () => { s ^= s << 13; s ^= s >>> 17; s ^= s << 5; return (s >>> 0) / 0x100000000; };
+  }
+
+  // True if a pixel matches one of the three known water colours (±10 tolerance).
+  function isWaterColor(r, g, b) {
+    return (Math.abs(r -  21) <= 10 && Math.abs(g - 108) <= 10 && Math.abs(b - 153) <= 10) ||  // rgb(21,108,153)
+           (r <= 10             && Math.abs(g - 152) <= 10 && Math.abs(b - 178) <= 10) ||        // rgb(0,152,178)
+           (r <= 10             && Math.abs(g - 207) <= 10 && Math.abs(b - 223) <= 10);           // rgb(0,207,223)
+  }
+
+  // Analyse one wMask tile from water.png — splits pixels into two groups:
+  //   waterRows  : x-positions of water-colour pixels per row (shimmer placement)
+  //   waterMask  : canvas — opaque white only at water-colour pixels (animated clip mask)
+  //   cliffOnly  : canvas — cliff/shore pixels preserved unchanged (drawn on top of animation)
+  function analyzeWaterTile(wMask) {
+    const tmp = document.createElement('canvas');
+    tmp.width = tmp.height = GT;
+    const tc = tmp.getContext('2d');
+    tc.drawImage(T[7].img, wMask * GT, 0, GT, GT, 0, 0, GT, GT);
+    const d = tc.getImageData(0, 0, GT, GT).data;
+
+    const wmC = document.createElement('canvas'); wmC.width = wmC.height = GT;
+    const coC = document.createElement('canvas'); coC.width = coC.height = GT;
+    const wmD = wmC.getContext('2d').createImageData(GT, GT);
+    const coD = coC.getContext('2d').createImageData(GT, GT);
+    const waterRows = [];
+    for (let y = 0; y < GT; y++) waterRows.push([]);
+
+    for (let y = 0; y < GT; y++) {
+      for (let x = 0; x < GT; x++) {
+        const i = (y * GT + x) * 4;
+        const r = d[i], g = d[i+1], b = d[i+2], a = d[i+3];
+        if (a < 128) continue;
+        if (isWaterColor(r, g, b)) {
+          wmD.data[i] = wmD.data[i+1] = wmD.data[i+2] = 255;
+          wmD.data[i+3] = a;
+          waterRows[y].push(x);
+        } else {
+          // Cliff / shore pixel — copied verbatim
+          coD.data[i] = r; coD.data[i+1] = g; coD.data[i+2] = b; coD.data[i+3] = a;
+        }
+      }
+    }
+    wmC.getContext('2d').putImageData(wmD, 0, 0);
+    coC.getContext('2d').putImageData(coD, 0, 0);
+
+    // Edge pixels: water pixels that are 4-connected adjacent to at least one cliff pixel.
+    const edgePixels = [];
+    for (let y = 0; y < GT; y++) {
+      for (const x of waterRows[y]) {
+        const adj = (nx, ny) => ny >= 0 && ny < GT && nx >= 0 && nx < GT &&
+                                coD.data[(ny * GT + nx) * 4 + 3] > 0;
+        if (adj(x-1,y) || adj(x+1,y) || adj(x,y-1) || adj(x,y+1))
+          edgePixels.push({ x, y });
+      }
+    }
+
+    return { waterRows, waterMask: wmC, cliffOnly: coC, edgePixels };
+  }
+
+  // Deterministically place shimmer specs within the water area for one wMask.
+  function makeShimmers(rows, wMask) {
+    const rng    = makeRNG(Math.imul(wMask, 2654435769) ^ 0xdeadbeef);
+    const totalPx = rows.reduce((s, r) => s + r.length, 0);
+    const n      = Math.max(1, Math.min(8, Math.round(totalPx / 180)));  // ~5–6 for full tile
+    const usable = [];
+    for (let y = 0; y < rows.length; y++)
+      if (rows[y].length >= 3) usable.push(y);
+    if (!usable.length) return [];
+
+    const out = [];
+    for (let i = 0, tries = 0; i < n && tries < n * 12; tries++) {
+      const y  = usable[Math.floor(rng() * usable.length)];
+      const r  = rows[y];
+      const si = Math.floor(rng() * r.length);
+      // Find a run of consecutive x values starting at si
+      let run = 1;
+      while (run < r.length - si && r[si + run] === r[si + run - 1] + 1) run++;
+      if (run < 2) continue;   // no horizontal run long enough — retry
+      i++;
+      const len      = Math.min(run, 2 + Math.floor(rng() * 3));  // 2–4 px
+      const phase    = Math.floor(rng() * NFRAMES);                // peak frame
+      const halfLife = 2 + Math.floor(rng() * 3);                  // 2–4 frames fade
+      const colorIdx = rng() < 0.35 ? 1 : 0;                      // 35 % chance of bright
+      out.push({ x: r[si], y, len, phase, halfLife, colorIdx });
+    }
+    return out;
+  }
+
+  // Pre-bake one oval foam patch: quadratic alpha falloff from centre, wider than tall.
+  // Calculated once per particle at buildWaterFrames time — never again.
+  function makeParticleStamp(w, h, colorIdx) {
+    const cx = (w - 1) / 2, cy = (h - 1) / 2;
+    const rx = w / 2,       ry = Math.max(0.5, h / 2);
+    const [sr, sg, sb] = SHIMMER_RGB[colorIdx];
+    const stamp  = document.createElement('canvas');
+    stamp.width  = w;  stamp.height = h;
+    const sid    = stamp.getContext('2d').createImageData(w, h);
+    for (let py = 0; py < h; py++) {
+      for (let px = 0; px < w; px++) {
+        const dx = (px - cx) / rx, dy = (py - cy) / ry;
+        const d2 = dx*dx + dy*dy;
+        if (d2 >= 1) continue;                        // outside ellipse → transparent
+        const a  = (1 - d2) * 255 | 0;               // quadratic falloff: bright centre
+        const i  = (py * w + px) * 4;
+        sid.data[i] = sr;  sid.data[i+1] = sg;  sid.data[i+2] = sb;  sid.data[i+3] = a;
+      }
+    }
+    stamp.getContext('2d').putImageData(sid, 0, 0);
+    return stamp;
+  }
+
+  // Shore foam: bright oval patches centred on cliff-edge water pixels.
+  // edgePixels = water pixels directly adjacent to cliff art for this wMask.
+  function makeShoreShimmers(edgePixels, count, wMask, ovalWidth = 8, ovalHeight = 4) {
+    if (!edgePixels.length || count === 0) return [];
+    const rng = makeRNG(Math.imul(wMask + 99, 0x9e3779b9) ^ 0xfeedface);
+    const n   = Math.min(count, 32);  // hard cap: 32/tile
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      // Random pick from cliff-edge pixels — each pixel IS on the cliff boundary.
+      const p        = edgePixels[Math.floor(rng() * edgePixels.length)];
+      const phase    = Math.floor(rng() * NFRAMES);   // starting peak within cycle
+      const period   = 8 + Math.floor(rng() * 7);    // 8–14 frames per full cycle
+      const h        = 1 + Math.floor(rng() * ovalHeight);  // 1 to slider value
+      const wMin     = Math.min(2 * h, ovalWidth);           // width ≥ 2×height
+      const w        = wMin + Math.floor(rng() * (ovalWidth - wMin + 1));  // [2h, max]
+      const colorIdx = rng() < 0.65 ? 1 : 0;         // favour bright colour
+      const stamp    = makeParticleStamp(w, h, colorIdx);
+      // Centre stamp at the cliff-edge pixel; waterMask clips the cliff-side half.
+      const drawX = p.x - ((stamp.width  - 1) >> 1);
+      const drawY = p.y - ((stamp.height - 1) >> 1);
+      out.push({ drawX, drawY, stamp, phase, period });
+    }
+    return out;
+  }
+
+  // Bake NFRAMES canvases for one wMask value.
+  function bakeWaterFrames(wMask, foamParticles = [], foamBlend = 0.7) {
+    const { waterRows, waterMask, cliffOnly } = analyzeWaterTile(wMask);
+    const shimmers = makeShimmers(waterRows, wMask);
+    const frames         = [];
+
+    for (let f = 0; f < NFRAMES; f++) {
+      const c    = document.createElement('canvas');
+      c.width    = c.height = GT;
+      const cctx = c.getContext('2d');
+      cctx.imageSmoothingEnabled = false;
+
+      // 1. Flat base water colour
+      cctx.fillStyle = WATER_BASE;
+      cctx.fillRect(0, 0, GT, GT);
+
+      // 2. Horizontal shimmer dashes (1 px tall)
+      for (const sh of shimmers) {
+        const raw  = (f - sh.phase + NFRAMES) % NFRAMES;
+        const dist = Math.min(raw, NFRAMES - raw);  // circular distance from peak frame
+        const a    = Math.max(0, 1 - dist / sh.halfLife);
+        if (a < 0.01) continue;
+        cctx.globalAlpha = a;
+        cctx.fillStyle   = SHIMMER_CLR[sh.colorIdx];
+        cctx.fillRect(sh.x, sh.y, sh.len, 1);
+      }
+      // 2b. Shore foam — oval patches centred on cliff-edge pixels for this wMask.
+      for (const sp of foamParticles) {
+        const pos = ((f - sp.phase + NFRAMES * 16) % sp.period) / sp.period;
+        const a   = Math.max(0, 1 - 2 * Math.abs(pos - 0.5));
+        if (a < 0.02) continue;
+        cctx.globalAlpha = a * foamBlend;
+        cctx.drawImage(sp.stamp, sp.drawX, sp.drawY);
+      }
+      cctx.globalAlpha = 1;
+
+
+      // 3. Clip animated content to water-colour pixels only (cliff area → transparent)
+      cctx.globalCompositeOperation = 'destination-in';
+      cctx.drawImage(waterMask, 0, 0);
+      cctx.globalCompositeOperation = 'source-over';
+
+      // 4. Draw cliff / shore art unchanged on top
+      cctx.drawImage(cliffOnly, 0, 0);
+
+      frames.push(c);
+    }
+    return frames;
+  }
+
+  function buildWaterFrames(foamCount = 32, ovalWidth = 20, ovalHeight = 4, foamBlend = 0.5) {
+    waterFrameMap = new Map();
+    for (let m = 1; m <= 15; m++) {
+      const { edgePixels } = analyzeWaterTile(m);
+      // "Cliff from bottom": a top corner has water but the corner directly below it does not.
+      // TL(bit3) without BL(bit1)  —or—  TR(bit2) without BR(bit0).
+      // These tiles show a cliff face on their bottom edge; foam there looks better smaller.
+      const bottomCliff = ((m & 8) && !(m & 2)) || ((m & 4) && !(m & 1));
+      const fw = bottomCliff ? Math.max(1, ovalWidth  >> 1) : ovalWidth;
+      const fh = bottomCliff ? Math.max(1, ovalHeight >> 1) : ovalHeight;
+      const foam = makeShoreShimmers(edgePixels, foamCount, m, fw, fh);
+      waterFrameMap.set(m, bakeWaterFrames(m, foam, foamBlend));
+    }
+  }
+
+  // Variant index: first terrain in PRIORITY with variants > 1 (= grass, 9 variants)
+  // Identical to editor.js getVariantIndex() — same vi used as cache key component.
+  function getVariantIndex(rx, ry) {
+    for (const t of PRIORITY)
+      if (t.variants > 1) return nodeHash(rx, ry) % t.variants;
+    return 0;
+  }
+
+  // ── tile cache ────────────────────────────────────────────────────────────
+  // Key layout (identical to editor.js plainTileCache):
+  //   bits  0– 5 : tl  (terrain id fits in 6 bits; max id used = 7 < 64)
+  //   bits  6–11 : tr
+  //   bits 12–17 : bl
+  //   bits 18–23 : br
+  //   bits 24–29 : vi  (variant index 0–8 from getVariantIndex)
+  const tileCache = new Map();
+
+  function buildTileCanvas(tl, tr, bl, br, rx, ry) {
+    const c    = document.createElement('canvas');
+    c.width    = c.height = GT;
+    const cctx = c.getContext('2d');
+    cctx.imageSmoothingEnabled = false;
+
+    // Base fill: dirt col 15 (full tile) — ensures every pixel has a texture
+    cctx.drawImage(T[2].img, 15 * GT, 0, GT, GT, 0, 0, GT, GT);
+
+    // Terrain layers in priority order — mirrors editor.js buildTileCanvas
+    for (const terrain of PRIORITY) {
+      const mask =
+        ((tl === terrain.id ? 1 : 0) << 3) |
+        ((tr === terrain.id ? 1 : 0) << 2) |
+        ((bl === terrain.id ? 1 : 0) << 1) |
+         (br === terrain.id ? 1 : 0);
+      if (mask === 0) continue;
+      const vrow = terrain.variants > 1 ? nodeHash(rx, ry) % terrain.variants : 0;
+      cctx.drawImage(terrain.img, mask * GT, vrow * GT, GT, GT, 0, 0, GT, GT);
+    }
+
+    return c;
+  }
+
+  function drawNode(px, py, tl, tr, bl, br, rx, ry) {
+    const vi  = getVariantIndex(rx, ry);
+    const key = tl | (tr << 6) | (bl << 12) | (br << 18) | (vi << 24);
+    let tile  = tileCache.get(key);
+    if (!tile) { tile = buildTileCanvas(tl, tr, bl, br, rx, ry); tileCache.set(key, tile); }
+    ctx.drawImage(tile, px, py);
+  }
+  // ── grid overlay ───────────────────────────────────────────────────────────────────
+  let gridMode = 0;  // 0 = none  1 = normal (cell boundaries)  2 = dual (node lines)
+  function drawGrid() {
+    if (gridMode === 0) return;
+    ctx.save();
+    ctx.lineWidth = 1;
+    if (gridMode === 1) {
+      // Cell grid: lines at every GT pixels
+      ctx.strokeStyle = 'rgba(0,0,0,0.30)';
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += GT) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+      for (let y = 0; y <= H; y += GT) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+      ctx.stroke();
+    } else {
+      // Dual-grid node lines: offset by GT/2 from cell boundaries (amber)
+      ctx.strokeStyle = 'rgba(255,200,0,0.35)';
+      ctx.beginPath();
+      for (let x = GT / 2; x < W; x += GT) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+      for (let y = GT / 2; y < H; y += GT) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // ── render ────────────────────────────────────────────────────────────────
+  // Dual-grid: (COLS+1) × (ROWS+1) nodes.
+  // Node (rx, ry) → pixel ((rx-1)*GT + GT/2, (ry-1)*GT + GT/2)
+  // Samples: TL=(rx-1,ry-1) TR=(rx,ry-1) BL=(rx-1,ry) BR=(rx,ry)
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let ry = 0; ry <= ROWS; ry++) {
+      for (let rx = 0; rx <= COLS; rx++) {
+        const tl = cellAt(rx - 1, ry - 1);
+        const tr = cellAt(rx,     ry - 1);
+        const bl = cellAt(rx - 1, ry);
+        const br = cellAt(rx,     ry);
+        const px = (rx - 1) * GT + GT / 2;
+        const py = (ry - 1) * GT + GT / 2;
+        drawNode(px, py, tl, tr, bl, br, rx, ry);
+
+        // Animated water overlay (drawn on top of terrain tile)
+        const wMask = ((tl === 7 ? 1 : 0) << 3) | ((tr === 7 ? 1 : 0) << 2) |
+                      ((bl === 7 ? 1 : 0) << 1) |  (br === 7 ? 1 : 0);
+        if (wMask > 0 && waterFrameMap) {
+          const wf     = waterFrameMap.get(wMask);
+          const wPhase = nodeHash(rx, ry) % NFRAMES;  // stable per-node phase offset
+          if (wf) ctx.drawImage(wf[(currentFrame + wPhase) % NFRAMES], px, py);
+        }
+      }
+    }
+
+    const tkb = ((tileCache.size * GT * GT * 4) / 1024).toFixed(0);
+    const wkb = waterFrameMap
+      ? ((waterFrameMap.size * NFRAMES * GT * GT * 4) / 1024).toFixed(0) : '—';
+    document.getElementById('cacheInfo').textContent =
+      `terrain: ${tileCache.size} tiles · ~${tkb} KB   water: 15 masks × ${NFRAMES} frames · ~${wkb} KB`;
+    drawGrid();
+  }
+
+  // ── tile previews ─────────────────────────────────────────────────────────
+  function drawPreviews() {
+    [[0,'previewGrass'],[1,'previewSand'],[7,'previewWater']].forEach(([id, elId]) => {
+      const c = document.getElementById(elId).getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.drawImage(T[id].img, 15 * GT, 0, GT, GT, 0, 0, GT, GT);  // col 15 = full tile
+    });
+  }
+
+  // ── painting ──────────────────────────────────────────────────────────────
+  let painting   = false;
+  let activeTool = 0;  // terrain id: 0=grass, 1=sand, 7=water
+
+  function hitCell(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      cx: Math.floor((e.offsetX / r.width)  * COLS),
+      cy: Math.floor((e.offsetY / r.height) * ROWS)
+    };
+  }
+
+  function applyPaint(e) {
+    const { cx, cy } = hitCell(e);
+    if (cx < 0 || cx >= COLS || cy < 0 || cy >= ROWS) return;
+    const val = (e.buttons & 2) ? 0 : activeTool;  // right-click = erase → grass
+    if (grid[cy * COLS + cx] !== val) {
+      grid[cy * COLS + cx] = val;
+      render();
+    }
+  }
+
+  canvas.addEventListener('mousedown',   e => { e.preventDefault(); painting = true; applyPaint(e); });
+  canvas.addEventListener('mousemove',   e => { if (painting) applyPaint(e); });
+  canvas.addEventListener('mouseup',     () => painting = false);
+  canvas.addEventListener('mouseleave',  () => painting = false);
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ── tool buttons ──────────────────────────────────────────────────────────
+  const BTNS = [ {id:'btnGrass',tool:0}, {id:'btnSand',tool:1}, {id:'btnWater',tool:7} ];
+  BTNS.forEach(({ id, tool }) =>
+    document.getElementById(id).addEventListener('click', () => {
+      activeTool = tool;
+      BTNS.forEach(b => document.getElementById(b.id).classList.toggle('active', b.tool === tool));
+    })
+  );
+
+  // ── grid button ───────────────────────────────────────────────────────────────────
+  document.getElementById('btnGrid').addEventListener('click', () => {
+    gridMode = (gridMode + 1) % 3;
+    document.getElementById('btnGrid').textContent =
+      ['Grid: None', 'Grid: Normal', 'Grid: Dual'][gridMode];
+    render();
+  });
+
+  // ── foam sliders ───────────────────────────────────────────────────────────────────
+  function getSliderVals() {
+    return {
+      count  : +document.getElementById('foamSlider').value,
+      width  : +document.getElementById('foamWidth').value,
+      height : +document.getElementById('foamHeight').value,
+      blend  : +document.getElementById('foamBlend').value / 100,
+    };
+  }
+  function rebuild() {
+    const { count, width, height, blend } = getSliderVals();
+    buildWaterFrames(count, width, height, blend);
+    render();
+  }
+  [['foamSlider','foamVal',''],['foamWidth','foamWidthVal',''],['foamHeight','foamHeightVal',''],['foamBlend','foamBlendVal','%']]
+    .forEach(([id, labelId, suffix]) =>
+      document.getElementById(id).addEventListener('input', e => {
+        document.getElementById(labelId).textContent = e.target.value + suffix;
+        rebuild();
+      })
+    );
+
+  // ── animation timer ────────────────────────────────────────────────────────────────────
+  setInterval(() => {
+    if (!waterFrameMap) return;
+    currentFrame = (currentFrame + 1) % NFRAMES;
+    render();
+  }, 100);  // 100 ms ≈ 10 fps
+</script>
+</body>
+</html>

@@ -1,0 +1,1521 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Character Animation Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #12121a;
+    color: #ccc;
+    font-family: 'Segoe UI', monospace;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 0;
+    gap: 0;
+  }
+
+  h1 { font-size: 0.9em; letter-spacing: 3px; color: #8ab4f8; text-transform: uppercase; }
+
+  #mainCanvas {
+    image-rendering: pixelated;
+    background: #1a1a2c;
+    border: 2px solid #2a2a40;
+    border-radius: 4px;
+  }
+
+  .panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    max-width: 1200px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card {
+    background: #1a1a2c;
+    border: 1px solid #2a2a40;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-title {
+    font-size: 0.68em;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #555;
+    margin-bottom: 2px;
+  }
+
+  select {
+    background: #22223a;
+    color: #ccc;
+    border: 1px solid #3a3a5a;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.88em;
+    cursor: pointer;
+    outline: none;
+  }
+  select:focus { border-color: #8ab4f8; }
+
+  .pos-display {
+    font-size: 0.75em;
+    color: #888;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .layer-sel {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    transition: background 0.1s;
+  }
+  .layer-sel:hover { background: #2a2a2a; }
+  .layer-sel.active { background: #1e3a5f; outline: 1px solid #4a8fd4; }
+
+  .sub-title {
+    font-size: 0.7em;
+    color: #555;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+
+  .hint { font-size: 0.65em; color: #444; margin-top: 2px; }
+
+  .sprite-grid {
+    display: grid;
+    gap: 1px;
+    background: #0e0e1a;
+    padding: 3px;
+    border-radius: 4px;
+    user-select: none;
+  }
+
+  .sprite-cell {
+    image-rendering: pixelated;
+    cursor: crosshair;
+    border: 2px solid transparent;
+    border-radius: 2px;
+    display: block;
+  }
+  .sprite-cell:hover   { border-color: #444; }
+  .sprite-cell.active  { border-color: #f0a040; }
+  .sprite-cell.in-drag { border-color: #60a0f0; }
+
+  .hand-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border: 2px solid transparent;
+    border-radius: 3px;
+  }
+  .hand-row:hover  { border-color: #444; }
+  .hand-row.active { border-color: #f0a040; }
+  .hand-row .idx   { font-size: 0.65em; color: #555; width: 14px; text-align: center; }
+
+  .none-btn {
+    font-size: 0.72em;
+    background: #1e1e30;
+    border: 1px solid #3a3a5a;
+    color: #666;
+    padding: 3px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 4px;
+    align-self: flex-start;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .none-btn:hover  { color: #aaa; border-color: #666; }
+  .none-btn.active { color: #f0a040; border-color: #f0a040; }
+
+  .layer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8em;
+    color: #888;
+  }
+  .layer-row span { flex: 1; }
+
+  .z-input {
+    width: 48px;
+    background: #22223a;
+    color: #ccc;
+    border: 1px solid #3a3a5a;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.85em;
+    text-align: center;
+    outline: none;
+  }
+  .z-input:focus { border-color: #8ab4f8; }
+
+  /* Main layout sections */
+  .preview-col {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .preview-side {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .controls-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 14px;
+    align-items: flex-start;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .pickers-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+
+  .transform-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .xform-btn {
+    background: #1e1e30;
+    color: #888;
+    border: 1px solid #3a3a5a;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    line-height: 1.4;
+  }
+  .xform-btn:hover  { color: #ccc; border-color: #666; }
+  .xform-btn.active { color: #f0a040; border-color: #f0a040; }
+  .xform-info { font-size: 0.65em; color: #555; margin-left: 2px; font-variant-numeric: tabular-nums; }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .z-btns { display: flex; gap: 2px; flex-shrink: 0; }
+  .z-btn {
+    background: #1e1e30;
+    color: #555;
+    border: 1px solid #2e2e4a;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    cursor: pointer;
+    line-height: 1.5;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .z-btn:hover { color: #ccc; border-color: #666; }
+
+  .save-btn {
+    background: #1e1e30;
+    color: #8ab4f8;
+    border: 1px solid #4060a0;
+    padding: 7px 16px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+  .save-btn:hover { background: #252545; }
+
+  .saved-section {
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  .saved-header {
+    font-size: 0.68em;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #555;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .file-btn {
+    background: #1e1e30;
+    color: #888;
+    border: 1px solid #3a3a5a;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 1em; /* relative to .saved-header shrinks it nicely */
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .file-btn:hover { color: #ccc; border-color: #666; }
+  #fileImport { display: none; }
+
+  .saved-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .saved-card {
+    background: #1a1a2c;
+    border: 1px solid #2a2a40;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 168px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .saved-card:hover  { border-color: #4a4a6a; }
+  .saved-card.active { border-color: #f0a040; }
+
+  .combo-thumb {
+    image-rendering: pixelated;
+    width: 100%;
+    aspect-ratio: 160 / 140;
+    border-radius: 3px;
+    background: #0e0e1a;
+    display: block;
+  }
+
+  .combo-name {
+    font-size: 0.82em;
+    color: #ccc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .combo-detail {
+    font-size: 0.65em;
+    color: #555;
+    line-height: 1.4;
+  }
+
+  .combo-btns {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .combo-btn {
+    flex: 1;
+    background: #22223a;
+    color: #888;
+    border: 1px solid #3a3a5a;
+    padding: 3px 4px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 0.72em;
+    cursor: pointer;
+  }
+  .combo-btn:hover     { color: #ccc; border-color: #666; }
+  .combo-btn-del       { flex: 0 0 auto; color: #804040; border-color: #4a2a2a; }
+  .combo-btn-del:hover { color: #f06060; border-color: #a06060; }
+
+  .combo-json {
+    font-size: 0.62em;
+    font-family: 'Consolas', monospace;
+    background: #0e0e1a;
+    color: #6a8a6a;
+    border: 1px solid #1e2e1e;
+    border-radius: 4px;
+    padding: 8px 10px;
+    width: 100%;
+    height: 180px;
+    resize: vertical;
+    outline: none;
+    margin-top: 8px;
+    display: block;
+  }
+  .combo-json:focus { border-color: #3a5a3a; color: #8aba8a; }
+
+  .page-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .thumb-rail {
+    width: 360px;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 4px;
+    padding: 8px 6px;
+    background: #0c0c14;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: scroll;
+    align-self: flex-start;
+  }
+
+  .thumb-item {
+    position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    line-height: 0;
+    flex-shrink: 0;
+    transition: border-color 0.15s;
+  }
+  .thumb-item:hover  { border-color: #4a4a6a; }
+  .thumb-item.active { border-color: #f0a040; }
+
+  .thumb-del {
+    position: absolute;
+    top: 2px; right: 2px;
+    background: rgba(10,10,20,0.85);
+    color: #804040;
+    border: none;
+    border-radius: 2px;
+    width: 16px; height: 16px;
+    font-size: 10px;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .thumb-item:hover .thumb-del { display: flex; }
+  .thumb-del:hover { color: #f06060; background: rgba(10,10,20,0.95); }
+
+  .combo-name-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .combo-name-input {
+    flex: 1;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #ccc;
+    padding: 5px 8px;
+    font-size: 0.85em;
+    outline: none;
+  }
+  .combo-name-input:focus { border-color: #8ab4f8; }
+  .combo-name-input.error { border-color: #f06060; }
+  .suggest-btn {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #ccc;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: border-color 0.15s;
+  }
+  .suggest-btn:hover { border-color: #8ab4f8; }
+  .suggest-btn:disabled { opacity: 0.5; cursor: default; }
+  .lms-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .lms-input {
+    flex: 1;
+    background: #111120;
+    border: 1px solid #2a2a3a;
+    border-radius: 4px;
+    color: #666;
+    padding: 3px 7px;
+    font-size: 0.72em;
+    outline: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .lms-input:focus { border-color: #4a6a9a; color: #aaa; }
+  .lms-status { font-size: 0.68em; color: #f09060; white-space: nowrap; }
+  .suggestion-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .suggestion-chip {
+    background: #1a2a3a;
+    border: 1px solid #2a4a6a;
+    border-radius: 10px;
+    color: #8ab4f8;
+    padding: 2px 9px;
+    font-size: 0.72em;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .suggestion-chip:hover { background: #253545; }
+  .thumb-label {
+    line-height: 1.3;
+    font-size: 0.58em;
+    color: #888;
+    text-align: center;
+    padding: 2px 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="thumb-rail" id="savedCombos"></div>
+<div class="page-main">
+<h1>Character Animation Demo</h1>
+
+<div class="preview-col">
+  <canvas id="mainCanvas" width="320" height="280"></canvas>
+  <div class="preview-side">
+    <div class="card">
+      <div class="layer-header">
+        <span class="card-title">Character</span>
+        <div class="z-btns">
+          <button class="z-btn" id="zCharFront" title="Move in front">&#9650;</button>
+          <button class="z-btn" id="zCharBack"  title="Move behind">&#9660;</button>
+        </div>
+      </div>
+      <select id="charSelect"></select>
+      <div class="hint">128x32 . 4 frames . 8 fps</div>
+    </div>
+    <div class="combo-name-row">
+      <input type="text" id="comboNameInput" class="combo-name-input" placeholder="Combo name…" maxlength="40" autocomplete="off">
+      <button id="suggestNameBtn" class="suggest-btn" title="Suggest a name">✨</button>
+    </div>
+    <div class="lms-row">
+      <input type="text" id="lmsUrl" class="lms-input" placeholder="LM Studio: http://localhost:1234" autocomplete="off">
+      <span id="lmsStatus" class="lms-status"></span>
+    </div>
+    <div id="suggestionChips" class="suggestion-chips"></div>
+    <button id="saveComboBtn" class="save-btn">⊕ Save</button>
+  </div>
+</div>
+
+<div class="controls-row">
+  <div class="card">
+    <div class="layer-header layer-sel" id="selLH" data-layer="lh">
+      <span class="sub-title" style="margin:0">Left Hand</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="pos-display" id="lhPos">-10, 6</span>
+        <div class="z-btns">
+          <button class="z-btn" id="zLHFront" title="Move in front">&#9650;</button>
+          <button class="z-btn" id="zLHBack"  title="Move behind">&#9660;</button>
+        </div>
+      </div>
+    </div>
+    <div class="layer-header layer-sel" id="selW2" data-layer="w2" style="margin-top:8px">
+      <span class="sub-title" style="margin:0">Weapon 2</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="pos-display" id="w2Pos">8, -8</span>
+        <div class="z-btns">
+          <button class="z-btn" id="zW2Front" title="Move in front">&#9650;</button>
+          <button class="z-btn" id="zW2Back"  title="Move behind">&#9660;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="layer-header layer-sel" id="selRH" data-layer="rh">
+      <span class="sub-title" style="margin:0">Right Hand</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="pos-display" id="rhPos">10, 6</span>
+        <div class="z-btns">
+          <button class="z-btn" id="zRHFront" title="Move in front">&#9650;</button>
+          <button class="z-btn" id="zRHBack"  title="Move behind">&#9660;</button>
+        </div>
+      </div>
+    </div>
+    <div class="layer-header layer-sel" id="selW1" data-layer="w1" style="margin-top:8px">
+      <span class="sub-title" style="margin:0">Weapon 1</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="pos-display" id="w1Pos">0, -12</span>
+        <div class="z-btns">
+          <button class="z-btn" id="zW1Front" title="Move in front">&#9650;</button>
+          <button class="z-btn" id="zW1Back"  title="Move behind">&#9660;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pickers-row">
+  <div class="card">
+    <div class="card-title">Hands</div>
+    <div id="handsContainer"></div>
+    <button class="none-btn active" id="handNone">None</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Weapon 1</div>
+    <select id="w1File">
+      <option value="Weapon-Bone">Bone</option>
+      <option value="Weapon-Wood" selected>Wood</option>
+    </select>
+    <div id="w1Container"></div>
+    <button class="none-btn active" id="w1None">None</button>
+    <div class="hint">Drag cells to select multi-tile</div>
+    <div class="transform-row">
+      <button class="xform-btn" id="w1RotCCW" title="Rotate 90° CCW">&#8634;</button>
+      <button class="xform-btn" id="w1RotCW"  title="Rotate 90° CW">&#8635;</button>
+      <button class="xform-btn" id="w1FlipH"  title="Flip Horizontal">&#8596;</button>
+      <button class="xform-btn" id="w1FlipV"  title="Flip Vertical">&#8597;</button>
+      <span class="xform-info" id="w1XformInfo">0°</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Weapon 2</div>
+    <select id="w2File">
+      <option value="Weapon-Bone">Bone</option>
+      <option value="Weapon-Wood">Wood</option>
+    </select>
+    <div id="w2Container"></div>
+    <button class="none-btn active" id="w2None">None</button>
+    <div class="hint">Drag cells to select multi-tile</div>
+    <div class="transform-row">
+      <button class="xform-btn" id="w2RotCCW" title="Rotate 90° CCW">&#8634;</button>
+      <button class="xform-btn" id="w2RotCW"  title="Rotate 90° CW">&#8635;</button>
+      <button class="xform-btn" id="w2FlipH"  title="Flip Horizontal">&#8596;</button>
+      <button class="xform-btn" id="w2FlipV"  title="Flip Vertical">&#8597;</button>
+      <span class="xform-info" id="w2XformInfo">0°</span>
+    </div>
+  </div>
+</div>
+
+<div class="saved-section">
+  <div class="saved-header">
+    <span>Saved Combinations</span>
+    <button id="saveFileBtn" class="file-btn">&#8659; Save JSON</button>
+    <button id="loadFileBtn" class="file-btn">&#8657; Load JSON</button>
+    <input type="file" id="fileImport" accept=".json,application/json">
+  </div>
+  <textarea id="savedJson" class="combo-json" readonly spellcheck="false"></textarea>
+</div>
+</div><!-- .page-main -->
+
+<script>
+'use strict';
+
+const CHARS = [
+  'Knight','Orc','OrcRogue','OrcShaman','OrcWarrior',
+  'Rogue','Skeleton','SkeletonMage','SkeletonRogue','SkeletonWarrior','Wizard'
+];
+
+const SCALE       = 4;
+const FRAME_SIZE  = 32;
+const HAND_CELL   = 16;
+const WEAPON_CELL = 16;
+const FRAME_COUNT = 4;
+const FPS         = 8;
+// Y offset (source px) added to hands & weapons per animation frame: 0 → 1 → 2 → 1 px higher
+const FRAME_BOB   = [0, 1, 2, 1];
+const CW = 320, CH = 280;
+const CX = CW / 2, CY = CH / 2 + 8;
+
+// Thumbnail animation canvas dimensions — tight crop at scale 2
+// Base sprite is 32×32; at scale 2 that's 64×64. Canvas has ~16px margin each side.
+const THUMB_SCALE = 2;
+const THUMB_W     = 96;  // 64px sprite + 16px margin each side
+const THUMB_H     = 88;  // slightly shorter; center biased up for weapons below hands
+const THUMB_CX    = 48;
+const THUMB_CY    = 50;
+
+// z: lower = drawn first (behind), higher = drawn last (on top)
+// Default order: wep2(1) -> wep1(2) -> hands(3) -> char(4)
+const state = {
+  charName: 'Knight',
+  char: { z: 4 },
+  handRow: null,
+  lh: { x: -10, y: 6, z: 3 },
+  rh: { x:  10, y: 6, z: 3 },
+  wep: [
+    { file: 'Weapon-Wood', col: null, row: null, cols: 1, rows: 1, x: 0,  y: -12, z: 2, rot: 0, flipH: false, flipV: false },
+    { file: 'Weapon-Wood', col: null, row: null, cols: 1, rows: 1, x: 8,  y:  -8, z: 1, rot: 0, flipH: false, flipV: false },
+  ],
+  frame: 0,
+};
+
+// Image loading
+const images = {};
+const toLoad = [...CHARS, 'Weapon-Hands', 'Weapon-Bone', 'Weapon-Wood'];
+let loadCount = 0;
+toLoad.forEach(name => {
+  const img = new Image();
+  img.onload  = () => { images[name] = img; if (++loadCount === toLoad.length) init(); };
+  img.onerror = () => { console.warn('Could not load:', name + '.png'); if (++loadCount === toLoad.length) init(); };
+  img.src = name + '.png';
+});
+
+// Canvas
+const canvas = document.getElementById('mainCanvas');
+const ctx    = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function drawSprite(img, sx, sy, sw, sh, offsetX, offsetY) {
+  ctx.drawImage(
+    img, sx, sy, sw, sh,
+    CX + offsetX * SCALE - (sw / 2) * SCALE,
+    CY + offsetY * SCALE - (sh / 2) * SCALE,
+    sw * SCALE, sh * SCALE
+  );
+}
+
+function drawChar() {
+  const img = images[state.charName];
+  if (!img) return;
+  ctx.drawImage(
+    img, state.frame * FRAME_SIZE, 0, FRAME_SIZE, FRAME_SIZE,
+    CX - (FRAME_SIZE / 2) * SCALE, CY - (FRAME_SIZE / 2) * SCALE,
+    FRAME_SIZE * SCALE, FRAME_SIZE * SCALE
+  );
+}
+
+function drawHand(side) {
+  if (state.handRow === null) return;
+  const img = images['Weapon-Hands'];
+  if (!img) return;
+  const col = side === 'lh' ? 0 : 1;
+  const s   = state[side];
+  drawSprite(img, col * HAND_CELL, state.handRow * HAND_CELL, HAND_CELL, HAND_CELL, s.x, s.y + FRAME_BOB[state.frame]);
+}
+
+// Weapon transparency trimming — cache: key → { sx,sy,sw,sh,dx,dy } in source px
+const weaponTrimCache = {};
+
+function computeWeaponTrim(img, sx, sy, sw, sh) {
+  const oc = document.createElement('canvas');
+  oc.width = sw; oc.height = sh;
+  const oc2 = oc.getContext('2d');
+  oc2.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  const data = oc2.getImageData(0, 0, sw, sh).data;
+  let minX = sw, maxX = -1, minY = sh, maxY = -1;
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (data[(y * sw + x) * 4 + 3] > 4) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null; // fully transparent
+  const tw = maxX - minX + 1, th = maxY - minY + 1;
+  return {
+    sx: sx + minX, sy: sy + minY, sw: tw, sh: th,
+    dx: (minX + tw / 2) - sw / 2,  // source-px shift of visual center vs original center
+    dy: (minY + th / 2) - sh / 2,
+  };
+}
+
+function getWeaponTrim(file, col, row, cols, rows) {
+  if (col === null) return null;
+  const key = `${file}:${col},${row},${cols},${rows}`;
+  if (key in weaponTrimCache) return weaponTrimCache[key];
+  const img = images[file];
+  if (!img) return null;
+  const t = computeWeaponTrim(img, col * WEAPON_CELL, row * WEAPON_CELL, cols * WEAPON_CELL, rows * WEAPON_CELL);
+  weaponTrimCache[key] = t;
+  return t;
+}
+
+// Shared sprite-with-transform renderer used by both main canvas and thumbnail ctx
+function drawSpriteEx(c2d, img, sx, sy, sw, sh, ox, oy, sc, cx, cy, rot, flipH, flipV) {
+  const destCX = cx + ox * sc;
+  const destCY = cy + oy * sc;
+  const dw = sw * sc, dh = sh * sc;
+  if (!rot && !flipH && !flipV) {
+    c2d.drawImage(img, sx, sy, sw, sh, destCX - dw / 2, destCY - dh / 2, dw, dh);
+    return;
+  }
+  c2d.save();
+  c2d.translate(destCX, destCY);
+  if (rot) c2d.rotate(rot * Math.PI / 180);
+  if (flipH || flipV) c2d.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  c2d.drawImage(img, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh);
+  c2d.restore();
+}
+
+function drawWeapon(wi) {
+  const w = state.wep[wi];
+  if (w.col === null) return;
+  const img = images[w.file];
+  if (!img) return;
+  const t = getWeaponTrim(w.file, w.col, w.row, w.cols, w.rows);
+  if (!t) return;
+  drawSpriteEx(ctx, img, t.sx, t.sy, t.sw, t.sh, w.x + t.dx, w.y + FRAME_BOB[state.frame] + t.dy, SCALE, CX, CY, w.rot || 0, w.flipH || false, w.flipV || false);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, CW, CH);
+  const layers = [
+    { z: state.char.z,   fn: drawChar },
+    { z: state.lh.z,     fn: () => drawHand('lh') },
+    { z: state.rh.z,     fn: () => drawHand('rh') },
+    { z: state.wep[0].z, fn: () => drawWeapon(0) },
+    { z: state.wep[1].z, fn: () => drawWeapon(1) },
+  ];
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(l => l.fn());
+}
+
+let animTimer = null;
+function startAnimation() {
+  if (animTimer) clearInterval(animTimer);
+  animTimer = setInterval(() => { state.frame = (state.frame + 1) % FRAME_COUNT; draw(); }, 1000 / FPS);
+}
+
+// Weapon drag-select state
+const dragState    = [null, null];
+const weaponRefresh = [null, null];
+
+document.addEventListener('mouseup', () => {
+  for (let wi = 0; wi < 2; wi++) {
+    if (!dragState[wi]) continue;
+    const d  = dragState[wi];
+    const c0 = Math.min(d.startC, d.curC), c1 = Math.max(d.startC, d.curC);
+    const r0 = Math.min(d.startR, d.curR), r1 = Math.max(d.startR, d.curR);
+    state.wep[wi].col  = c0; state.wep[wi].row  = r0;
+    state.wep[wi].cols = c1 - c0 + 1; state.wep[wi].rows = r1 - r0 + 1;
+    dragState[wi] = null;
+    if (weaponRefresh[wi]) weaponRefresh[wi]();
+    document.getElementById(wi === 0 ? 'w1None' : 'w2None').classList.remove('active');
+    draw();
+  }
+});
+
+function setupCharSelect() {
+  const sel = document.getElementById('charSelect');
+  CHARS.forEach(name => { const opt = document.createElement('option'); opt.value = opt.textContent = name; sel.appendChild(opt); });
+  sel.addEventListener('change', () => { state.charName = sel.value; draw(); });
+}
+
+function buildHandsUI() {
+  const container = document.getElementById('handsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  const img = images['Weapon-Hands'];
+  if (!img) return;
+  const rows = Math.floor(img.height / HAND_CELL), cellPx = HAND_CELL * 3;
+
+  // Read pixels once to filter empty rows
+  const oc = document.createElement('canvas'); oc.width = img.width; oc.height = img.height;
+  const octx = oc.getContext('2d'); octx.drawImage(img, 0, 0);
+  const pxd = octx.getImageData(0, 0, img.width, img.height).data;
+  function rowHasContent(r) {
+    const sy = r * HAND_CELL;
+    for (let y = sy; y < sy + HAND_CELL; y++)
+      for (let x = 0; x < img.width; x++) {
+        const i = (y * img.width + x) * 4;
+        if (pxd[i+3] > 4 && !(pxd[i] < 10 && pxd[i+1] < 10 && pxd[i+2] < 10)) return true;
+      }
+    return false;
+  }
+
+  for (let r = 0; r < rows; r++) {
+    if (!rowHasContent(r)) continue;
+    const row = document.createElement('div');
+    row.className = 'hand-row';
+    if (state.handRow === r) row.classList.add('active');
+    const idx = document.createElement('span'); idx.className = 'idx'; idx.textContent = r + 1; row.appendChild(idx);
+    [0, 1].forEach(col => {
+      const c = document.createElement('canvas'); c.width = c.height = cellPx; c.style.imageRendering = 'pixelated';
+      const cx2 = c.getContext('2d'); cx2.imageSmoothingEnabled = false;
+      cx2.drawImage(img, col * HAND_CELL, r * HAND_CELL, HAND_CELL, HAND_CELL, 0, 0, cellPx, cellPx);
+      row.appendChild(c);
+    });
+    const fr = r;
+    row.addEventListener('click', () => {
+      state.handRow = fr;
+      buildHandsUI();
+      draw();
+    });
+    container.appendChild(row);
+  }
+  document.getElementById('handNone')?.classList.toggle('active', state.handRow === null);
+}
+
+function buildWeaponUI(wi) {
+  const containerId = wi === 0 ? 'w1Container' : 'w2Container';
+  const container   = document.getElementById(containerId);
+  container.innerHTML = '';
+  const w = state.wep[wi], img = images[w.file];
+  if (!img) return;
+  const cols = Math.floor(img.width / WEAPON_CELL), rows = Math.floor(img.height / WEAPON_CELL), cellPx = WEAPON_CELL * 3;
+
+  // Read pixels once; detect which rows and cols have actual (non-transparent, non-black) content
+  const oc = document.createElement('canvas'); oc.width = img.width; oc.height = img.height;
+  const octx = oc.getContext('2d'); octx.drawImage(img, 0, 0);
+  const pxd = octx.getImageData(0, 0, img.width, img.height).data;
+  function cellHasContent(c, r) {
+    const sx = c * WEAPON_CELL, sy = r * WEAPON_CELL;
+    for (let y = sy; y < sy + WEAPON_CELL; y++)
+      for (let x = sx; x < sx + WEAPON_CELL; x++) {
+        const i = (y * img.width + x) * 4;
+        if (pxd[i+3] > 4 && !(pxd[i] < 10 && pxd[i+1] < 10 && pxd[i+2] < 10)) return true;
+      }
+    return false;
+  }
+  const validColSet = new Set(), validRowSet = new Set();
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      if (cellHasContent(c, r)) { validColSet.add(c); validRowSet.add(r); }
+  const validCols = [...validColSet].sort((a,b)=>a-b);
+  const validRows = [...validRowSet].sort((a,b)=>a-b);
+
+  const grid = document.createElement('div'); grid.className = 'sprite-grid';
+  grid.style.gridTemplateColumns = 'repeat(' + validCols.length + ', ' + cellPx + 'px)';
+  const cellElems = []; // { r, c, el }
+
+  function refresh() {
+    const d = dragState[wi], wState = state.wep[wi];
+    const drag = d ? { c0: Math.min(d.startC,d.curC), r0: Math.min(d.startR,d.curR), c1: Math.max(d.startC,d.curC), r1: Math.max(d.startR,d.curR) } : null;
+    cellElems.forEach(({ r, c, el }) => {
+      el.classList.remove('active','in-drag');
+      if (wState.col !== null && c >= wState.col && c <= wState.col+wState.cols-1 && r >= wState.row && r <= wState.row+wState.rows-1)
+        el.classList.add('active');
+      if (drag && c >= drag.c0 && c <= drag.c1 && r >= drag.r0 && r <= drag.r1) { el.classList.remove('active'); el.classList.add('in-drag'); }
+    });
+  }
+  weaponRefresh[wi] = refresh;
+
+  validRows.forEach(fr => {
+    validCols.forEach(fc => {
+      const cell = document.createElement('canvas'); cell.width = cell.height = cellPx; cell.className = 'sprite-cell'; cell.title = 'col ' + fc + ', row ' + fr;
+      const cx2 = cell.getContext('2d'); cx2.imageSmoothingEnabled = false;
+      cx2.drawImage(img, fc * WEAPON_CELL, fr * WEAPON_CELL, WEAPON_CELL, WEAPON_CELL, 0, 0, cellPx, cellPx);
+      cell.addEventListener('mousedown', e => { dragState[wi] = { startC: fc, startR: fr, curC: fc, curR: fr }; refresh(); e.preventDefault(); });
+      cell.addEventListener('mouseenter', e => { if (dragState[wi] && e.buttons === 1) { dragState[wi].curC = fc; dragState[wi].curR = fr; refresh(); } });
+      cellElems.push({ r: fr, c: fc, el: cell }); grid.appendChild(cell);
+    });
+  });
+  container.appendChild(grid);
+  refresh();
+}
+
+let activeLayer = null;
+
+const LAYER_DEFS = {
+  rh: { getX: () => state.rh.x,     setX: v => state.rh.x = v,     getY: () => state.rh.y,     setY: v => state.rh.y = v,     posId: 'rhPos' },
+  lh: { getX: () => state.lh.x,     setX: v => state.lh.x = v,     getY: () => state.lh.y,     setY: v => state.lh.y = v,     posId: 'lhPos' },
+  w1: { getX: () => state.wep[0].x, setX: v => state.wep[0].x = v, getY: () => state.wep[0].y, setY: v => state.wep[0].y = v, posId: 'w1Pos' },
+  w2: { getX: () => state.wep[1].x, setX: v => state.wep[1].x = v, getY: () => state.wep[1].y, setY: v => state.wep[1].y = v, posId: 'w2Pos' },
+};
+
+function updatePosDisplay(layerKey) {
+  const def = LAYER_DEFS[layerKey];
+  const el = document.getElementById(def.posId);
+  if (el) el.textContent = `${def.getX()}, ${def.getY()}`;
+}
+
+function setupArrowKeys() {
+  document.querySelectorAll('.layer-sel').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.z-btns')) return;
+      const key = el.dataset.layer;
+      activeLayer = (activeLayer === key) ? null : key;
+      document.querySelectorAll('.layer-sel').forEach(s =>
+        s.classList.toggle('active', s.dataset.layer === activeLayer));
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (!activeLayer) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    const def = LAYER_DEFS[activeLayer];
+    if (!def) return;
+    const CLAMP = 64;
+    let moved = false;
+    if (e.key === 'ArrowLeft')  { def.setX(Math.max(-CLAMP, def.getX() - 1)); moved = true; }
+    if (e.key === 'ArrowRight') { def.setX(Math.min( CLAMP, def.getX() + 1)); moved = true; }
+    if (e.key === 'ArrowUp')    { def.setY(Math.max(-CLAMP, def.getY() - 1)); moved = true; }
+    if (e.key === 'ArrowDown')  { def.setY(Math.min( CLAMP, def.getY() + 1)); moved = true; }
+    if (moved) { e.preventDefault(); updatePosDisplay(activeLayer); draw(); }
+  });
+}
+
+// ── Save / Load combinations ─────────────────────────────────────────────────
+
+const STORAGE_KEY = 'rpg-anim-combos';
+
+function normalizeZ(snap) {
+  const layers = [
+    { get: () => snap.char.z,   set: v => snap.char.z   = v },
+    { get: () => snap.lh.z,     set: v => snap.lh.z     = v },
+    { get: () => snap.rh.z,     set: v => snap.rh.z     = v },
+    { get: () => snap.wep[0].z, set: v => snap.wep[0].z = v },
+    { get: () => snap.wep[1].z, set: v => snap.wep[1].z = v },
+  ];
+  const sorted = [...new Set(layers.map(l => l.get()))].sort((a, b) => a - b);
+  layers.forEach(l => l.set(sorted.indexOf(l.get())));
+}
+
+function snapshotState() {
+  const snap = {
+    charName: state.charName,
+    char:     { z: state.char.z },
+    handRow:  state.handRow,
+    lh:       { ...state.lh },
+    rh:       { ...state.rh },
+    wep:      state.wep.map(w => ({ ...w })),
+  };
+  normalizeZ(snap);
+  return snap;
+}
+
+function loadCombos() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveCombosToStorage(combos) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(combos));
+}
+
+function applyCombo(snap) {
+  // Character
+  document.getElementById('comboNameInput').value = snap.name || '';
+  state.charName = snap.charName;
+  document.getElementById('charSelect').value = snap.charName;
+
+  // Z-order (no numeric inputs; z buttons read directly from state)
+  state.char.z = snap.char.z;
+  state.lh.z   = snap.lh.z;
+  state.rh.z   = snap.rh.z;
+
+  // Hands
+  state.handRow = snap.handRow;
+  state.lh.x = snap.lh.x; state.lh.y = snap.lh.y;
+  state.rh.x = snap.rh.x; state.rh.y = snap.rh.y;
+  buildHandsUI();
+  updatePosDisplay('lh'); updatePosDisplay('rh');
+
+  // Weapons
+  [0, 1].forEach(wi => {
+    Object.assign(state.wep[wi], snap.wep[wi]);
+    document.getElementById(wi === 0 ? 'w1File' : 'w2File').value = snap.wep[wi].file;
+    buildWeaponUI(wi);
+    if (snap.wep[wi].col === null)
+      document.getElementById(wi === 0 ? 'w1None' : 'w2None').classList.add('active');
+  });
+  updatePosDisplay('w1'); updatePosDisplay('w2');
+
+  [0, 1].forEach(wi => updateXformUI(wi));
+
+  draw();
+}
+
+let thumbTimers = [];
+let deletedStack = [];
+
+async function testLmsConnection(url) {
+  const status = document.getElementById('lmsStatus');
+  status.style.color = '#666'; status.textContent = '⏳ testing…';
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const res = await fetch(`${url.replace(/\/$/, '')}/v1/models`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      const count = data.data?.length ?? '?';
+      status.style.color = '#60c060';
+      status.textContent = `✓ ${count} model${count !== 1 ? 's' : ''} loaded`;
+    } else {
+      status.style.color = '#f09060';
+      status.textContent = `✗ HTTP ${res.status}`;
+    }
+  } catch (e) {
+    clearTimeout(timer);
+    const msg = e.name === 'AbortError' ? 'timeout' :
+                e.message.toLowerCase().includes('fetch') ? 'unreachable \u2014 is LM Studio server running? Enable CORS in LM Studio → Local Server settings' :
+                e.message.slice(0, 60);
+    status.style.color = '#f06060';
+    status.textContent = '✗ ' + msg;
+  }
+}
+
+async function callLmsCompletions(lmsUrl, messages) {
+  const res = await fetch(`${lmsUrl.replace(/\/$/, '')}/v1/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, max_tokens: 500, temperature: 0.9, stream: false })
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}${body ? ': ' + body.slice(0, 80) : ''}`);
+  }
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  return text.split('\n')
+    .map(l => l.replace(/^[\d\.\-\*\)\s]+/, '').trim())
+    .filter(l => l.length > 1 && l.length < 50);
+}
+
+function buildEquipmentDescription() {
+  const char = state.charName || 'character';
+  const weps = state.wep.filter(w => w.col !== null).map(w => w.file.replace('Weapon-', '').toLowerCase());
+  const parts = [`pixel art RPG ${char}`];
+  if (weps.length > 0) parts.push(`wielding ${weps.join(' and ')} weapon${weps.length > 1 ? 's' : ''}`);
+  if (state.handRow !== null) parts.push('with hand equipment');
+  return parts.join(', ');
+}
+
+const NAME_PROMPT = 'Suggest 5 short creative fantasy names for this character combination (style: "Adjective Class", e.g. "Iron Knight", "Shadow Blade", "Forest Ranger"). List only the names, one per line, no numbering or explanation.';
+
+async function suggestComboNameAI(imageDataUrl, lmsUrl) {
+  // Stage 1: vision (multimodal models)
+  try {
+    return await callLmsCompletions(lmsUrl, [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: imageDataUrl } },
+        { type: 'text', text: 'This is a pixel art RPG character with equipment. ' + state.charName + ". " + NAME_PROMPT }
+      ]
+    }]);
+  } catch (visionErr) {
+    // Stage 2: text-only fallback for non-vision models
+    if (visionErr.message.startsWith('HTTP 4')) {
+      return await callLmsCompletions(lmsUrl, [{
+        role: 'user',
+        content: `I have a ${buildEquipmentDescription()}. ${NAME_PROMPT}`
+      }]);
+    }
+    throw visionErr;
+  }
+}
+
+function showSuggestionChips(names) {
+  const container = document.getElementById('suggestionChips');
+  container.innerHTML = '';
+  names.forEach(name => {
+    const chip = document.createElement('button');
+    chip.className = 'suggestion-chip';
+    chip.textContent = name;
+    chip.addEventListener('click', () => {
+      document.getElementById('comboNameInput').value = name;
+      document.getElementById('comboNameInput').classList.remove('error');
+      container.innerHTML = '';
+    });
+    container.appendChild(chip);
+  });
+}
+
+function suggestComboName() {
+  const char = state.charName || 'Warrior';
+  const equippedFiles = state.wep.filter(w => w.col !== null).map(w => w.file.toLowerCase());
+  const hasHands = state.handRow !== null;
+
+  const pools = {
+    wood:    ['Forest', 'Oak', 'Ranger', 'Verdant', 'Sylvan', 'Crude'],
+    bone:    ['Bone', 'Cursed', 'Hollow', 'Shadow', 'Undying', 'Grim'],
+    hands:   ['Unarmed', 'Brawler', 'Bare-Knuckle', 'Fist', 'Ironclad'],
+    default: ['Iron', 'Swift', 'Brave', 'Lone', 'Fierce', 'Silent'],
+  };
+
+  let pool = pools.default;
+  for (const f of equippedFiles) {
+    if (f.includes('wood')) { pool = pools.wood; break; }
+    if (f.includes('bone')) { pool = pools.bone; break; }
+  }
+  if (hasHands && equippedFiles.length === 0) pool = pools.hands;
+
+  const adj  = pool[Math.floor(Math.random() * pool.length)];
+  const base = `${adj} ${char}`;
+  const existing = loadCombos().map(c => (c.name || '').toLowerCase());
+  if (!existing.includes(base.toLowerCase())) return base;
+  let i = 2;
+  while (existing.includes(`${base} ${i}`.toLowerCase())) i++;
+  return `${base} ${i}`;
+} // undo stack for deleted combos
+
+function renderSavedCombos() {
+  thumbTimers.forEach(t => clearInterval(t));
+  thumbTimers = [];
+
+  const combos    = loadCombos().sort((a, b) => (a.charName || '').localeCompare(b.charName || ''));
+  const container = document.getElementById('savedCombos');
+  container.innerHTML = '';
+
+  combos.forEach((combo, idx) => {
+    const item = document.createElement('div');
+    item.className = 'thumb-item';
+    item.addEventListener('click', e => {
+      if (e.target.closest('.thumb-del')) return;
+      document.querySelectorAll('.thumb-item').forEach(c => c.classList.remove('active'));
+      item.classList.add('active');
+      applyCombo(combo);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    const thumbCanvas = document.createElement('canvas');
+    thumbCanvas.width  = THUMB_W;
+    thumbCanvas.height = THUMB_H;
+    thumbCanvas.className = 'combo-thumb';
+    const tc = thumbCanvas.getContext('2d');
+    let thumbFrame = 0;
+    drawComboToCtx(tc, combo, 0, THUMB_SCALE, THUMB_CX, THUMB_CY);
+    const timer = setInterval(() => {
+      thumbFrame = (thumbFrame + 1) % FRAME_COUNT;
+      drawComboToCtx(tc, combo, thumbFrame, THUMB_SCALE, THUMB_CX, THUMB_CY);
+    }, 1000 / FPS);
+    thumbTimers.push(timer);
+    item.appendChild(thumbCanvas);
+
+    if (combo.name) {
+      const lbl = document.createElement('span');
+      lbl.className = 'thumb-label';
+      lbl.textContent = combo.name;
+      item.appendChild(lbl);
+    }
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'thumb-del';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Delete';
+    delBtn.addEventListener('click', () => {
+      const all = loadCombos();
+      const comboJson = JSON.stringify(combo);
+      const realIdx = all.findIndex(c => JSON.stringify(c) === comboJson);
+      if (realIdx === -1) return;
+      const removed = all.splice(realIdx, 1)[0];
+      deletedStack.push({ idx: realIdx, combo: removed });
+      saveCombosToStorage(all);
+      renderSavedCombos();
+    });
+    item.appendChild(delBtn);
+
+    container.appendChild(item);
+  });
+
+  document.getElementById('savedJson').value = formatAllCombos(combos);
+  document.getElementById('comboNameInput').dispatchEvent(new Event('input'));
+}
+
+function formatCombo({ thumbnail, name, charName, char, handRow, lh, rh, wep }) {
+  const lines = ['{'];
+  if (name) lines.push('  "name": ' + JSON.stringify(name) + ',');
+  lines.push('  "charName": ' + JSON.stringify(charName) + ',');
+  lines.push('  "charZ": ' + char.z + ',');
+  if (handRow !== null && handRow !== undefined)
+    lines.push('  "handRow": ' + handRow + ',');
+  lines.push('  "lh": {"x": ' + lh.x + ', "y": ' + lh.y + ', "z": ' + lh.z + '},');
+  lines.push('  "rh": {"x": ' + rh.x + ', "y": ' + rh.y + ', "z": ' + rh.z + '}');
+  wep.forEach((w, wi) => {
+    if (!w || w.col === null) return;
+    const p = [];
+    p.push('"file": ' + JSON.stringify(w.file));
+    p.push('"col": ' + w.col + ', "row": ' + w.row);
+    if (w.cols !== 1) p.push('"cols": ' + w.cols);
+    if (w.rows !== 1) p.push('"rows": ' + w.rows);
+    p.push('"x": ' + w.x + ', "y": ' + w.y + ', "z": ' + w.z);
+    if (w.rot)   p.push('"rot": '   + w.rot);
+    if (w.flipH) p.push('"flipH": true');
+    if (w.flipV) p.push('"flipV": true');
+    lines[lines.length - 1] += ',';
+    lines.push('  "wep' + (wi + 1) + '": {' + p.join(', ') + '}');
+  });
+  lines.push('}');
+  return lines.join('\n');
+}
+
+function formatAllCombos(combos) {
+  if (!combos.length) return '';
+  const sorted = [...combos].sort((a, b) => (a.charName || '').localeCompare(b.charName || ''));
+  return '[\n' + sorted.map(c => formatCombo(c)).join(',\n') + '\n]';
+}
+
+function parseComboEntry(e) {
+  if (!('charZ' in e)) return e; // old internal format, pass through
+  const defWep = wi => ({ file: 'Weapon-Wood', col: null, row: null, cols: 1, rows: 1, x: wi === 0 ? 0 : 8, y: wi === 0 ? -12 : -8, z: wi === 0 ? 2 : 1, rot: 0, flipH: false, flipV: false });
+  const toWep  = (src, wi) => src
+    ? { file: src.file, col: src.col ?? null, row: src.row ?? null, cols: src.cols ?? 1, rows: src.rows ?? 1, x: src.x ?? 0, y: src.y ?? 0, z: src.z ?? (wi === 0 ? 2 : 1), rot: src.rot ?? 0, flipH: src.flipH ?? false, flipV: src.flipV ?? false }
+    : defWep(wi);
+  return {
+    name:     e.name || '',
+    charName: e.charName,
+    char:     { z: e.charZ },
+    handRow:  e.handRow ?? null,
+    lh:       e.lh  || { x: -10, y: 6, z: 3 },
+    rh:       e.rh  || { x:  10, y: 6, z: 3 },
+    wep:      [toWep(e.wep1, 0), toWep(e.wep2, 1)],
+  };
+}
+
+function generateThumbnail(combo) {
+  const oc  = document.createElement('canvas');
+  oc.width  = CW; oc.height = CH;
+  drawComboToCtx(oc.getContext('2d'), combo, 0, SCALE, CX, CY);
+  return oc.toDataURL();
+}
+
+// Shared combo renderer — used by main thumbnail generation and animated card previews
+function drawComboToCtx(c2d, combo, frame, sc, tcx, tcy) {
+  c2d.clearRect(0, 0, c2d.canvas.width, c2d.canvas.height);
+  c2d.imageSmoothingEnabled = false;
+  const bob = FRAME_BOB[frame];
+
+  function spr(img, sx, sy, sw, sh, ox, oy) {
+    c2d.drawImage(img, sx, sy, sw, sh,
+      tcx + ox * sc - (sw / 2) * sc,
+      tcy + oy * sc - (sh / 2) * sc,
+      sw * sc, sh * sc);
+  }
+
+  const layers = [
+    { z: combo.char.z, fn: () => {
+        const img = images[combo.charName]; if (!img) return;
+        c2d.drawImage(img, frame * FRAME_SIZE, 0, FRAME_SIZE, FRAME_SIZE,
+          tcx - (FRAME_SIZE / 2) * sc, tcy - (FRAME_SIZE / 2) * sc,
+          FRAME_SIZE * sc, FRAME_SIZE * sc);
+    }},
+    { z: combo.lh.z, fn: () => {
+        if (combo.handRow === null) return;
+        const img = images['Weapon-Hands']; if (!img) return;
+        spr(img, 0,         combo.handRow * HAND_CELL, HAND_CELL, HAND_CELL, combo.lh.x, combo.lh.y + bob);
+    }},
+    { z: combo.rh.z, fn: () => {
+        if (combo.handRow === null) return;
+        const img = images['Weapon-Hands']; if (!img) return;
+        spr(img, HAND_CELL, combo.handRow * HAND_CELL, HAND_CELL, HAND_CELL, combo.rh.x, combo.rh.y + bob);
+    }},
+    ...combo.wep.map(w => ({ z: w.z, fn: () => {
+        if (w.col === null) return;
+        const img = images[w.file]; if (!img) return;
+        const t = getWeaponTrim(w.file, w.col, w.row, w.cols, w.rows);
+        if (!t) return;
+        drawSpriteEx(c2d, img, t.sx, t.sy, t.sw, t.sh, w.x + t.dx, w.y + bob + t.dy, sc, tcx, tcy, w.rot || 0, w.flipH || false, w.flipV || false);
+    }})),
+  ];
+  layers.sort((a, b) => a.z - b.z);
+  layers.forEach(l => l.fn());
+}
+
+function setupZInputs() {
+  [
+    ['zChar', v => state.char.z    = v], ['zLH', v => state.lh.z     = v],
+    ['zRH',   v => state.rh.z     = v], ['zW1', v => state.wep[0].z = v],
+    ['zW2',   v => state.wep[1].z = v],
+  ].forEach(([id, setter]) => {
+    document.getElementById(id).addEventListener('input', e => { const v = parseInt(e.target.value,10); if (!isNaN(v)) { setter(v); draw(); } });
+  });
+}
+
+function setupZButtons() {
+  [
+    ['zCharFront','zCharBack', () => state.char.z,   v => state.char.z   = v],
+    ['zLHFront',  'zLHBack',  () => state.lh.z,     v => state.lh.z     = v],
+    ['zRHFront',  'zRHBack',  () => state.rh.z,     v => state.rh.z     = v],
+    ['zW1Front',  'zW1Back',  () => state.wep[0].z, v => state.wep[0].z = v],
+    ['zW2Front',  'zW2Back',  () => state.wep[1].z, v => state.wep[1].z = v],
+  ].forEach(([frontId, backId, getter, setter]) => {
+    document.getElementById(frontId)?.addEventListener('click', () => { setter(getter() + 1); draw(); });
+    document.getElementById(backId) ?.addEventListener('click', () => { setter(Math.max(0, getter() - 1)); draw(); });
+  });
+}
+
+function updateXformUI(wi) {
+  const w = state.wep[wi], p = wi === 0 ? 'w1' : 'w2';
+  const info = document.getElementById(p + 'XformInfo');
+  if (info) info.textContent = (w.rot || 0) + '°' + (w.flipH ? ' H' : '') + (w.flipV ? ' V' : '');
+  document.getElementById(p + 'FlipH')?.classList.toggle('active', !!w.flipH);
+  document.getElementById(p + 'FlipV')?.classList.toggle('active', !!w.flipV);
+}
+
+function init() {
+  setupCharSelect(); buildHandsUI(); buildWeaponUI(0); buildWeaponUI(1); setupArrowKeys(); setupZButtons();
+
+  document.getElementById('handNone').addEventListener('click', () => {
+    state.handRow = null;
+    buildHandsUI();
+    draw();
+  });
+
+  [0, 1].forEach(wi => {
+    const noneId = wi === 0 ? 'w1None' : 'w2None', fileId = wi === 0 ? 'w1File' : 'w2File';
+    document.getElementById(noneId).addEventListener('click', () => {
+      state.wep[wi].col = null; if (weaponRefresh[wi]) weaponRefresh[wi]();
+      document.getElementById(noneId).classList.add('active'); draw();
+    });
+    document.getElementById(fileId).addEventListener('change', e => {
+      state.wep[wi].file = e.target.value; state.wep[wi].col = null;
+      buildWeaponUI(wi); document.getElementById(noneId).classList.add('active'); draw();
+    });
+
+    const pref = wi === 0 ? 'w1' : 'w2';
+    document.getElementById(pref + 'RotCCW').addEventListener('click', () => {
+      state.wep[wi].rot = ((state.wep[wi].rot || 0) - 90 + 360) % 360; updateXformUI(wi); draw();
+    });
+    document.getElementById(pref + 'RotCW').addEventListener('click', () => {
+      state.wep[wi].rot = ((state.wep[wi].rot || 0) + 90) % 360; updateXformUI(wi); draw();
+    });
+    document.getElementById(pref + 'FlipH').addEventListener('click', () => {
+      state.wep[wi].flipH = !state.wep[wi].flipH; updateXformUI(wi); draw();
+    });
+    document.getElementById(pref + 'FlipV').addEventListener('click', () => {
+      state.wep[wi].flipV = !state.wep[wi].flipV; updateXformUI(wi); draw();
+    });
+  });
+
+  const lmsUrlEl = document.getElementById('lmsUrl');
+  lmsUrlEl.value = localStorage.getItem('rpg-lms-url') || 'http://localhost:1234';
+  lmsUrlEl.addEventListener('change', () => {
+    const url = lmsUrlEl.value.trim();
+    localStorage.setItem('rpg-lms-url', url);
+    if (url) testLmsConnection(url);
+  });
+  lmsUrlEl.addEventListener('blur', () => {
+    const url = lmsUrlEl.value.trim();
+    if (url) testLmsConnection(url);
+  });
+  // Test on load if URL is already set
+  if (lmsUrlEl.value.trim()) testLmsConnection(lmsUrlEl.value.trim());
+
+  document.getElementById('suggestNameBtn').addEventListener('click', async () => {
+    const btn       = document.getElementById('suggestNameBtn');
+    const nameInput = document.getElementById('comboNameInput');
+    const lmsUrl    = lmsUrlEl.value.trim();
+    const status    = document.getElementById('lmsStatus');
+    nameInput.classList.remove('error');
+
+    if (lmsUrl) {
+      btn.textContent = '⏳'; btn.disabled = true; status.textContent = '';
+      try {
+        const names = await suggestComboNameAI(canvas.toDataURL('image/png'), lmsUrl);
+        showSuggestionChips(names);
+        if (names.length > 0 && !nameInput.value.trim()) nameInput.value = names[0];
+      } catch (err) {
+        const msg = err.message.toLowerCase().includes('fetch') ? 'unreachable (CORS?)' : err.message.slice(0, 50);
+        document.getElementById('lmsStatus').style.color = '#f06060';
+        document.getElementById('lmsStatus').textContent = '\u26a0 ' + msg;
+        nameInput.value = suggestComboName();
+        showSuggestionChips([]);
+      } finally {
+        btn.textContent = '✨'; btn.disabled = false;
+      }
+    } else {
+      nameInput.value = suggestComboName();
+      showSuggestionChips([]);
+    }
+  });
+
+  document.getElementById('saveComboBtn').addEventListener('click', () => {
+    const nameInput = document.getElementById('comboNameInput');
+    const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.classList.add('error');
+      nameInput.focus();
+      return;
+    }
+    nameInput.classList.remove('error');
+    const all = loadCombos();
+    const snap = snapshotState();
+    snap.name = name;
+    snap.thumbnail = canvas.toDataURL();
+    const existingIdx = all.findIndex(c => (c.name || '').toLowerCase() === name.toLowerCase());
+    if (existingIdx !== -1) {
+      all[existingIdx] = snap; // update in place
+    } else {
+      all.push(snap);          // new entry
+    }
+    saveCombosToStorage(all);
+    renderSavedCombos();
+  });
+
+  const comboNameInput = document.getElementById('comboNameInput');
+  function refreshSaveBtn() {
+    const name = comboNameInput.value.trim();
+    const exists = loadCombos().some(c => (c.name || '').toLowerCase() === name.toLowerCase());
+    const btn = document.getElementById('saveComboBtn');
+    btn.textContent = (name && exists) ? '↻ Update' : '⊕ Save';
+  }
+  comboNameInput.addEventListener('input', refreshSaveBtn);
+
+  document.getElementById('saveFileBtn').addEventListener('click', () => {
+    const combos = loadCombos();
+    const blob = new Blob([formatAllCombos(combos)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'combinations.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('loadFileBtn').addEventListener('click', () => {
+    document.getElementById('fileImport').click();
+  });
+
+  document.getElementById('fileImport').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        const imported = JSON.parse(evt.target.result);
+        const arr = Array.isArray(imported) ? imported : [imported];
+        const parsed = arr.map(parseComboEntry);
+        parsed.forEach(c => { if (!c.thumbnail) c.thumbnail = generateThumbnail(c); });
+        saveCombosToStorage(parsed);
+        renderSavedCombos();
+      } catch {
+        alert('Invalid JSON file.');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  renderSavedCombos();
+  draw(); startAnimation();
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'z' && deletedStack.length > 0) {
+      e.preventDefault();
+      const { idx, combo } = deletedStack.pop();
+      const all = loadCombos();
+      all.splice(idx, 0, combo);
+      saveCombosToStorage(all);
+      renderSavedCombos();
+    }
+  });
+}
+</script>
+</body>
+</html>

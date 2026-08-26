@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpha Filter</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#1a1a1f;
+  color:#c8c8d0;
+  font-family:monospace;
+  font-size:12px;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:16px;
+}
+#app{
+  width:100%;
+  max-width:900px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.panel{
+  background:#22222a;
+  border:1px solid #383848;
+  border-radius:6px;
+  padding:10px 12px;
+}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.label{color:#7a7a90;font-size:11px;white-space:nowrap}
+.section-label{font-size:10px;color:#555568;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+.sep{width:1px;height:18px;background:#383848;flex-shrink:0}
+.chip{
+  font-size:11px;
+  font-family:monospace;
+  color:#7a7a90;
+  background:#16161e;
+  border:1px solid #2a2a38;
+  border-radius:4px;
+  padding:2px 7px;
+  white-space:nowrap;
+}
+.chip b{color:#a0a0c0;font-weight:500}
+button{
+  background:#2a2a38;
+  color:#c8c8d0;
+  border:1px solid #484860;
+  border-radius:4px;
+  padding:4px 10px;
+  font-size:11px;
+  font-family:monospace;
+  cursor:pointer;
+  white-space:nowrap;
+}
+button:hover{background:#32324a;border-color:#6060a0}
+button:disabled{opacity:0.35;cursor:not-allowed}
+.file-label{
+  color:#7a7a90;
+  font-size:11px;
+  background:#16161e;
+  border:1px solid #383848;
+  border-radius:4px;
+  padding:3px 8px;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:260px;
+  display:block;
+}
+.file-label:hover{border-color:#6060a0;color:#c8c8d0}
+#upload{display:none}
+input[type=range]{
+  accent-color:#5a5aaa;
+  cursor:pointer;
+  width:200px;
+}
+.canvas-wrap{
+  border:1px solid #2e2e3e;
+  border-radius:4px;
+  overflow:auto;
+  background:#0e0e14;
+  display:inline-block;
+  max-width:100%;
+  max-height:500px;
+}
+canvas{display:block;image-rendering:pixelated;}
+.previews{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.preview-col{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.preview-title{
+  font-size:10px;
+  color:#555568;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Load -->
+  <div class="panel">
+    <div class="row">
+      <label class="file-label" for="upload" id="file-label-txt">choose image…</label>
+      <input type="file" id="upload" accept="image/*">
+      <div class="sep"></div>
+      <span class="label">alpha threshold</span>
+      <input type="range" id="slider" min="0" max="255" value="0">
+      <span class="chip"><b id="thresh-val">0</b> / 255</span>
+      <div class="sep"></div>
+      <span class="chip">pixels removed: <b id="removed-count">–</b></span>
+      <div class="sep"></div>
+      <button id="save-btn" disabled>⬇ Save PNG</button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="panel" id="preview-panel" style="display:none">
+    <div class="section-label">preview</div>
+    <div class="previews">
+      <div class="preview-col">
+        <div class="preview-title">original</div>
+        <div class="canvas-wrap"><canvas id="orig-canvas"></canvas></div>
+      </div>
+      <div class="preview-col">
+        <div class="preview-title">filtered</div>
+        <div class="canvas-wrap"><canvas id="out-canvas"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const upload       = document.getElementById('upload');
+const fileLabelTxt = document.getElementById('file-label-txt');
+const slider       = document.getElementById('slider');
+const threshVal    = document.getElementById('thresh-val');
+const removedCount = document.getElementById('removed-count');
+const saveBtn      = document.getElementById('save-btn');
+const previewPanel = document.getElementById('preview-panel');
+const origCanvas   = document.getElementById('orig-canvas');
+const outCanvas    = document.getElementById('out-canvas');
+
+let srcImg = null;
+let threshold = 0;
+
+upload.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  fileLabelTxt.textContent = f.name.length > 34 ? f.name.slice(0, 32) + '…' : f.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      srcImg = img;
+      drawOriginal();
+      applyFilter();
+      previewPanel.style.display = '';
+      saveBtn.disabled = false;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+slider.addEventListener('input', () => {
+  threshold = parseInt(slider.value);
+  threshVal.textContent = threshold;
+  if (srcImg) applyFilter();
+});
+
+function drawOriginal() {
+  origCanvas.width  = srcImg.naturalWidth;
+  origCanvas.height = srcImg.naturalHeight;
+  const ctx = origCanvas.getContext('2d');
+  ctx.clearRect(0, 0, origCanvas.width, origCanvas.height);
+  ctx.drawImage(srcImg, 0, 0);
+}
+
+function applyFilter() {
+  const w = srcImg.naturalWidth;
+  const h = srcImg.naturalHeight;
+
+  // read pixels from original
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  const tc = tmp.getContext('2d');
+  tc.drawImage(srcImg, 0, 0);
+  const id = tc.getImageData(0, 0, w, h);
+  const data = id.data;
+
+  let removed = 0;
+  if (threshold > 0) {
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] < threshold) { data[i] = 0; removed++; }
+    }
+  }
+
+  outCanvas.width  = w;
+  outCanvas.height = h;
+  const oc = outCanvas.getContext('2d');
+  oc.clearRect(0, 0, w, h);
+  oc.putImageData(id, 0, 0);
+
+  removedCount.textContent = removed.toLocaleString();
+}
+
+saveBtn.addEventListener('click', () => {
+  if (!srcImg) return;
+  outCanvas.toBlob(blob => {
+    const a = document.createElement('a');
+    const name = (fileLabelTxt.textContent.replace(/…$/, '') || 'image').replace(/\.[^.]+$/, '');
+    a.download = `${name}_filtered.png`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }, 'image/png');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+[
+  {
+    "name": "Knight", "hp": 50, "attack": 12, "defense": 12, "armor": 7, "agility": 4, "xp": 110,
+    "charName": "Knight",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2}
+  },
+  {
+    "name": "Steel Warrior", "hp": 62, "attack": 16, "defense": 14, "armor": 9, "agility": 5, "xp": 155,
+    "charName": "Knight",
+    "charZ": 3,
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": -1, "z": 1}
+  },
+  {
+    "name": "Iron Sentinel", "hp": 90, "attack": 20, "defense": 20, "armor": 13, "agility": 5, "xp": 265,
+    "charName": "Knight",
+    "charZ": 2,
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 1},
+    "rh": {"x": 10, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": -1, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 9, "row": 0, "x": -11, "y": 6, "z": 2}
+  },
+  {
+    "name": "Iron Blade", "hp": 42, "attack": 11, "defense": 9, "armor": 6, "agility": 3, "xp": 80,
+    "charName": "Knight",
+    "charZ": 3,
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 0, "row": 0, "rows": 3, "x": 11, "y": -8, "z": 1}
+  },
+  {
+    "name": "Iron Pilgrim", "hp": 32, "attack": 8, "defense": 6, "armor": 4, "agility": 1, "xp": 54,
+    "charName": "Knight",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 1, "row": 1, "rows": 2, "x": 11, "y": 1, "z": 1}
+  },
+  {
+    "name": "Iron Warden", "hp": 52, "attack": 14, "defense": 13, "armor": 8, "agility": 4, "xp": 125,
+    "charName": "Knight",
+    "handRow": 0,
+    "lh": {"x": -10, "y": 6, "z": 1},
+    "rh": {"x": 10, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": 1, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 8, "row": 0, "x": -7, "y": 7, "z": 1}
+  },
+  {
+    "name": "Wild Scout", "hp": 20, "attack": 3, "defense": 2, "armor": 1, "agility": 4, "xp": 22,
+    "charName": "Orc",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2}
+  },
+  {
+    "name": "Moss Ranger", "hp": 22, "attack": 6, "defense": 3, "armor": 2, "agility": 5, "xp": 32,
+    "charName": "Orc",
+    "charZ": 3,
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": -1, "z": 1}
+  },
+  {
+    "name": "Forest Savage", "hp": 42, "attack": 11, "defense": 5, "armor": 2, "agility": 5, "xp": 65,
+    "charName": "Orc",
+    "charZ": 2,
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 1},
+    "rh": {"x": 10, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": -1, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 9, "row": 0, "x": -11, "y": 6, "z": 2}
+  },
+  {
+    "name": "Shadow Berserker", "hp": 54, "attack": 17, "defense": 8, "armor": 4, "agility": 7, "xp": 130,
+    "charName": "Orc",
+    "charZ": 3,
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 0, "row": 0, "rows": 3, "x": 11, "y": -8, "z": 1}
+  },
+  {
+    "name": "Mossy Brute", "hp": 55, "attack": 12, "defense": 7, "armor": 5, "agility": 1, "xp": 88,
+    "charName": "Orc",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 1, "row": 1, "rows": 2, "x": 11, "y": 1, "z": 1}
+  },
+  {
+    "name": "Shadow Blade", "hp": 40, "attack": 15, "defense": 9, "armor": 4, "agility": 11, "xp": 105,
+    "charName": "Orc",
+    "handRow": 4,
+    "lh": {"x": -10, "y": 6, "z": 1},
+    "rh": {"x": 10, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 11, "y": 1, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 8, "row": 0, "x": -7, "y": 7, "z": 1}
+  },
+  {
+    "name": "Orc Sniper", "hp": 36, "attack": 16, "defense": 6, "armor": 3, "agility": 9, "xp": 100,
+    "charName": "Orc",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -2, "y": 5, "z": 3},
+    "rh": {"x": 9, "y": 5, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 3, "row": 3, "rows": 2, "x": -3, "y": 9, "z": 2, "rot": 270},
+    "wep2": {"file": "Weapon-Wood", "col": 5, "row": 1, "rows": 2, "x": -7, "y": 1, "z": 0}
+  },
+  {
+    "name": "Goblin Hammerer", "hp": 18, "attack": 4, "defense": 0, "armor": 1, "agility": 1, "xp": 20,
+    "charName": "OrcRogue",
+    "handRow": 4,
+    "lh": {"x": -7, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 1, "row": 1, "rows": 2, "x": 6, "y": 6, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Orc Chopper", "hp": 34, "attack": 9, "defense": 4, "armor": 3, "agility": 2, "xp": 52,
+    "charName": "OrcRogue",
+    "handRow": 4,
+    "lh": {"x": -7, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 0, "row": 3, "rows": 2, "x": 6, "y": 6, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Orc Digger", "hp": 22, "attack": 4, "defense": 1, "armor": 2, "agility": 0, "xp": 22,
+    "charName": "OrcRogue",
+    "handRow": 4,
+    "lh": {"x": -7, "y": 6, "z": 2},
+    "rh": {"x": 11, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 1, "row": 3, "rows": 2, "x": 12, "y": -1, "z": 1}
+  },
+  {
+    "name": "Venom Thief", "hp": 25, "attack": 7, "defense": 4, "armor": 1, "agility": 7, "xp": 40,
+    "charName": "OrcRogue",
+    "charZ": 2,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 2},
+    "rh": {"x": 10, "y": 6, "z": 1}
+  },
+  {
+    "name": "Orc Shaman", "hp": 32, "attack": 11, "defense": 5, "armor": 2, "agility": 4, "xp": 68,
+    "charName": "OrcShaman",
+    "charZ": 2,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 3, "row": 0, "x": -4, "y": 6, "z": 2}
+  },
+  {
+    "name": "Orc Adept", "hp": 36, "attack": 13, "defense": 6, "armor": 3, "agility": 5, "xp": 84,
+    "charName": "OrcShaman",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 0, "cols": 2, "x": 5, "y": 6, "z": 1}
+  },
+  {
+    "name": "Orc Sorcerer", "hp": 40, "attack": 15, "defense": 8, "armor": 3, "agility": 6, "xp": 105,
+    "charName": "OrcShaman",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 0, "cols": 2, "x": -5, "y": -3, "z": 1, "rot": 270}
+  },
+  {
+    "name": "Orc Necromancer", "hp": 48, "attack": 17, "defense": 10, "armor": 4, "agility": 6, "xp": 140,
+    "charName": "OrcShaman",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Bone", "col": 6, "row": 1, "rows": 3, "x": -5, "y": -3, "z": 1}
+  },
+  {
+    "name": "Orc Ritualist", "hp": 44, "attack": 16, "defense": 9, "armor": 4, "agility": 6, "xp": 125,
+    "charName": "OrcShaman",
+    "charZ": 1,
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Bone", "col": 6, "row": 1, "rows": 3, "x": 3, "y": 5, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Orc Death-Scholar", "hp": 50, "attack": 20, "defense": 11, "armor": 5, "agility": 8, "xp": 170,
+    "charName": "OrcShaman",
+    "handRow": 4,
+    "lh": {"x": -6, "y": 6, "z": 2},
+    "rh": {"x": 4, "y": 7, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 1, "row": 1, "rows": 2, "x": -6, "y": -1, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 3, "row": 0, "x": 3, "y": 9, "z": 0, "rot": 90}
+  },
+  {
+    "name": "Orc Manslayer", "hp": 80, "attack": 21, "defense": 14, "armor": 8, "agility": 6, "xp": 210,
+    "charName": "OrcWarrior",
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 3},
+    "rh": {"x": 9, "y": 3, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 0, "row": 0, "rows": 3, "x": 5, "y": 4, "z": 0, "rot": 90}
+  },
+  {
+    "name": "Orc Pounder", "hp": 72, "attack": 16, "defense": 10, "armor": 7, "agility": 2, "xp": 145,
+    "charName": "OrcWarrior",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -6, "y": 6, "z": 3},
+    "rh": {"x": 5, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 1, "row": 1, "rows": 2, "x": 2, "y": 7, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Orc Warrior", "hp": 38, "attack": 9, "defense": 6, "armor": 4, "agility": 3, "xp": 62,
+    "charName": "OrcWarrior",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 3},
+    "rh": {"x": 8, "y": 6, "z": 2}
+  },
+  {
+    "name": "Orc Shooter", "hp": 26, "attack": 9, "defense": 3, "armor": 2, "agility": 5, "xp": 45,
+    "charName": "OrcWarrior",
+    "handRow": 4,
+    "lh": {"x": -7, "y": 6, "z": 2},
+    "rh": {"x": 14, "y": -2, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 3, "row": 3, "rows": 2, "x": 11, "y": -1, "z": 1},
+    "wep2": {"file": "Weapon-Wood", "col": 1, "row": 0, "x": -5, "y": 6, "z": 1}
+  },
+  {
+    "name": "Orc Pikeman", "hp": 36, "attack": 12, "defense": 7, "armor": 4, "agility": 5, "xp": 78,
+    "charName": "OrcWarrior",
+    "handRow": 4,
+    "lh": {"x": -7, "y": 6, "z": 2},
+    "rh": {"x": 11, "y": -2, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 4, "row": 0, "rows": 3, "x": 11, "y": -9, "z": 1},
+    "wep2": {"file": "Weapon-Wood", "col": 9, "row": 0, "x": -5, "y": 6, "z": 2}
+  },
+  {
+    "name": "Rogue Assasin", "hp": 34, "attack": 14, "defense": 6, "armor": 2, "agility": 10, "xp": 82,
+    "charName": "Rogue",
+    "handRow": 0,
+    "lh": {"x": -9, "y": 6, "z": 3},
+    "rh": {"x": 2, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": 10, "y": 8, "z": 2, "rot": 90},
+    "wep2": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": -9, "y": 1, "z": 1}
+  },
+  {
+    "name": "Rogue Shooter", "hp": 18, "attack": 7, "defense": 2, "armor": 1, "agility": 5, "xp": 28,
+    "charName": "Rogue",
+    "handRow": 0,
+    "lh": {"x": 2, "y": 1, "z": 3},
+    "rh": {"x": 15, "y": 0, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 3, "rows": 2, "x": 10, "y": 0, "z": 2},
+    "wep2": {"file": "Weapon-Wood", "col": 2, "row": 0, "x": 12, "y": 1, "z": 1}
+  },
+  {
+    "name": "Rogue", "hp": 14, "attack": 1, "defense": 0, "armor": 0, "agility": 2, "xp": 12,
+    "charName": "Rogue",
+    "charZ": 3,
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 9, "y": 6, "z": 2}
+  },
+  {
+    "name": "Orc Bandit", "hp": 28, "attack": 8, "defense": 3, "armor": 2, "agility": 4, "xp": 40,
+    "charName": "Rogue",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 3},
+    "rh": {"x": 9, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 1, "rows": 2, "x": -6, "y": 4, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": -1, "y": 9, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Skeleton Reaper", "hp": 65, "attack": 21, "defense": 13, "armor": 7, "agility": 10, "xp": 195,
+    "charName": "Skeleton",
+    "charZ": 1,
+    "handRow": 3,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 5, "z": 5},
+    "wep1": {"file": "Weapon-Bone", "col": 2, "row": 3, "rows": 2, "x": 14, "y": -1, "z": 4},
+    "wep2": {"file": "Weapon-Bone", "col": 9, "row": 0, "x": -5, "y": 6, "z": 4}
+  },
+  {
+    "name": "Skeleton", "hp": 12, "attack": 0, "defense": 0, "armor": 0, "agility": 0, "xp": 10,
+    "charName": "Skeleton",
+    "charZ": 1,
+    "handRow": 3,
+    "lh": {"x": -7, "y": 6, "z": 3},
+    "rh": {"x": 5, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Soldier", "hp": 24, "attack": 5, "defense": 3, "armor": 2, "agility": 2, "xp": 30,
+    "charName": "Skeleton",
+    "charZ": 1,
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 3},
+    "rh": {"x": 7, "y": 6, "z": 2},
+    "wep1": {"file": "Weapon-Bone", "col": 2, "row": 1, "rows": 2, "x": 9, "y": -3, "z": 1}
+  },
+  {
+    "name": "Skeleton Fighter", "hp": 26, "attack": 7, "defense": 4, "armor": 3, "agility": 3, "xp": 38,
+    "charName": "Skeleton",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 7, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 2, "row": 1, "rows": 2, "x": 9, "y": -3, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 8, "row": 0, "x": -5, "y": 5, "z": 2}
+  },
+  {
+    "name": "Skeleton Guard", "hp": 35, "attack": 9, "defense": 7, "armor": 5, "agility": 3, "xp": 60,
+    "charName": "Skeleton",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 7, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 3, "row": 1, "rows": 2, "x": -9, "y": -5, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 8, "row": 0, "x": 5, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Phalanx", "hp": 60, "attack": 14, "defense": 15, "armor": 9, "agility": 3, "xp": 140,
+    "charName": "Skeleton",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 8, "y": 3, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 4, "row": 0, "rows": 3, "x": 10, "y": -9, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 9, "row": 0, "x": -4, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Mage", "hp": 36, "attack": 16, "defense": 7, "armor": 3, "agility": 6, "xp": 105,
+    "charName": "SkeletonMage",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Bone", "col": 5, "row": 0, "cols": 2, "x": 11, "y": -1, "z": 2, "rot": 270},
+    "wep2": {"file": "Weapon-Bone", "col": 3, "row": 0, "x": -5, "y": 6, "z": 4}
+  },
+  {
+    "name": "Skeleton Bandit", "hp": 16, "attack": 4, "defense": 1, "armor": 1, "agility": 5, "xp": 26,
+    "charName": "SkeletonRogue",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 9, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 1, "rows": 2, "x": -6, "y": 4, "z": 0},
+    "wep2": {"file": "Weapon-Wood", "col": 2, "row": 1, "rows": 2, "x": -1, "y": 9, "z": 1, "rot": 90}
+  },
+  {
+    "name": "Skeleton Vagabond", "hp": 16, "attack": 3, "defense": 0, "armor": 1, "agility": 2, "xp": 18,
+    "charName": "SkeletonRogue",
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 9, "y": 6, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 6, "row": 1, "rows": 2, "x": 3, "y": 5, "z": 0, "rot": 90}
+  },
+  {
+    "name": "Skeleton Scholar", "hp": 15, "attack": 7, "defense": 1, "armor": 0, "agility": 3, "xp": 26,
+    "charName": "SkeletonRogue",
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 3},
+    "rh": {"x": 8, "y": -8, "z": 1},
+    "wep1": {"file": "Weapon-Wood", "col": 6, "row": 2, "rows": 2, "x": 8, "y": 1, "z": 0, "rot": 180},
+    "wep2": {"file": "Weapon-Wood", "col": 3, "row": 0, "x": -6, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Rogue", "hp": 15, "attack": 2, "defense": 1, "armor": 0, "agility": 3, "xp": 15,
+    "charName": "SkeletonRogue",
+    "handRow": 0,
+    "lh": {"x": -8, "y": 6, "z": 3},
+    "rh": {"x": 7, "y": 6, "z": 1}
+  },
+  {
+    "name": "Skeleton Warrior", "hp": 40, "attack": 9, "defense": 8, "armor": 5, "agility": 3, "xp": 70,
+    "charName": "SkeletonWarrior",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 8, "y": 3, "z": 1}
+  },
+  {
+    "name": "Skeleton Footman", "hp": 30, "attack": 8, "defense": 5, "armor": 4, "agility": 3, "xp": 48,
+    "charName": "SkeletonWarrior",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 8, "y": 3, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 2, "row": 1, "rows": 2, "x": 9, "y": -5, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 8, "row": 0, "x": -7, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Crusher", "hp": 58, "attack": 15, "defense": 8, "armor": 6, "agility": 2, "xp": 112,
+    "charName": "SkeletonWarrior",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 8, "y": 3, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 1, "row": 3, "rows": 2, "x": 9, "y": -5, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 9, "row": 0, "x": -7, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Protector", "hp": 75, "attack": 16, "defense": 17, "armor": 11, "agility": 4, "xp": 180,
+    "charName": "SkeletonWarrior",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 8, "y": 3, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 2, "row": 3, "rows": 2, "x": 12, "y": -5, "z": 0},
+    "wep2": {"file": "Weapon-Bone", "col": 8, "row": 0, "x": -6, "y": 6, "z": 2}
+  },
+  {
+    "name": "Skeleton Piercer", "hp": 30, "attack": 10, "defense": 5, "armor": 3, "agility": 6, "xp": 45,
+    "charName": "SkeletonWarrior",
+    "handRow": 3,
+    "lh": {"x": -8, "y": 6, "z": 2},
+    "rh": {"x": 7, "y": 7, "z": 1},
+    "wep1": {"file": "Weapon-Bone", "col": 7, "row": 1, "rows": 3, "x": 1, "y": 6, "z": 0, "rot": 90}
+  },
+  {
+    "name": "Wizard", "hp": 38, "attack": 13, "defense": 7, "armor": 2, "agility": 5, "xp": 90,
+    "charName": "Wizard",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 3},
+    "rh": {"x": 10, "y": 6, "z": 3}
+  },
+  {
+    "name": "Wizard Scholar", "hp": 20, "attack": 8, "defense": 2, "armor": 0, "agility": 4, "xp": 42,
+    "charName": "Wizard",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 0, "cols": 2, "x": 11, "y": -1, "z": 2, "rot": 270},
+    "wep2": {"file": "Weapon-Wood", "col": 3, "row": 0, "x": -5, "y": 6, "z": 4}
+  },
+  {
+    "name": "Wizard Arcanist", "hp": 46, "attack": 19, "defense": 10, "armor": 3, "agility": 8, "xp": 155,
+    "charName": "Wizard",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 6, "row": 1, "rows": 3, "x": 11, "y": -7, "z": 2},
+    "wep2": {"file": "Weapon-Wood", "col": 3, "row": 0, "x": -5, "y": 6, "z": 4}
+  },
+  {
+    "name": "Wizard Adept", "hp": 30, "attack": 12, "defense": 5, "armor": 1, "agility": 4, "xp": 72,
+    "charName": "Wizard",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 5, "row": 0, "cols": 2, "x": 11, "y": -1, "z": 2, "rot": 270}
+  },
+  {
+    "name": "Wizard Elder", "hp": 55, "attack": 21, "defense": 12, "armor": 4, "agility": 8, "xp": 195,
+    "charName": "Wizard",
+    "charZ": 4,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 3},
+    "wep1": {"file": "Weapon-Wood", "col": 6, "row": 1, "rows": 3, "x": 11, "y": -7, "z": 2}
+  },
+  {
+    "name": "Wizard Battlemage", "hp": 68, "attack": 20, "defense": 16, "armor": 8, "agility": 8, "xp": 215,
+    "charName": "Wizard",
+    "charZ": 1,
+    "handRow": 0,
+    "lh": {"x": -7, "y": 6, "z": 5},
+    "rh": {"x": 10, "y": 6, "z": 5},
+    "wep1": {"file": "Weapon-Wood", "col": 6, "row": 1, "rows": 3, "x": 5, "y": 6, "z": 4, "rot": 90}
+  },
+  {
+    "name": "Crab", "hp": 10, "attack": 0, "defense": 0, "armor": 2, "agility": 0, "xp": 8,
+    "charName": "Hero-Crab"
+  },
+  {
+    "name": "Gorilla", "hp": 48, "attack": 9, "defense": 4, "armor": 2, "agility": 3, "xp": 50,
+    "charName": "Gorilla"
+  }
+]

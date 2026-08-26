@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hero Sprite Compositor</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: #1e1e1e;
+    color: #ddd;
+    display: flex;
+  }
+  .panel {
+    width: 240px;
+    padding: 12px;
+    background: #252526;
+    border-right: 1px solid #333;
+    overflow-y: auto;
+    height: 100vh;
+  }
+  .panel h1 { font-size: 14px; margin: 0 0 12px; color: #fff; }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9aa;
+    margin-bottom: 4px;
+  }
+  select, button {
+    width: 100%;
+    padding: 5px 6px;
+    background: #3c3c3c;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  button { text-align: left; }
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow: auto;
+  }
+  .stage h2 { font-size: 13px; font-weight: normal; margin: 0 0 12px; color: #9aa; }
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: flex-start; gap: 6px; }
+  .ylabel { font-size: 11px; color: #9aa; align-self: center; width: 56px; text-align: right; }
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background:
+      conic-gradient(#333 25%, #444 0 50%, #333 0 75%, #444 0) 0 0 / 16px 16px;
+    border: 1px solid #000;
+    display: block;
+  }
+  .sheetcanvas { margin-left: 4px; }
+  .controls { margin-top: 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .controls input { width: 56px; }
+  .controls label { font-size: 12px; color: #9aa; }
+  .hint { font-size: 11px; color: #777; margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Hero Compositor</h1>
+    <div class="field">
+      <label>Hero</label>
+      <select id="heroSel">
+        <option value="Tom">Tom</option>
+        <option value="Mark">Mark</option>
+        <option value="George">George</option>
+      </select>
+    </div>
+    <p class="hint">704x256 sheets, 11x4 grid of 64x64 frames.<br>
+      Lines: 0 up, 1 left, 2 down, 3 right.<br>
+      Idle anim = frames [0,0,1]; Walk anim = frames [2..10].</p>
+    <div class="controls">
+      <button id="play">Pause</button>
+    </div>
+    <div class="controls">
+      <label>Zoom</label>
+      <input id="zoom" type="number" min="1" max="16" value="4">
+    </div>
+  </div>
+
+  <div class="stage">
+    <h2 id="title">Hero_Tom &mdash; 4 lines</h2>
+    <div class="rows" id="rows"></div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  const FRAME = 64;
+  const ROWS = 4;  // 256 / 64
+  const DIR_NAMES = ["up", "left", "down", "right"];
+
+  // Idle cycle: frames 0,0,1 (note the repeated 0). Walk cycle: frames 2..9.
+  // COLS is auto-detected from the loaded PNG width.
+  const IDLE_FRAMES = [0, 0, 1];
+  const WALK_FRAMES = [2, 3, 4, 5, 6, 7, 8, 9];
+
+  const heroSel = document.getElementById("heroSel");
+  const titleEl = document.getElementById("title");
+  const rowsEl = document.getElementById("rows");
+  const playBtn = document.getElementById("play");
+  const zoom = document.getElementById("zoom");
+
+  let heroImg = new Image();
+  let heroReady = false;
+
+  // One row per direction: animated canvas + full-sheet canvas (11 frames).
+  const anims = [];
+  const sheets = [];
+  for (let y = 0; y < ROWS; y++) {
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const yl = document.createElement("div");
+    yl.className = "ylabel";
+    yl.textContent = "y=" + y + " " + DIR_NAMES[y];
+    row.appendChild(yl);
+
+    const anim = document.createElement("canvas");
+    anim.width = FRAME; anim.height = FRAME;
+    anim.className = "animcanvas";
+    row.appendChild(anim);
+    anims.push(anim.getContext("2d"));
+
+    const sheet = document.createElement("canvas");
+    sheet.width = FRAME * COLS; sheet.height = FRAME;
+    sheet.className = "sheetcanvas";
+    row.appendChild(sheet);
+    sheets.push(sheet.getContext("2d"));
+
+    rowsEl.appendChild(row);
+  }
+
+  function clampInt(v, min, max) {
+    v = parseInt(v, 10);
+    if (isNaN(v)) v = 0;
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function applyZoom() {
+    const z = Math.max(1, clampInt(zoom.value, 1, 16));
+    const h = FRAME * z + "px";
+    document.querySelectorAll(".animcanvas").forEach(c => {
+      c.style.width = h; c.style.height = h;
+    });
+    document.querySelectorAll(".sheetcanvas").forEach(c => {
+      c.style.width = (FRAME * COLS * z) + "px";
+      c.style.height = h;
+    });
+  }
+
+  function loadHero(name) {
+    heroReady = false;
+    heroImg = new Image();
+    heroImg.onload = () => { heroReady = true; drawAll(); };
+    heroImg.src = "Hero_" + name + ".png";
+    titleEl.textContent = "Hero_" + name + " — 4 lines";
+  }
+
+  // Paint the full sheet row for direction y (all 11 frames left-to-right).
+  function paintSheet(y) {
+    const ctx = sheets[y];
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, FRAME * COLS, FRAME);
+    if (!heroReady) return;
+    for (let x = 0; x < COLS; x++) {
+      ctx.drawImage(heroImg, x * FRAME, y * FRAME, FRAME, FRAME, x * FRAME, 0, FRAME, FRAME);
+    }
+  }
+
+  // Paint the animated frame for direction y using frame index f.
+  function paintAnim(y, f) {
+    const ctx = anims[y];
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, FRAME, FRAME);
+    if (!heroReady) return;
+    ctx.drawImage(heroImg, f * FRAME, y * FRAME, FRAME, FRAME, 0, 0, FRAME, FRAME);
+  }
+
+  function drawAll() {
+    for (let y = 0; y < ROWS; y++) {
+      paintSheet(y);
+      paintAnim(y, currentFrame(y));
+    }
+  }
+
+  // Animation: walk rows cycle through WALK_FRAMES; the walk cycle is the long one.
+  // For the preview we animate all rows as walk (11-frame cycle) so you see motion.
+  let playing = true;
+  let tick = 0;
+  let lastTime = 0;
+
+  function currentFrame(y) {
+    // Use the walk frame list for the live preview animation.
+    return WALK_FRAMES[tick % WALK_FRAMES.length];
+  }
+
+  function loop(ts) {
+    if (!lastTime) lastTime = ts;
+    if (playing) {
+      // ~8 fps
+      const fps = 8;
+      if (ts - lastTime >= 1000 / fps) {
+        tick++;
+        lastTime = ts;
+        if (heroReady) {
+          for (let y = 0; y < ROWS; y++) paintAnim(y, currentFrame(y));
+        }
+      }
+    } else {
+      lastTime = ts;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  zoom.addEventListener("input", applyZoom);
+  heroSel.addEventListener("change", () => loadHero(heroSel.value));
+  playBtn.addEventListener("click", () => {
+    playing = !playing;
+    playBtn.textContent = playing ? "Pause" : "Play";
+  });
+
+  applyZoom();
+  loadHero("Tom"); // default hero
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

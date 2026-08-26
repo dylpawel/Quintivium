@@ -1,0 +1,152 @@
+[
+  {
+    "question": "Look closely at how the shapes change from left to right, and from top to bottom. Which symbol belongs in the empty box with the question mark?\n$$\n\\begin{array}{|c|c|c|}\n\\hline\n\\circ & \\circ\\circ & \\circ\\circ\\circ \\\\\n\\hline\n\\square & \\square\\square & \\square\\square\\square \\\\\n\\hline\n\\triangle & \\triangle\\triangle & ? \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["$\\triangle$", "$\\triangle\\triangle$", "$\\triangle\\triangle\\triangle$", "$\\circ\\circ\\circ$"],
+    "answers": ["$\\triangle\\triangle\\triangle$"],
+    "hint": "Count the number of shapes in each row. Row 1 goes 1, 2, 3. Row 2 goes 1, 2, 3. What should the last box of the triangle row look like?"
+  },
+  {
+    "question": "These three dominoes follow a secret pattern. Look at the relationship between the top numbers and the bottom numbers. What number is missing from the last domino?\n$$\n\\begin{array}{|c|} \n\\hline\n3 \\\\\n\\hline\n6 \\\\\n\\hline\n\\end{array}\n\\hskip{5mm}\n\\begin{array}{|c|} \n\\hline\n5 \\\\\n\\hline\n10 \\\\\n\\hline\n\\end{array}\n\\hskip{5mm}\n\\begin{array}{|c|} \n\\hline\n9 \\\\\n\\hline\n? \\\\\n\\hline\n\\end{array}\n$$",
+    "answers": ["18"],
+    "hint": "Look at the first domino: how do you get from the top number (3) to the bottom number (6)? Check if that same rule works for the second domino (5 to 10)!"
+  },
+  {
+    "question": "Three of these rooms hold the exact same value, but one room is the ODD ONE OUT. Find the room that has a different total than the rest:\n$$\n\\begin{array}{|c|c|}\n\\hline\n\\text{Room A: } 4 + 4 & \\text{Room B: } 12 - 4 \\\\\n\\hline\n\\text{Room C: } 2 \\times 4 & \\text{Room D: } 16 \\div 4 \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["Room A", "Room B", "Room C", "Room D"],
+    "answers": ["Room D"],
+    "hint": "Solve the math problem inside each room! Room A equals 8. Room B equals 8. Room C equals 8. What does Room D equal?"
+  },
+  {
+    "question": "You found a secret pirate grid map! Gold coins, keys, and swords are hidden in different zones. If you go to zone C-2, what item will you find?\n$$\n\\begin{array}{c|c|c|c|}\n & 1 & 2 & 3 \\\\\n\\hline\nA & \\text{Key} & \\text{Sword} & \\text{Coin} \\\\\n\\hline\nB & \\text{Coin} & \\text{Key} & \\text{Sword} \\\\\n\\hline\nC & \\text{Sword} & \\text{Coin} & \\text{Key} \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["Key", "Sword", "Coin"],
+    "answers": ["Coin"],
+    "hint": "Find the letter C on the left side of the grid, then slide your finger to the right until you are under the number 2 column!"
+  },
+  {
+    "question": "A spy secret code wheel matches standard letters to code letters by shifting them. Look at the top row and see how it matches the bottom row. Use the code wheel to decode the secret word: K H O\n$$\n\\begin{array}{|c|c|c|c|c|c|}\n\\hline\n\\text{Real Letter:} & \\text{H} & \\text{I} & \\text{J} & \\text{K} & \\text{L} \\\\\n\\hline\n\\text{Code Letter:} & \\text{K} & \\text{L} & \\text{M} & \\text{N} & \\text{O} \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["INK", "HEL", "KID", "LOG"],
+    "answers": ["HEL"],
+    "hint": "The secret word is written in Code Letters. Find the code letter K on the bottom row, and look at the Real Letter right above it. Do the same for H and O!"
+  },
+  {
+    "question": "Look at this perfectly balanced scale. If the left side balances the right side exactly, how much does a single Box weigh (in grams)?\n$$\n\\begin{array}{ccc}\n\\text{Box} + \\text{Box} & \\text{===================} & 10\\text{ grams} + 4\\text{ grams} \\\\\n & \\triangle & \n\\end{array}\n$$",
+    "answers": ["7"],
+    "hint": "First, add the weights on the right side together to see the total weight (10 + 4 = 14). Since the two boxes on the left are identical and equal 14 altogether, split 14 in half!"
+  },
+  {
+    "question": "A tiny robot starts at the bottom-left corner (A-1) of this grid map. If it moves 2 steps to the right, and then 2 steps up, what space does it land on?\n$$\n\\begin{array}{c|c|c|c|}\n3 & \\text{Star} & \\text{Moon} & \\text{Sun} \\\\\n\\hline\n2 & \\text{Apple} & \\text{Banana} & \\text{Grape} \\\\\n\\hline\n1 & \\text{Robot} & \\text{Car} & \\text{Bike} \\\\\n\\hline\n & \\text{A} & \\text{B} & \\text{C}\n\\end{array}\n$$",
+    "choices": ["Moon", "Sun", "Banana", "Grape"],
+    "answers": ["Sun"],
+    "hint": "Start at the Robot (A-1). Move 2 steps right along the letters (A to B, then B to C). Now move 2 steps up along the numbers (1 to 2, then 2 to 3)!"
+  },
+  {
+    "question": "This bar chart shows how many magical gems Alex collected on Monday, Tuesday, and Wednesday. Looking at the height of the bars, how many MORE gems did Alex collect on Wednesday than on Tuesday?\n$$\n\\begin{array}{r|ccc}\n6 & \\color{purple}{\\blacksquare} & & \\\\\n5 & \\color{purple}{\\blacksquare} & & \\color{purple}{\\blacksquare} \\\\\n4 & \\color{purple}{\\blacksquare} & & \\color{purple}{\\blacksquare} \\\\\n3 & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} \\\\\n2 & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} \\\\\n1 & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} & \\color{purple}{\\blacksquare} \\\\\n\\hline\n & \\text{Mon} & \\text{Tue} & \\text{Wed}\n\\end{array}\n$$",
+    "answers": ["2"],
+    "hint": "Find the height of the Tuesday bar by looking at the number on the left. Then find the height of the Wednesday bar. Subtract Tuesday's number from Wednesday's number!"
+  },
+  {
+    "question": "You need to deliver a message from Town A to Town D. Look at the paths and the mileage points between the towns. Which path is the shortest total route?\n$$\n\\begin{array}{ccccc}\n & & \\text{Town B} & & \\\\\n & \\nearrow 4 & & \\searrow 5 & \\\\\n\\text{Town A} & & & & \\text{Town D} \\\\\n & \\searrow 3 & & \\nearrow 7 & \\\\\n & & \\text{Town C} & & \n\\end{array}\n$$",
+    "choices": ["Through Town B", "Through Town C", "Both paths are equal", "No path exists"],
+    "answers": ["Through Town B"],
+    "hint": "Calculate the total cost for both routes! Path 1 goes through Town B: 4 + 5. Path 2 goes through Town C: 3 + 7. Compare the two totals to see which is smaller!"
+  },
+  {
+    "question": "In a class of 20 kids, a survey showed their favorite ice cream flavors. Look at the chart. If 12 kids like Chocolate and 13 kids like Vanilla, but some like BOTH, how many kids like ONLY Chocolate?\n$$\n\\begin{array}{|c|c|}\n\\hline\n\\text{Total Kids} & 20 \\\\\n\\hline\n\\text{Like Both} & 5 \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["5 kids", "7 kids", "8 kids", "12 kids"],
+    "answers": ["7 kids"],
+    "hint": "The chart says 5 kids like both. Since 12 kids like Chocolate in total (including the ones who like both), you just need to subtract the 'both' kids from the total chocolate lovers!"
+  },
+  {
+    "question": "A game piece starts at space A-1. It moves 2 spaces right, but then it hits a magic mirror line on column C that reflects its position perfectly back to column A on the same row. What space does it actually end up on?\n$$\n\\begin{array}{c|c|c|c|}\n2 & \\text{Room 4} & \\text{Room 5} & \\text{Room 6} \\\\\n\\hline\n1 & \\text{Start} & \\text{Room 2} & \\text{Room 3} \\\\\n\\hline\n & \\text{A} & \\text{B} & \\text{C}\n\\end{array}\n$$",
+    "choices": ["Start", "Room 2", "Room 3", "Room 4"],
+    "answers": ["Start"],
+    "hint": "Track it step-by-step: Starting at A-1, moving 1 step right lands on B-1. The second step right hits C-1, which triggers the mirror bounce and sends the piece right back where it started on column A!"
+  },
+  {
+    "question": "Look at these three interlocking gears. If Gear 1 spins Clockwise (like the hands of a clock), which way will Gear 3 spin?\n$$\n\\begin{array}{ccccc}\n\\text{[Gear 1]} & \\rightarrow & \\text{[Gear 2]} & \\rightarrow & \\text{[Gear 3]} \\\\\n\\text{(Clockwise)} & & & & \\mathbf{?}\n\\end{array}\n$$",
+    "choices": ["Clockwise", "Counter-Clockwise", "It stays still", "It spins backward and forward"],
+    "answers": ["Clockwise"],
+    "hint": "When two gears touch, they spin in opposite directions! If Gear 1 is Clockwise, Gear 2 must turn Counter-Clockwise. Now, use that rule to find which way Gear 3 turns when Gear 2 pushes it!"
+  },
+  {
+    "question": "Look closely at the numbers in this chart. They do not follow a normal math sequence. They count the number of straight lines used to draw each symbol! What number belongs in the last box?\n$$\n\\begin{array}{|c|c|c|c|}\n\\hline\n\\angle & \\times & \\triangle & + \\\\\n\\hline\n2 & 2 & 3 & ? \\\\\n\\hline\n\\end{array}\n$$",
+    "choices": ["1", "2", "3", "4"],
+    "answers": ["2"],
+    "hint": "An angle shape has 2 straight lines, an X-mark has 2 crossing lines, and a triangle has 3 lines. Count how many straight lines cross together to draw a plus sign (+)."
+  },
+  {
+    "question": "A builder stacks solid blocks on a table. The numbers in this grid show how many blocks are stacked on top of each other in that exact spot. If you look at this building directly from the FRONT, how many blocks are completely hidden from your view behind taller stacks?\n$$\n\\begin{array}{|c|c|}\n\\hline\n1 & 3 \\\\\n\\hline\n4 & 2 \\\\\n\\hline\n\\end{array}\n\\\\\n\\text{[ FRONT VIEW IS HERE ]}\n$$",
+    "choices": ["1 block", "2 blocks", "3 blocks", "4 blocks"],
+    "answers": ["1 block"],
+    "hint": "Imagine standing at the bottom of the grid looking up. On the left side, a stack of 4 blocks completely blocks your view of the 1 block behind it. On the right side, a stack of 2 blocks sits in front—can you still see the stack of 3 blocks behind it?"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"220\" height=\"90\" viewBox=\"0 0 220 90\" xmlns=\"http://www.w3.org/2000/svg\">\n    \n    <rect width=\"220\" height=\"90\" rx=\"10\" fill=\"#111111\"/>\n    \n    <g fill=\"#FF3333\" transform=\"translate(15, 10)\">\n      <line x1=\"5\" y1=\"3\" x2=\"35\" y2=\"3\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"3\" y1=\"5\" x2=\"3\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"5\" y1=\"37\" x2=\"35\" y2=\"37\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"3\" y1=\"39\" x2=\"3\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"5\" y1=\"71\" x2=\"35\" y2=\"71\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    </g>\n    \n    <g fill=\"#FF3333\" transform=\"translate(75, 10)\">\n      <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    </g>\n    \n    <g fill=\"#FF3333\" transform=\"translate(135, 10)\">\n      <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n      <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    </g>\n</svg>\nIf you look at this digital watch screen upside down in a mirror, it creates a secret math equation! What number does the display change to?\n$$\\text{New Display} = ?$$",
+    "choices": ["111", "811", "118", "181"],
+    "answers": ["118"],
+    "hint": "Try flipping your phone or head completely upside down! The first number (8) stays an 8, but the position of the digits reverses entirely."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"200\" height=\"160\" viewBox=\"0 0 200 160\" xmlns=\"http://www.w3.org/2000/svg\">\n    \n    <circle cx=\"75\" cy=\"65\" r=\"50\" fill=\"#FF4136\" fill-opacity=\"0.6\"/>\n    \n    <circle cx=\"125\" cy=\"65\" r=\"50\" fill=\"#0074D9\" fill-opacity=\"0.6\"/>\n    \n    <circle cx=\"100\" cy=\"65\" r=\"10\" fill=\"#FFFF00\" stroke=\"#333\" stroke-width=\"1.5\"/>\n    \n    <text x=\"45\" y=\"68\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#FFF\" font-weight=\"bold\">9</text>\n    <text x=\"145\" y=\"68\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#FFF\" font-weight=\"bold\">11</text>\n    <text x=\"96\" y=\"140\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#333\" font-weight=\"bold\">Total = 24</text>\n</svg>\nThis Venn diagram tracks a group of 24 students. 9 students only like Math, and 11 students only like Science. The yellow center circle shows students who like BOTH. How many students belong in that yellow center circle?\n$$\\text{Both} = ?$$",
+    "choices": ["2 students", "4 students", "6 students", "8 students"],
+    "answers": ["4 students"],
+    "hint": "Add the students who only like math (9) and only like science (11) together first. Subtract that total from the grand total of 24 to find who is left over for the middle!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"100\" viewBox=\"0 0 260 100\" xmlns=\"http://www.w3.org/2000/svg\">\n    \n    <circle cx=\"50\" cy=\"50\" r=\"35\" fill=\"none\" stroke=\"#2ECC40\" stroke-width=\"6\" stroke-dasharray=\"6,4\"/>\n    <circle cx=\"50\" cy=\"50\" r=\"8\" fill=\"#2ECC40\"/>\n    <text x=\"43\" y=\"95\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#2ECC40\" font-weight=\"bold\">A</text>\n    \n    <path d=\"M 40 10 Q 55 5 65 15\" fill=\"none\" stroke=\"#2ECC40\" stroke-width=\"3\" marker-end=\"url(#arrow)\"/>\n    \n    <circle cx=\"120\" cy=\"50\" r=\"30\" fill=\"none\" stroke=\"#FF851B\" stroke-width=\"6\" stroke-dasharray=\"6,4\"/>\n    <circle cx=\"120\" cy=\"50\" r=\"8\" fill=\"FF851B\"/>\n    <text x=\"115\" y=\"95\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#FF851B\" font-weight=\"bold\">B</text>\n    \n    <circle cx=\"185\" cy=\"50\" r=\"32\" fill=\"none\" stroke=\"#7FDBFF\" stroke-width=\"6\" stroke-dasharray=\"6,4\"/>\n    <circle cx=\"185\" cy=\"50\" r=\"8\" fill=\"#7FDBFF\"/>\n    <text x=\"180\" y=\"95\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#7FDBFF\" font-weight=\"bold\">C</text>\n    \n    <defs>\n      <marker id=\"arrow\" viewBox=\"0 0 10 10\" refX=\"5\" refY=\"5\" markerWidth=\"4\" markerHeight=\"4\" orient=\"auto-start-reverse\">\n        <path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#2ECC40\"/>\n      </marker>\n    </defs>\n</svg>\nLook at this row of three interconnected gears. If <b>Gear A</b> turns <b>Clockwise</b>, which direction will <b>Gear C</b> turn?\n$$\\text{Rotation} = \\mathbf{?}$$",
+    "choices": ["Clockwise", "Counter-Clockwise", "It alternates back and forth", "It will lock up and not move"],
+    "answers": ["Clockwise"],
+    "hint": "When two touching gears spin, they turn in opposite directions. If Gear A goes Clockwise, figure out Gear B's direction. Then use Gear B's direction to see what it does to Gear C!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"10\" y=\"10\" width=\"140\" height=\"140\" fill=\"none\" stroke=\"#333\" stroke-width=\"3\"/>\n  <line x1=\"80\" y1=\"10\" x2=\"80\" y2=\"150\" stroke=\"#FF4136\" stroke-width=\"2\" stroke-dasharray=\"4,4\"/>\n  <line x1=\"10\" y1=\"80\" x2=\"150\" y2=\"80\" stroke=\"#333\" stroke-width=\"1\"/>\n  <polygon points=\"30,30 50,30 50,50 30,50\" fill=\"#0074D9\"/>\n  <circle cx=\"30\" cy=\"120\" r=\"12\" fill=\"#2ECC40\"/>\n  <polygon points=\"110,30 130,30 130,50 110,50\" fill=\"#0074D9\"/>\n  <circle cx=\"100\" cy=\"120\" r=\"12\" fill=\"#2ECC40\"/>\n</svg>\nAn object on the left side is perfectly reflected across the red dotted mirror line to create its twin shape on the right side. Which shape is at the exact correct mirror distance?\n$$\\text{Reflection} = \\mathbf{?}$$",
+    "choices": ["The Blue Square", "The Green Circle", "Both of them", "None of them"],
+    "answers": ["The Blue Square"],
+    "hint": "Check the distance from the center red line! The Blue Square is 30 pixels away from the line on both sides ($80 - 50 = 30$ and $110 - 80 = 30$). The Green Circle is not at the same distance on both sides."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"240\" height=\"140\" viewBox=\"0 0 240 140\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"100\" y=\"10\" width=\"40\" height=\"40\" fill=\"#7FDBFF\" stroke=\"#333\" stroke-width=\"3\"/>\n  <text x=\"116\" y=\"34\" font-weight=\"bold\" fill=\"#333\">A</text>\n  <rect x=\"50\" y=\"35\" width=\"50\" height=\"15\" fill=\"#7FDBFF\" stroke=\"#333\" stroke-width=\"3\"/>\n  <rect x=\"140\" y=\"35\" width=\"50\" height=\"15\" fill=\"#7FDBFF\" stroke=\"#333\" stroke-width=\"3\"/>\n  <line x1=\"165\" y1=\"35\" x2=\"165\" y2=\"50\" stroke=\"#FF4136\" stroke-width=\"4\"/>\n  <rect x=\"20\" y=\"50\" width=\"40\" height=\"50\" fill=\"none\" stroke=\"#333\" stroke-width=\"3\"/>\n  <text x=\"36\" y=\"80\" font-weight=\"bold\" fill=\"#333\">B</text>\n  <rect x=\"180\" y=\"50\" width=\"40\" height=\"50\" fill=\"none\" stroke=\"#333\" stroke-width=\"3\"/>\n  <text x=\"196\" y=\"80\" font-weight=\"bold\" fill=\"#333\">C</text>\n</svg>\nWater is continuously poured directly into Tank A. Notice that the pipe heading towards Tank C has a solid red wall blockage inside it. Which tank will fill up to the top first?\n$$\\text{First Tank} = ?$$",
+    "choices": ["Tank A", "Tank B", "Tank C", "Both A and B together"],
+    "answers": ["Tank B"],
+    "hint": "Water flows downwards and takes the open route. Since the pipe path to Tank C is blocked by the red line, all the escaping water from Tank A shifts left into Tank B."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"220\" height=\"90\" viewBox=\"0 0 220 90\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect width=\"220\" height=\"90\" rx=\"10\" fill=\"#111111\"/>\n  <g fill=\"#FF3333\" transform=\"translate(15, 10)\">\n    <line x1=\"5\" y1=\"3\" x2=\"35\" y2=\"3\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"3\" y1=\"5\" x2=\"3\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"5\" y1=\"37\" x2=\"35\" y2=\"37\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"3\" y1=\"39\" x2=\"3\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"5\" y1=\"71\" x2=\"35\" y2=\"71\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n  </g>\n  <g fill=\"#FF3333\" transform=\"translate(75, 10)\">\n    <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n  </g>\n  <g fill=\"#FF3333\" transform=\"translate(135, 10)\">\n    <line x1=\"37\" y1=\"5\" x2=\"37\" y2=\"35\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n    <line x1=\"37\" y1=\"39\" x2=\"37\" y2=\"69\" stroke=\"#FF3333\" stroke-width=\"6\" stroke-linecap=\"round\"/>\n  </g>\n</svg>\nIf you look at this digital watch screen upside down in a mirror, it creates a secret math equation! What number does the display change to?\n$$\\text{New Display} = ?$$",
+    "choices": ["111", "811", "118", "181"],
+    "answers": ["118"],
+    "hint": "Try flipping your screen upside down! The digital 8 stays an 8, but reading it from right to left reverses the digits to form 118."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"180\" height=\"150\" viewBox=\"0 0 180 150\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <line x1=\"20\" y1=\"100\" x2=\"160\" y2=\"100\" stroke=\"#333\" stroke-width=\"4\"/>\n  <polygon points=\"90,100 80,120 100,120\" fill=\"#666\"/>\n  \n  <polygon points=\"40,75 30,95 50,95\" fill=\"#FF4136\"/>\n  <polygon points=\"60,75 50,95 70,95\" fill=\"#FF4136\"/>\n  <polygon points=\"50,50 40,70 60,70\" fill=\"#FF4136\"/>\n  \n  <rect x=\"110\" y=\"65\" width=\"30\" height=\"30\" fill=\"#0074D9\"/>\n  <circle cx=\"125\" cy=\"50\" r=\"10\" fill=\"#FFDC00\"/>\n  <text x=\"121\" y=\"54\" font-size=\"11\" font-weight=\"bold\" fill=\"#333\">3</text>\n</svg>\nLook at this perfectly balanced scale. If one single red triangle weighs exactly 4 grams, how many grams does the single blue square weigh?\n$$\\text{Weight of Square} = ?$$",
+    "choices": ["5 grams", "7 grams", "9 grams", "12 grams"],
+    "answers": ["9 grams"],
+    "hint": "Calculate the total weight on the left side first. There are 3 triangles, and each weighs 4 grams ($3 \\times 4 = 12$). Since the scale is perfectly balanced, the right side must also equal 12 grams total. Subtract the 3-gram circular weight from 12!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <rect x=\"20\" y=\"20\" width=\"120\" height=\"120\" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/>\n  <line x1=\"60\" y1=\"20\" x2=\"60\" y2=\"140\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"100\" y1=\"20\" x2=\"100\" y2=\"140\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"20\" y1=\"60\" x2=\"140\" y2=\"60\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"20\" y1=\"100\" x2=\"140\" y2=\"100\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  \n  \n  <path d=\"M 20,140 L 20,20 L 100,20 L 100,60\" fill=\"none\" stroke=\"#B10DC9\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n  \n  \n  <circle cx=\"20\" cy=\"140\" r=\"6\" fill=\"#2ECC40\"/>\n  \n  <polygon points=\"95,55 105,55 100,65\" fill=\"#B10DC9\"/>\n</svg>\nAn ant crawls along the purple line starting at the green dot. If the side of each small grid square equals exactly 1 block unit, how many total block units long is the ant's journey?\n$$\\text{Total Units} = ?$$",
+    "choices": ["4 units", "5 units", "6 units", "7 units"],
+    "answers": ["6 units"],
+    "hint": "Count the grid square steps along the purple path! It goes straight up by 3 blocks, turns right for 2 blocks, and then goes down by 1 block ($3 + 2 + 1 = 6$)."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"150\" height=\"150\" viewBox=\"0 0 150 150\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <rect x=\"10\" y=\"10\" width=\"130\" height=\"130\" fill=\"#FF851B\" stroke=\"#333\" stroke-width=\"2\"/>\n  <rect x=\"35\" y=\"35\" width=\"80\" height=\"80\" fill=\"#7FDBFF\" stroke=\"#333\" stroke-width=\"2\"/>\n  <rect x=\"55\" y=\"55\" width=\"40\" height=\"40\" fill=\"#2ECC40\" stroke=\"#333\" stroke-width=\"2\"/>\n</svg>\nImagine these colored square sheets are stacked directly on top of each other on a table. Which colored sheet was placed on the table first (forming the bottom layer)?\n$$\\text{Bottom Sheet Color} = ?$$",
+    "choices": ["The Green Square", "The Blue Square", "The Orange Square", "They were placed at the same time"],
+    "answers": ["The Orange Square"],
+    "hint": "The sheet at the very bottom will have its middle covered up by any sheets stacked on top of it. Look at which color forms the largest outer border and is partially hidden!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <rect x=\"20\" y=\"20\" width=\"120\" height=\"120\" fill=\"none\" stroke=\"#333\" stroke-width=\"2\"/>\n  <line x1=\"60\" y1=\"20\" x2=\"60\" y2=\"140\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"100\" y1=\"20\" x2=\"100\" y2=\"140\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"20\" y1=\"60\" x2=\"140\" y2=\"60\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  <line x1=\"20\" y1=\"100\" x2=\"140\" y2=\"100\" stroke=\"#E2E8F0\" stroke-width=\"1.5\"/>\n  \n  \n  <path d=\"M 20,100 L 140,100 L 140,20 L 100,20\" fill=\"none\" stroke=\"#B10DC9\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n  \n  \n  <circle cx=\"20\" cy=\"100\" r=\"6\" fill=\"#2ECC40\"/>\n  \n  <polygon points=\"105,15 95,20 105,25\" fill=\"#B10DC9\"/>\n</svg>\nAn ant crawls along the purple line starting at the green dot. If the side of each small grid square equals exactly 1 block unit, how many total block units long is the ant's journey?",
+    "answers": ["6"],
+    "hint": "Follow the path from the green dot: It goes all the way across the grid to the right (3 blocks), goes straight up to the top corner (2 blocks), and then turns left into the next lane (1 block). Add those steps together: $3 + 2 + 1$."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <rect x=\"20\" y=\"40\" width=\"80\" height=\"80\" fill=\"#7FDBFF\" fill-opacity=\"0.5\" stroke=\"#0074D9\" stroke-width=\"2\"/>\n  <circle cx=\"100\" cy=\"80\" r=\"40\" fill=\"#FF851B\" fill-opacity=\"0.5\" stroke=\"#FF851B\" stroke-width=\"2\"/>\n  \n  \n  <text x=\"45\" y=\"85\" font-size=\"14\" font-weight=\"bold\" fill=\"#333\">8</text>\n  <text x=\"85\" y=\"85\" font-size=\"14\" font-weight=\"bold\" fill=\"#333\">5</text>\n  <text x=\"120\" y=\"85\" font-size=\"14\" font-weight=\"bold\" fill=\"#333\">11</text>\n</svg>\nThis diagram shows numbers placed inside a blue square and an orange circle. Look closely at how the shapes overlap. What is the grand total of all the numbers that are located <b>inside the circle</b>?",
+    "answers": ["16"],
+    "hint": "Be careful! The question only asks for numbers inside the circle boundary. The number 8 is only inside the square. Find the two numbers that sit completely inside the curved perimeter of the circle and add them up!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"200\" height=\"110\" viewBox=\"0 0 200 110\" xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <line x1=\"20\" y1=\"70\" x2=\"180\" y2=\"70\" stroke=\"#333\" stroke-width=\"4\"/>\n  <polygon points=\"100,70 90,90 110,90\" fill=\"#666\"/>\n  \n  \n  <polygon points=\"40,40 43,48 52,48 45,53 47,62 40,56 33,62 35,53 28,48 37,48\" fill=\"#FFDC00\" stroke=\"#999\" stroke-width=\"1\"/>\n  <polygon points=\"70,40 73,48 82,48 75,53 77,62 70,56 63,62 65,53 58,48 67,48\" fill=\"#FFDC00\" stroke=\"#999\" stroke-width=\"1\"/>\n  \n  \n  <polygon points=\"135,45 120,65 150,65\" fill=\"#B10DC9\"/>\n  <rect x=\"155\" y=\"45\" width=\"20\" height=\"20\" fill=\"#E2E8F0\" stroke=\"#333\" stroke-width=\"1.5\"/>\n  <text x=\"161\" y=\"60\" font-size=\"11\" font-weight=\"bold\" fill=\"#333\">4</text>\n</svg>\nLook at this perfectly balanced scale. We know that one single purple triangle weighs exactly <b>6 grams</b>. If both yellow stars are completely identical, how many grams does a single yellow star weigh?",
+    "answers": ["5"],
+    "hint": "Find the total weight on the right side first by adding the purple triangle (6g) and the weight block (4g) together ($6 + 4 = 10$). Since the scale is balanced, the left side must also equal 10 grams altogether. Split that total evenly between the two identical stars!"
+  }
+]

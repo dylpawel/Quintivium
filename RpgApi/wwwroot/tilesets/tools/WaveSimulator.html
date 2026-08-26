@@ -1,0 +1,776 @@
+
+<style>
+  .wrap { padding: 1rem 0; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+  .panels { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .section { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  h3 { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .all-ctrl { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 620px; }
+  .ctrl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .ctrl { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+  .ctrl label { min-width: 110px; font-size: 12px; }
+  .ctrl input[type=range] { width: 90px; flex-shrink: 0; }
+  .ctrl span { font-size: 12px; font-weight: 500; color: var(--color-text-primary); min-width: 30px; text-align: right; }
+  .sec-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 6px; }
+  .wave-panels { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .wave-box { border: 0.5px solid var(--color-border-tertiary); border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
+  .wave-title { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 2px; }
+  .frames-row { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+  .frame-label { font-size: 11px; color: var(--color-text-tertiary); text-align: center; margin-top: 2px; }
+  .highlight-frame { outline: 2px solid #15a0d0; }
+
+  /* ── grid editor ── */
+  .sep-line { width: 100%; max-width: 640px; border: none; border-top: 1px solid var(--color-border-tertiary, #1e3a50); margin: 4px 0; }
+  .grid-section { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 640px; }
+  .tile-btns { display: flex; gap: 6px; align-self: flex-start; }
+  .tile-btn { display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 5px; border: 1.5px solid transparent; cursor: pointer; font-size: 12px; color: var(--color-text-secondary, #7a9ab0); background: none; user-select: none; }
+  .tile-btn:hover { color: var(--color-text-primary, #dce8f0); }
+  .tile-btn.active { border-color: #15a0d0; color: var(--color-text-primary, #dce8f0); }
+  .tile-btn canvas { image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 2px; }
+  #gridCanvas { image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; border: 1px solid #0a3a50; touch-action: none; user-select: none; }
+</style>
+
+<div class="wrap">
+  <div class="panels">
+    <div class="section">
+      <h3>live preview (32×32)</h3>
+      <canvas id="bigCanvas" width="32" height="32" style="width:192px;height:192px;border:1px solid #0a3a50;"></canvas>
+    </div>
+    <div class="section">
+      <h3>tiled map (4×4)</h3>
+      <canvas id="mapCanvas" width="128" height="128" style="width:320px;height:320px;border:1px solid #0a3a50;"></canvas>
+    </div>
+  </div>
+
+  <div class="section" style="width:100%;max-width:620px;">
+    <h3 style="align-self:flex-start;">baked frames (16)</h3>
+    <div class="frames-row" id="framesRow"></div>
+    <div class="frame-label">← active frame highlighted in blue</div>
+  </div>
+
+  <div class="all-ctrl">
+    <div class="sec-label">playback</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>playback speed</label><input type="range" id="fpsSlider" min="1" max="24" value="10" step="1"><span id="fpsVal">10 fps</span></div>
+    </div>
+
+    <div class="sec-label">quantization</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>shade bands</label><input type="range" id="bandsSlider" min="2" max="8" value="8" step="1"><span id="bandsVal">8</span></div>
+      <div class="ctrl"><label>wave depth</label><input type="range" id="depthSlider" min="4" max="40" value="4" step="1"><span id="depthVal">4</span></div>
+    </div>
+
+    <div class="sec-label">directional lighting</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>light angle</label><input type="range" id="lightAngSlider" min="0" max="355" value="315" step="5"><span id="lightAngVal">315°</span></div>
+      <div class="ctrl"><label>light strength</label><input type="range" id="lightStrSlider" min="0" max="30" value="12" step="1"><span id="lightStrVal">12</span></div>
+    </div>
+
+    <div class="sec-label">waves</div>
+    <div class="wave-panels">
+      <div class="wave-box">
+        <div class="wave-title">wave A</div>
+        <div class="ctrl"><label>frequency</label><input type="range" id="aFreqSlider" min="0.5" max="8" value="1.0" step="0.1"><span id="aFreqVal">1.0</span></div>
+        <div class="ctrl"><label>amplitude</label><input type="range" id="aAmpSlider" min="0" max="100" value="8" step="1"><span id="aAmpVal">8</span></div>
+        <div class="ctrl"><label>angle</label><input type="range" id="aAngSlider" min="0" max="355" value="45" step="5"><span id="aAngVal">45°</span></div>
+        <div class="ctrl"><label>speed</label><input type="range" id="aSpdSlider" min="0" max="10" value="1" step="1"><span id="aSpdVal">1</span></div>
+      </div>
+      <div class="wave-box">
+        <div class="wave-title">wave B</div>
+        <div class="ctrl"><label>frequency</label><input type="range" id="bFreqSlider" min="0.5" max="8" value="2.0" step="0.1"><span id="bFreqVal">2.0</span></div>
+        <div class="ctrl"><label>amplitude</label><input type="range" id="bAmpSlider" min="0" max="100" value="2" step="1"><span id="bAmpVal">2</span></div>
+        <div class="ctrl"><label>angle</label><input type="range" id="bAngSlider" min="0" max="355" value="60" step="5"><span id="bAngVal">60°</span></div>
+        <div class="ctrl"><label>speed</label><input type="range" id="bSpdSlider" min="0" max="10" value="1" step="1"><span id="bSpdVal">1</span></div>
+      </div>
+      <div class="wave-box">
+        <div class="wave-title">wave C</div>
+        <div class="ctrl"><label>frequency</label><input type="range" id="cFreqSlider" min="0.5" max="8" value="2.0" step="0.1"><span id="cFreqVal">2.0</span></div>
+        <div class="ctrl"><label>amplitude</label><input type="range" id="cAmpSlider" min="0" max="100" value="2" step="1"><span id="cAmpVal">2</span></div>
+        <div class="ctrl"><label>angle</label><input type="range" id="cAngSlider" min="0" max="355" value="30" step="5"><span id="cAngVal">30°</span></div>
+        <div class="ctrl"><label>speed</label><input type="range" id="cSpdSlider" min="0" max="10" value="1" step="1"><span id="cSpdVal">1</span></div>
+      </div>
+    </div>
+
+    <div class="sec-label">shimmers</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>density</label><input type="range" id="densitySlider" min="0" max="16" value="3" step="1"><span id="densityVal">3</span></div>
+      <div class="ctrl"><label>brightness</label><input type="range" id="brightSlider" min="0" max="90" value="70" step="1"><span id="brightVal">70</span></div>
+    </div>
+
+    <div class="sec-label">foam / bubbles</div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>amount</label><input type="range" id="foamAmtSlider" min="0" max="60" value="60" step="1"><span id="foamAmtVal">60</span></div>
+      <div class="ctrl"><label>edge width (px)</label><input type="range" id="foamWidSlider" min="1" max="20" value="8" step="1"><span id="foamWidVal">8 px</span></div>
+    </div>
+    <div class="ctrl-row">
+      <div class="ctrl"><label>opacity</label><input type="range" id="foamOpSlider" min="0" max="100" value="70" step="5"><span id="foamOpVal">70</span></div>
+      <div class="ctrl"><label>speed</label><input type="range" id="foamSpdSlider" min="1" max="8" value="1" step="1"><span id="foamSpdVal">1</span></div>
+    </div>
+  </div>
+
+  <hr class="sep-line">
+
+  <div class="grid-section">
+    <h3 style="align-self:flex-start;">map editor · 16 × 16</h3>
+    <div class="tile-btns">
+      <div class="tile-btn" id="btnGrass">
+        <canvas id="grassPreview" width="32" height="32" style="width:22px;height:22px;border:0.5px solid #2a4a2a;"></canvas>
+        Grass
+      </div>
+      <div class="tile-btn active" id="btnWater">
+        <canvas id="waterPreview" width="32" height="32" style="width:22px;height:22px;border:0.5px solid #0a3a50;"></canvas>
+        Water
+      </div>
+    </div>
+    <canvas id="gridCanvas" width="512" height="512" style="width:1024px;height:1024px;"></canvas>
+    <div class="frame-label">left-drag · paint &nbsp;|&nbsp; right-drag · erase</div>
+  </div>
+
+  <hr class="sep-line">
+
+  <div class="grid-section">
+    <div style="display:flex;align-items:center;gap:12px;align-self:flex-start;flex-wrap:wrap;">
+      <h3>wave overlay tileset &mdash; 64 tiles (4 quadrants &times; 16 frames)</h3>
+      <button id="btnDownloadWave" style="padding:3px 10px;font-size:11px;cursor:pointer;border-radius:4px;border:1px solid #1a5070;background:#091e2d;color:#6ac0e0;">&#8615; download PNG</button>
+    </div>
+    <div class="frame-label" style="align-self:flex-start;line-height:1.7;">
+      4 cols = quadrants (col = qx + qy&times;2) &nbsp;&middot;&nbsp; 16 rows = frames &nbsp;&middot;&nbsp; 128 &times; 512 px<br>
+      Applies to all 16 wMask values via <em>soft-light</em> blend &mdash; shoreline partials included, no per-shape baking needed.
+    </div>
+    <div style="overflow-y:auto;max-height:528px;border:1px solid #0a3a50;border-radius:3px;">
+      <canvas id="waveSheetCanvas" width="128" height="512"
+        style="display:block;width:384px;image-rendering:pixelated;image-rendering:crisp-edges;"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const TW = 32, TH = 32, TILES = 4, NFRAMES = 16;
+const MW = TW * TILES, MH = TH * TILES;
+const BASE = { r: 21, g: 108, b: 153 };
+
+const bigCtx = document.getElementById('bigCanvas').getContext('2d');
+const mapCtx = document.getElementById('mapCanvas').getContext('2d');
+
+const framesRow = document.getElementById('framesRow');
+const frameCanvases = [], frameCtxs = [];
+for (let f = 0; f < NFRAMES; f++) {
+  const c = document.createElement('canvas');
+  c.width = TW; c.height = TH;
+  c.style.cssText = 'width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;border:0.5px solid #0a3a50;';
+  framesRow.appendChild(c);
+  frameCanvases.push(c);
+  frameCtxs.push(c.getContext('2d'));
+}
+
+function bind(id, outId, fmt, cb) {
+  const el = document.getElementById(id), out = document.getElementById(outId);
+  out.textContent = fmt(+el.value);
+  el.oninput = () => { out.textContent = fmt(+el.value); cb(+el.value); };
+  return +el.value;
+}
+const rebake = v => { needsBake = true; return v; };
+
+let playFps  = bind('fpsSlider',     'fpsVal',    v => v + ' fps', v => playFps = v);
+let bands    = bind('bandsSlider',   'bandsVal',  v => v,          v => rebake(bands = v));
+let depth    = bind('depthSlider',   'depthVal',  v => v,          v => rebake(depth = v));
+let lightAng = bind('lightAngSlider','lightAngVal',v => v + '°',   v => rebake(lightAng = v));
+let lightStr = bind('lightStrSlider','lightStrVal',v => v,         v => rebake(lightStr = v));
+let aFreq    = bind('aFreqSlider',   'aFreqVal',  v => v.toFixed(1), v => rebake(aFreq = v));
+let aAmp     = bind('aAmpSlider',    'aAmpVal',   v => v,          v => rebake(aAmp = v));
+let aAng     = bind('aAngSlider',    'aAngVal',   v => v + '°',    v => rebake(aAng = v));
+let aSpd     = bind('aSpdSlider',    'aSpdVal',   v => v,          v => rebake(aSpd = v));
+let bFreq    = bind('bFreqSlider',   'bFreqVal',  v => v.toFixed(1), v => rebake(bFreq = v));
+let bAmp     = bind('bAmpSlider',    'bAmpVal',   v => v,          v => rebake(bAmp = v));
+let bAng     = bind('bAngSlider',    'bAngVal',   v => v + '°',    v => rebake(bAng = v));
+let bSpd     = bind('bSpdSlider',    'bSpdVal',   v => v,          v => rebake(bSpd = v));
+let cFreq    = bind('cFreqSlider',   'cFreqVal',  v => v.toFixed(1), v => rebake(cFreq = v));
+let cAmp     = bind('cAmpSlider',    'cAmpVal',   v => v,          v => rebake(cAmp = v));
+let cAng     = bind('cAngSlider',    'cAngVal',   v => v + '°',    v => rebake(cAng = v));
+let cSpd     = bind('cSpdSlider',    'cSpdVal',   v => v,          v => rebake(cSpd = v));
+let density  = bind('densitySlider', 'densityVal',v => v,          v => rebake(density = v));
+let brightness=bind('brightSlider',  'brightVal', v => v,          v => rebake(brightness = v));
+
+function lcg(seed) {
+  let s = (seed|0)+1;
+  return () => { s = (Math.imul(s,1664525)+1013904223)|0; return (s>>>0)/4294967296; };
+}
+const GLINTS_PER_TILE = 20;
+const tileGlints = [];
+for (let ti = 0; ti < TILES*TILES; ti++) {
+  const rng = lcg(ti*999+42);
+  const glints = [];
+  for (let gi = 0; gi < GLINTS_PER_TILE; gi++) {
+    const len = 2 + Math.floor(rng()*3);
+    glints.push({ x: Math.floor(rng()*(TW-len)), y: Math.floor(rng()*TH), len, phase: rng()*Math.PI*2, lifeSpeed: 0.5+rng()*1.0 });
+  }
+  tileGlints.push(glints);
+}
+
+let bakedFrames = null, needsBake = true, currentFrame = 0, lastFrameTime = 0;
+
+function sineSum(gx, gy, tNorm) {
+  const totalAmp = aAmp + bAmp + cAmp || 1;
+  function wave(freq, amp, angDeg, spd) {
+    const r = angDeg * Math.PI / 180;
+    const proj = (gx / MW) * Math.cos(r) + (gy / MH) * Math.sin(r);
+    return amp * Math.sin(proj * freq * Math.PI * 2 + tNorm * spd * 0.4);
+  }
+  return (wave(aFreq,aAmp,aAng,aSpd) + wave(bFreq,bAmp,bAng,bSpd) + wave(cFreq,cAmp,cAng,cSpd)) / totalAmp;
+}
+
+function quantize(v) {
+  const stepped = Math.floor(((v + 1) / 2) * bands) / (bands - 1);
+  return Math.min(1, stepped) * 2 - 1;
+}
+
+// Directional light: gradient across the full map
+// lightAng is the direction light COMES FROM (source direction)
+// top-left lit, bottom-right dark → light source is top-left = ~315°
+// We project each pixel onto the light axis and compute a bias
+function lightBias(gx, gy) {
+  // Direction FROM light source toward shadow: opposite of lightAng
+  const r = (lightAng + 180) * Math.PI / 180;
+  // Normalized coords -0.5..+0.5
+  const nx = gx / MW - 0.5;
+  const ny = gy / MH - 0.5;
+  // Project onto shadow direction: positive = in shadow, negative = in light
+  const proj = nx * Math.cos(r) + ny * Math.sin(r);
+  // proj in roughly -0.7..+0.7, scale to -lightStr..+lightStr
+  return proj * lightStr * 2.0;
+}
+
+function bakeFrames() {
+  bakedFrames = [];
+  // Precompute light bias for all map pixels (constant across frames)
+  const lightMap = new Float32Array(MW * MH);
+  for (let gy = 0; gy < MH; gy++)
+    for (let gx = 0; gx < MW; gx++)
+      lightMap[gy * MW + gx] = lightBias(gx, gy);
+
+  for (let f = 0; f < NFRAMES; f++) {
+    const tNorm = f * 1.0;
+    const img = new ImageData(MW, MH);
+    const d = img.data;
+
+    for (let gy = 0; gy < MH; gy++) {
+      for (let gx = 0; gx < MW; gx++) {
+        const idx = (gy * MW + gx) * 4;
+        const q = quantize(sineSum(gx, gy, tNorm));
+        // Wave shading: crests lighter, troughs darker
+        const waveDark = q * depth;
+        // Directional light: smoothly biases brightness based on position
+        const light = lightMap[gy * MW + gx];
+        const total = waveDark - light; // light is negative on lit side = brightens
+        d[idx]   = Math.min(255, Math.max(0, BASE.r + total));
+        d[idx+1] = Math.min(255, Math.max(0, BASE.g + total));
+        d[idx+2] = Math.min(255, Math.max(0, BASE.b + total * 0.55));
+        d[idx+3] = 255;
+      }
+    }
+
+    // Shimmers — biased toward the lit (top-left) side
+    for (let ty = 0; ty < TILES; ty++) {
+      for (let tx = 0; tx < TILES; tx++) {
+        const glints = tileGlints[ty * TILES + tx];
+        const active = Math.min(density, GLINTS_PER_TILE);
+        for (let gi = 0; gi < active; gi++) {
+          const g = glints[gi];
+          const life = (Math.sin((tNorm * 0.8 + g.phase) * g.lifeSpeed) + 1) / 2;
+          if (life < 0.25) continue;
+          const alpha = (life - 0.25) / 0.75;
+          // Shimmers are brighter on the lit side
+          const gxc = tx * TW + g.x, gyc = ty * TH + g.y;
+          const litFactor = Math.max(0.2, 1.0 - (lightBias(gxc, gyc) / (lightStr + 0.001)) * 0.5);
+          const br = Math.floor(brightness * alpha * litFactor);
+          for (let ddx = 0; ddx < g.len; ddx++) {
+            const px = gxc + ddx, py = gyc;
+            if (px >= MW || py >= MH) continue;
+            const idx = (py * MW + px) * 4;
+            const edge = (ddx === 0 || ddx === g.len - 1) ? 0.45 : 1.0;
+            const add = Math.floor(br * edge);
+            d[idx]   = Math.min(255, d[idx]   + add);
+            d[idx+1] = Math.min(255, d[idx+1] + Math.floor(add * 1.15));
+            d[idx+2] = Math.min(255, d[idx+2] + Math.floor(add * 0.7));
+          }
+        }
+      }
+    }
+
+    bakedFrames.push(img);
+
+    const fImg = frameCtxs[f].createImageData(TW, TH);
+    const fd = fImg.data;
+    for (let py = 0; py < TH; py++)
+      for (let px = 0; px < TW; px++) {
+        const si = (py * MW + px) * 4, di = (py * TW + px) * 4;
+        fd[di]=d[si]; fd[di+1]=d[si+1]; fd[di+2]=d[si+2]; fd[di+3]=255;
+      }
+    frameCtxs[f].putImageData(fImg, 0, 0);
+  }
+  needsBake = false;
+}
+
+function loop(ts) {
+  if (needsBake) { bakeFrames(); lastFrameTime = ts; }
+
+  const frameMs = 1000 / playFps;
+  if (ts - lastFrameTime >= frameMs) {
+    frameCanvases[currentFrame].classList.remove('highlight-frame');
+    currentFrame = (currentFrame + 1) % NFRAMES;
+    frameCanvases[currentFrame].classList.add('highlight-frame');
+    lastFrameTime = ts;
+  }
+
+  const frame = bakedFrames[currentFrame];
+  mapCtx.putImageData(frame, 0, 0);
+
+  const bigImg = bigCtx.createImageData(TW, TH);
+  const bd = bigImg.data, fd = frame.data;
+  for (let py = 0; py < TH; py++)
+    for (let px = 0; px < TW; px++) {
+      const si = (py * MW + px) * 4, di = (py * TW + px) * 4;
+      bd[di]=fd[si]; bd[di+1]=fd[si+1]; bd[di+2]=fd[si+2]; bd[di+3]=255;
+    }
+  bigCtx.putImageData(bigImg, 0, 0);
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+
+<script>
+// ── GRID EDITOR ──────────────────────────────────────────────────────────────
+// 16×16 logical cells, each 0=grass | 1=water
+// Dual-grid bitmask per node: bit3=TL(8), bit2=TR(4), bit1=BL(2), bit0=BR(1)
+// water.png : 16 cols × 1 row  → col = waterMask, row = 0
+// grass.png : 16 cols × 9 rows → col = 15 (full tile), row = stable hash variant
+
+const GCOLS = 16, GROWS = 16, GT = 32
+const GW = GCOLS * GT, GH = GROWS * GT   // 512 × 512
+
+const grid = new Uint8Array(GCOLS * GROWS)  // 0 = grass, 1 = water
+
+// Default map: rounded lake in the center
+;(function () {
+  for (let y = 0; y < GROWS; y++)
+    for (let x = 0; x < GCOLS; x++) {
+      const dx = x - 7.5, dy = y - 7.5
+      grid[y * GCOLS + x] = (dx * dx * 0.75 + dy * dy < 20) ? 1 : 0
+    }
+})()
+
+let activeTileTool = 1   // 0 = grass, 1 = water
+let gridDirty      = true
+
+// ── off-screen canvases ───────────────────────────────────────────────────────
+// grassCanvas: all dual-grid nodes using col = 15-wMask from grass.png.
+// Alpha-transparent in water corners → animated wave shows through at shorelines.
+const grassCanvas = document.createElement('canvas')
+grassCanvas.width = GW; grassCanvas.height = GH
+const grassCtx = grassCanvas.getContext('2d')
+grassCtx.imageSmoothingEnabled = false
+
+// waterBaseCanvas: static water.png tiles baked at every node.
+// Drawn first each frame so the soft-light wave overlay modulates the cliff art.
+const waterBaseCanvas = document.createElement('canvas')
+waterBaseCanvas.width = GW; waterBaseCanvas.height = GH
+const waterBaseCtx = waterBaseCanvas.getContext('2d')
+waterBaseCtx.imageSmoothingEnabled = false
+
+// waterTilesetCanvas: all 32×32 wave tiles in one texture.
+//
+//   Layout   128 × 512 px  (4*GT wide, NFRAMES*GT tall)
+//   col 0    quadrant (qx=0, qy=0)  — wave starting at (GT/2,    GT/2   )
+//   col 1    quadrant (qx=1, qy=0)  — wave starting at (3*GT/2,  GT/2   )
+//   col 2    quadrant (qx=0, qy=1)  — wave starting at (GT/2,    3*GT/2 )
+//   col 3    quadrant (qx=1, qy=1)  — wave starting at (3*GT/2,  3*GT/2 )
+//   row      frameIdx   (0–15)
+//
+//   Node (rx,ry):  qx = (rx+1)%2,  qy = (ry+1)%2
+//   64 tiles × 32×32 × 4 bytes = 256 KB
+//
+// Wave period WT = 64 px (2 tiles). Seamlessness holds because integer freq
+// makes sin wrap-around continuous:  sin((64/64)*2π*f) = sin(0)  for any int f.
+const WT = GT * 2   // wave seamless-period: 64 px
+const waterTilesetCanvas = document.createElement('canvas')
+waterTilesetCanvas.width  = 4 * GT        // 128 px
+waterTilesetCanvas.height = NFRAMES * GT  // 512 px
+const waterTilesetCtx = waterTilesetCanvas.getContext('2d')
+waterTilesetCtx.imageSmoothingEnabled = false
+const GGLINTS = 20  // shimmer glints per tile cell
+let _waterBakedRef = null
+
+function bakeAllWaterTiles() {
+  waterTilesetCtx.clearRect(0, 0, 4 * GT, NFRAMES * GT)
+  for (let fi = 0; fi < NFRAMES; fi++)
+    for (let qy = 0; qy < 2; qy++)
+      for (let qx = 0; qx < 2; qx++)
+        waterTilesetCtx.putImageData(_bakeWaterQuadrant(qx, qy, fi), (qx + qy * 2) * GT, fi * GT)
+  _waterBakedRef = bakedFrames
+  // Sync the visible preview canvas
+  const sc = document.getElementById('waveSheetCanvas')
+  if (sc) {
+    const sctx = sc.getContext('2d')
+    sctx.imageSmoothingEnabled = false
+    sctx.drawImage(waterTilesetCanvas, 0, 0)
+  }
+}
+
+function _bakeWaterQuadrant(qx, qy, frameIdx) {
+  // Each quadrant tile shows a 32×32 window into the 64×64 seamlessly-tiling
+  // wave pattern.  The window starts at (qx*GT + GT/2, qy*GT + GT/2) within
+  // the 64px period and wraps modulo WT — seamlessly for integer frequencies.
+  const img = new ImageData(GT, GT)
+  const d   = img.data
+  const tN  = frameIdx * 1.0
+  const tot = aAmp + bAmp + cAmp || 1
+  const ox  = qx * GT + GT / 2   // 16 or 48
+  const oy  = qy * GT + GT / 2   // 16 or 48
+
+  for (let gy = 0; gy < GT; gy++) {
+    for (let gx = 0; gx < GT; gx++) {
+      const wx = (ox + gx) % WT
+      const wy = (oy + gy) % WT
+
+      const pA = (wx + wy) / WT
+      const pB = (wx - wy) / WT
+      const pC =  wx       / WT
+
+      const raw = (
+        aAmp * Math.sin(pA * aFreq * Math.PI * 2 + tN * aSpd * 0.4) +
+        bAmp * Math.sin(pB * bFreq * Math.PI * 2 + tN * bSpd * 0.4) +
+        cAmp * Math.sin(pC * cFreq * Math.PI * 2 + tN * cSpd * 0.4)
+      ) / tot
+
+      const q   = Math.min(1, Math.floor(((raw + 1) / 2) * bands) / (bands - 1)) * 2 - 1
+      // Neutral gray: 128 = no effect under soft-light, >128 brightens, <128 darkens.
+      // Slight blue bias on crests so highlights feel cooler (matches editor.js).
+      const lum = 128 + Math.round(q * depth)
+      const idx = (gy * GT + gx) * 4
+      d[idx]   = lum
+      d[idx+1] = lum
+      d[idx+2] = Math.min(255, lum + 8)
+      d[idx+3] = 150  // ~59% opacity — controls soft-light intensity
+    }
+  }
+  return img
+}
+const gridTileGlints = []
+for (let _ti = 0; _ti < GCOLS * GROWS; _ti++) {
+  const rng = lcg(_ti * 997 + 17)
+  const gl  = []
+  for (let _gi = 0; _gi < GGLINTS; _gi++) {
+    const len = 2 + Math.floor(rng() * 3)
+    gl.push({ x: Math.floor(rng() * (GT - len)), y: Math.floor(rng() * GT),
+              len, phase: rng() * Math.PI * 2, lifeSpeed: 0.5 + rng() * 1.0 })
+  }
+  gridTileGlints.push(gl)
+}
+
+// ── foam / bubble system ──────────────────────────────────────────────────────
+// All 14 edge masks × 16 animation frames are baked upfront into one canvas:
+//
+//   foamTilesetCanvas  448 × 512 px  (14*GT wide, NFRAMES*GT tall)
+//   col  = wMask − 1   (0–13)
+//   row  = frameIdx    (0–15)
+//
+// Total: 224 tiles × 32×32 × 4 bytes = 896 KB
+// Rendering: one drawImage call per shoreline node — zero per-frame CPU work.
+
+function _bindFoam(id, outId, fmt, cb) {
+  const el = document.getElementById(id), out = document.getElementById(outId)
+  out.textContent = fmt(+el.value)
+  el.oninput = () => { out.textContent = fmt(+el.value); cb(+el.value) }
+  return +el.value
+}
+let foamTilesetDirty = true
+let foamAmount  = _bindFoam('foamAmtSlider', 'foamAmtVal', v => v,         v => { foamAmount  = v; foamTilesetDirty = true })
+let foamWidth   = _bindFoam('foamWidSlider', 'foamWidVal', v => v + ' px', v => { foamWidth   = v; foamTilesetDirty = true })
+let foamOpacity = _bindFoam('foamOpSlider',  'foamOpVal',  v => v,         v => { foamOpacity = v; foamTilesetDirty = true })
+let foamSpeed   = _bindFoam('foamSpdSlider', 'foamSpdVal', v => v,         v => { foamSpeed   = v; foamTilesetDirty = true })
+
+// Pre-generate up to 30 particle positions per wMask (fixed — depend only on geometry).
+const FOAM_MAX = 60
+const FOAM_PARTICLES = new Array(16).fill(null)
+for (let wm = 1; wm < 15; wm++) {
+  const rng = lcg(wm * 5381 + 113)
+  const cTL = (wm >> 3) & 1, cTR = (wm >> 2) & 1
+  const cBL = (wm >> 1) & 1, cBR = (wm >> 0) & 1
+  const pts = []; let tries = 0
+  while (pts.length < FOAM_MAX && tries < FOAM_MAX * 50) {
+    tries++
+    const x = rng() * GT, y = rng() * GT
+    const u = x / GT, v = y / GT
+    const wVal = cTL*(1-u)*(1-v) + cTR*u*(1-v) + cBL*(1-u)*v + cBR*u*v
+    if (wVal > 0.5)
+      pts.push({ x, y, phase: rng(), sz: 1 + Math.floor(rng() * 3) })
+  }
+  FOAM_PARTICLES[wm] = pts
+}
+
+function _bakeFoamTile(wMask, frameIdx) {
+  const img = new ImageData(GT, GT)
+  if (foamAmount === 0) return img
+  const d   = img.data
+  const pts = FOAM_PARTICLES[wMask]
+  const cTL = (wMask >> 3) & 1, cTR = (wMask >> 2) & 1
+  const cBL = (wMask >> 1) & 1, cBR = (wMask >> 0) & 1
+  const count = Math.min(foamAmount, pts.length)
+  const wBand = foamWidth / GT
+
+  for (let pi = 0; pi < count; pi++) {
+    const p = pts[pi]
+    const u = p.x / GT, v = p.y / GT
+    const wVal = cTL*(1-u)*(1-v) + cTR*u*(1-v) + cBL*(1-u)*v + cBR*u*v
+    const distFromEdge = wVal - 0.5
+    if (distFromEdge > wBand) continue
+    const cyclePos = ((frameIdx / NFRAMES) * foamSpeed + p.phase) % 1
+    const life = Math.sin(cyclePos * Math.PI)
+    if (life < 0.06) continue
+    const edgeFade = 1.0 - distFromEdge / wBand
+    const base = life * edgeFade * foamOpacity * 1.4   // more transparent than before
+    const bx = Math.round(p.x), by = Math.round(p.y)
+    const put = (dx, dy, mul) => {
+      const cx = bx + dx, cy = by + dy
+      if (cx < 0 || cx >= GT || cy < 0 || cy >= GT) return
+      const idx = (cy * GT + cx) * 4
+      const a = Math.min(255, Math.floor(base * mul))
+      if (a <= d[idx+3]) return
+      d[idx] = 232; d[idx+1] = 246; d[idx+2] = 255; d[idx+3] = a
+    }
+    // sz=1: single pixel · sz=2: 3-px cross · sz=3: 5-px soft circle
+    put(0, 0, 1.0)
+    if (p.sz >= 2) {
+      put(-1, 0, 0.40); put(1, 0, 0.40)
+      put(0, -1, 0.40); put(0, 1, 0.40)
+    }
+    if (p.sz >= 3) {
+      put(-1, -1, 0.18); put(1, -1, 0.18)
+      put(-1,  1, 0.18); put(1,  1, 0.18)
+    }
+  }
+  return img
+}
+
+// In-memory foam tileset: 14*GT wide × NFRAMES*GT tall.
+// Baked once upfront (and again whenever sliders change).
+const foamTilesetCanvas = document.createElement('canvas')
+foamTilesetCanvas.width  = 14 * GT      // 448 px
+foamTilesetCanvas.height = NFRAMES * GT  // 512 px
+const foamTilesetCtx = foamTilesetCanvas.getContext('2d')
+foamTilesetCtx.imageSmoothingEnabled = false
+
+function bakeAllFoamTiles() {
+  foamTilesetCtx.clearRect(0, 0, 14 * GT, NFRAMES * GT)
+  for (let fi = 0; fi < NFRAMES; fi++)
+    for (let wm = 1; wm <= 14; wm++)
+      foamTilesetCtx.putImageData(_bakeFoamTile(wm, fi), (wm - 1) * GT, fi * GT)
+  foamTilesetDirty = false
+}
+
+// ── tileset images ────────────────────────────────────────────────────────────
+const grassImg = new Image()
+const waterImg = new Image()
+let imagesReady = 0
+function onTileImgLoad() { if (++imagesReady === 2) { buildStaticLayer(); drawPreviews(); startGridLoop() } }
+grassImg.onload = onTileImgLoad
+waterImg.onload = onTileImgLoad
+grassImg.src = '../world/grass.png'
+waterImg.src = '../world/water.png'
+
+// ── deterministic per-node hash (same formula as editor.js) ──────────────────
+function nodeHash(rx, ry) {
+  let s = Math.imul(rx + 1, 0x9e3779b9) ^ Math.imul(ry + 1, 0x85ebca6b)
+  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b)
+  s = Math.imul(s ^ (s >>> 16), 0x45d9f3b)
+  return (s ^ (s >>> 16)) >>> 0
+}
+
+function cellAt(cx, cy) {
+  if (cx < 0 || cx >= GCOLS || cy < 0 || cy >= GROWS) return 0   // grass border
+  return grid[cy * GCOLS + cx]
+}
+
+// ── build static layers ───────────────────────────────────────────────────────
+function buildStaticLayer() {
+  grassCtx.clearRect(0, 0, GW, GH)
+  waterBaseCtx.clearRect(0, 0, GW, GH)
+
+  // Dual-grid nodes: (GCOLS+1) × (GROWS+1)
+  // Node (rx,ry) draws a 32×32 tile at pixel ((rx-1)*GT + GT/2, (ry-1)*GT + GT/2)
+  // It samples cells: TL=(rx-1,ry-1)  TR=(rx,ry-1)  BL=(rx-1,ry)  BR=(rx,ry)
+  for (let ry = 0; ry <= GROWS; ry++) {
+    for (let rx = 0; rx <= GCOLS; rx++) {
+      const tl = cellAt(rx - 1, ry - 1)
+      const tr = cellAt(rx,     ry - 1)
+      const bl = cellAt(rx - 1, ry)
+      const br = cellAt(rx,     ry)
+
+      // Water bitmask: 8=TL, 4=TR, 2=BL, 1=BR
+      const wMask = (tl << 3) | (tr << 2) | (bl << 1) | br
+
+      // Half-tile offset so the node centres on the four-cell corner
+      const px = (rx - 1) * GT + GT / 2
+      const py = (ry - 1) * GT + GT / 2
+
+      // Water base: draw water.png at col=wMask — includes cliff edge art at shorelines.
+      // The soft-light wave overlay will modulate these pixels without covering them.
+      if (wMask > 0)
+        waterBaseCtx.drawImage(waterImg, wMask * GT, 0, GT, GT, px, py, GT, GT)
+
+      // Grass column = complement of wMask: which corners are GRASS.
+      //   col 15 (0b1111) = all corners are grass  → full grass tile
+      //   col  0 (0b0000) = no grass corners       → fully transparent
+      //   col  N          = alpha-transparent in water corners, grass elsewhere
+      const grassCol = 15 - wMask
+      const variant  = nodeHash(rx, ry) % 9
+      grassCtx.drawImage(grassImg, grassCol * GT, variant * GT, GT, GT, px, py, GT, GT)
+    }
+  }
+}
+
+// ── render one animated frame onto the grid canvas ───────────────────────────
+const gridCanvas = document.getElementById('gridCanvas')
+const gridCtx    = gridCanvas.getContext('2d')
+gridCtx.imageSmoothingEnabled = false
+
+function renderGridFrame() {
+  // Rebuild static layers whenever the map was edited
+  if (gridDirty) { buildStaticLayer(); gridDirty = false }
+
+  gridCtx.clearRect(0, 0, GW, GH)
+
+  // 1. Animated water drawn first — at dual-grid NODE positions for every node
+  //    that has at least one water corner.  Each node picks the correct 32×32
+  //    quadrant tile from waterTilesetCanvas based on its (rx,ry) parity so
+  //    adjacent nodes show adjacent slices of the 64px-period wave → no seams.
+  // 1. Water base — water.png at every node: cliff edges, water fill, alpha-transparent in grass corners.
+  gridCtx.drawImage(waterBaseCanvas, 0, 0)
+
+  if (bakedFrames) {
+    if (_waterBakedRef !== bakedFrames) bakeAllWaterTiles()
+
+    // 2. Wave overlay via soft-light — modulates cliff and water brightness without covering art.
+    gridCtx.globalCompositeOperation = 'soft-light'
+    for (let ry = 0; ry <= GROWS; ry++) {
+      for (let rx = 0; rx <= GCOLS; rx++) {
+        const wMask = (cellAt(rx-1,ry-1) << 3) | (cellAt(rx,ry-1) << 2) |
+                      (cellAt(rx-1,ry)   << 1) |  cellAt(rx,ry)
+        if (wMask === 0) continue
+        const col = (rx + 1) % 2 + ((ry + 1) % 2) * 2   // 0-3
+        gridCtx.drawImage(waterTilesetCanvas,
+                          col * GT, currentFrame * GT, GT, GT,
+                          (rx - 1) * GT + GT / 2, (ry - 1) * GT + GT / 2, GT, GT)
+      }
+    }
+    gridCtx.globalCompositeOperation = 'source-over'
+
+    // 3. Shimmers — drawn before grass so grass alpha naturally clips them in grass areas
+    const active = Math.min(density, GGLINTS)
+    gridCtx.fillStyle = '#c8e8f8'
+    for (let cy = 0; cy < GROWS; cy++) {
+      for (let cx = 0; cx < GCOLS; cx++) {
+        if (grid[cy * GCOLS + cx] !== 1) continue
+        const glints = gridTileGlints[cy * GCOLS + cx]
+        for (let gi = 0; gi < active; gi++) {
+          const g    = glints[gi]
+          const life = (Math.sin((currentFrame * 0.8 + g.phase) * g.lifeSpeed) + 1) / 2
+          if (life < 0.25) continue
+          const a = ((life - 0.25) / 0.75) * (brightness / 90)
+          if (a < 0.02) continue
+          const ox = cx * GT + g.x, oy = cy * GT + g.y
+          gridCtx.globalAlpha = a * 0.68
+          gridCtx.fillRect(ox + 1, oy, Math.max(1, g.len - 2), 1)
+          gridCtx.globalAlpha = a * 0.3
+          gridCtx.fillRect(ox, oy, 1, 1)
+          if (g.len > 1) gridCtx.fillRect(ox + g.len - 1, oy, 1, 1)
+        }
+      }
+    }
+    gridCtx.globalAlpha = 1.0
+  }
+
+  // 3. Foam bubbles at shoreline nodes — drawn before grass so the grass alpha
+  //    clips bubbles in grass areas automatically.
+  if (foamAmount > 0) {
+    if (foamTilesetDirty) bakeAllFoamTiles()
+    for (let ry = 0; ry <= GROWS; ry++) {
+      for (let rx = 0; rx <= GCOLS; rx++) {
+        const wMask = (cellAt(rx-1,ry-1) << 3) | (cellAt(rx,ry-1) << 2) |
+                      (cellAt(rx-1,ry)   << 1) |  cellAt(rx,ry)
+        if (wMask < 1 || wMask > 14) continue
+        gridCtx.drawImage(foamTilesetCanvas,
+                          (wMask - 1) * GT, currentFrame * GT, GT, GT,
+                          (rx - 1) * GT + GT / 2, (ry - 1) * GT + GT / 2, GT, GT)
+      }
+    }
+  }
+
+  // 4. Grass on top — grassCanvas uses col = 15-wMask per node, so water corners
+  //    are alpha-transparent and the wave below shows through at the shoreline.
+  gridCtx.drawImage(grassCanvas, 0, 0)
+}
+
+function startGridLoop() {
+  ;(function loop() { renderGridFrame(); requestAnimationFrame(loop) })()
+}
+
+// ── tile picker previews ──────────────────────────────────────────────────────
+function drawPreviews() {
+  const gp = document.getElementById('grassPreview').getContext('2d')
+  gp.imageSmoothingEnabled = false
+  gp.drawImage(grassImg, 15 * GT, 0, GT, GT, 0, 0, GT, GT)   // variant 0, full tile
+
+  const wp = document.getElementById('waterPreview').getContext('2d')
+  wp.imageSmoothingEnabled = false
+  wp.drawImage(waterImg, 15 * GT, 0, GT, GT, 0, 0, GT, GT)   // full water tile
+}
+
+// ── mouse painting ────────────────────────────────────────────────────────────
+let gridPainting = false
+
+function hitCell(e) {
+  // offsetX/offsetY are already relative to the element in CSS pixels;
+  // divide by displayed size to get the logical cell index.
+  const r = gridCanvas.getBoundingClientRect()
+  const cx = Math.floor((e.offsetX / r.width)  * GCOLS)
+  const cy = Math.floor((e.offsetY / r.height) * GROWS)
+  return { cx, cy }
+}
+
+function applyPaint(e) {
+  const { cx, cy } = hitCell(e)
+  if (cx < 0 || cx >= GCOLS || cy < 0 || cy >= GROWS) return
+  const val = (e.buttons & 2) ? 0 : activeTileTool   // right-button = erase → grass
+  if (grid[cy * GCOLS + cx] !== val) {
+    grid[cy * GCOLS + cx] = val
+    gridDirty = true
+  }
+}
+
+gridCanvas.addEventListener('mousedown',  e => { e.preventDefault(); gridPainting = true; applyPaint(e) })
+gridCanvas.addEventListener('mousemove',  e => { if (gridPainting) applyPaint(e) })
+gridCanvas.addEventListener('mouseup',    () => gridPainting = false)
+gridCanvas.addEventListener('mouseleave', () => gridPainting = false)
+gridCanvas.addEventListener('contextmenu', e => e.preventDefault())
+
+// ── tile-picker button wiring ─────────────────────────────────────────────────
+document.getElementById('btnGrass').addEventListener('click', () => {
+  activeTileTool = 0
+  document.getElementById('btnGrass').classList.add('active')
+  document.getElementById('btnWater').classList.remove('active')
+})
+document.getElementById('btnWater').addEventListener('click', () => {
+  activeTileTool = 1
+  document.getElementById('btnWater').classList.add('active')
+  document.getElementById('btnGrass').classList.remove('active')
+})
+
+document.getElementById('btnDownloadWave').addEventListener('click', () => {
+  const a = document.createElement('a')
+  a.download = 'water_wave_overlay.png'
+  a.href = waterTilesetCanvas.toDataURL('image/png')
+  a.click()
+})
+</script>

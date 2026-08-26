@@ -1,0 +1,137 @@
+[
+  {
+    "question": "W skarbcu krasnoludów leżało 124 złote monety. Kupiec dołożył 232 monety. Ile monet jest teraz w skarbcu?",
+    "answers": ["356"],
+    "hint": "Dodaj kolumny bez przenoszenia: 4+2, 2+3, 1+2."
+  },
+  {
+    "question": "Rycerz miał 85 złotych. Wydał 43 złote na tarczę. Ile złotych mu zostało?",
+    "answers": ["42"],
+    "hint": "Odejmij dziesiątki, potem jedności: 80-40=40, 5-3=2."
+  },
+  {
+    "question": "Do zamku przybyło 6 grup po 7 rycerzy. Ilu rycerzy przybyło łącznie?",
+    "answers": ["42"],
+    "hint": "6 × 7 = ?"
+  },
+  {
+    "question": "W lochu jest 48 skrzyń. Rozbójnicy ukryli skarby w co czwartej skrzyni. Ile skrzyń ze skarbami jest w lochu?",
+    "answers": ["12"],
+    "hint": "48 ÷ 4 = ?"
+  },
+  {
+    "question": "A magic square — every row, column and diagonal add up to the same sum. What number belongs in the empty cell?\n$$\n\\begin{array}{|c|c|c|}\n\\hline\n8 & 1 & 6 \\\\ \\hline\n3 &   & 7 \\\\ \\hline\n4 & 9 & 2 \\\\ \\hline\n\\end{array}\n$$",
+    "answers": ["5"],
+    "hint": "Every row sums to 15. What is missing from the middle row: $3 + ? + 7 = 15$?"
+  },
+  {
+    "question": "The Pyramid of Numbers! The number in any brick is always equal to the two bricks directly underneath it added together. What number belongs in the empty cell?\n$$\n\\begin{array}{ccccc}\n & & \\boxed{25} & & \\\\\n & \\boxed{11} & & \\boxed{14} & \\\\\n\\boxed{4} & & \\boxed{?} & & \\boxed{7}\n\\end{array}\n$$",
+    "answers": ["7"],
+    "hint": "Look at the left side of the pyramid. What number do you need to add to 4 to make 11? ($4 + ? = 11$)"
+  },
+  {
+    "question": "The Pizza Parlor sliced a giant square pizza into 9 pieces. The shaded fractions $\\blacksquare$ have pepperoni, and the light fractions $\\square$ only have cheese. What fraction of the pizza has pepperoni?\n$$\n\\begin{array}{|c|c|c|}\n\\hline\n\\blacksquare & \\square & \\blacksquare \\\\\n\\hline\n\\square & \\blacksquare & \\square \\\\\n\\hline\n\\blacksquare & \\square & \\blacksquare \\\\\n\\hline\n\\end{array}\n$$",
+    "answers": ["5/9"],
+    "hint": "Count how many total squares there are altogether. Then, count how many of them are dark pepperoni squares $\\blacksquare$."
+  },
+  {
+    "question": "An alien spaceship landed on our coordinate grid at the location marked with the star (★). Can you find the grid coordinates $(X, Y)$ for the spaceship?\n$$\n\\begin{array}{c|c|c|c|}\nY=3 & \\cdot & \\cdot & \\cdot \\\\\n\\hline\nY=2 & \\cdot & \\bigstar & \\cdot \\\\\n\\hline\nY=1 & \\cdot & \\cdot & \\cdot \\\\\n\\hline\n & X=1 & X=2 & X=3 \\\\\n\\end{array}\n$$",
+    "answers": ["2,2", "(2,2)", "2, 2", "(2, 2)"],
+    "hint": "Look straight down from the star to find the X number, then look straight to the left to find the Y number. Write them as (X, Y)."
+  },
+  {
+    "question": "The scale is perfectly balanced, meaning both sides weigh the exact same amount. If each heavy block $\\blacksquare$ weighs 6 kilograms, how much does the mystery circle $\\bigcirc$ weigh?\n$$\n\\begin{array}{ccc}\n\\blacksquare \\ + \\ \\blacksquare & \\hskip{2cm} & \\bigcirc \\ + \\ \\bigcirc \\ + \\ \\bigcirc \\\\\n\\hline\n & \\triangle & \n\\end{array}\n$$",
+    "answers": ["4", "4kg", "4 kg"],
+    "hint": "First, find the total weight on the left side ($6 + 6$). Since the scale is balanced, the three circles on the right must split that total weight equally!"
+  },
+  {
+    "question": "A laser beam multiplies any number it hits by $\\color{red}{2}$. If the beam starts at the giant $\\Huge 3\\normalsize$, what number comes out at the end of the grid?\n$$\n\\begin{array}{|c|c|c|}\n\\hline\n\\Huge 3 \\normalsize & \\rightarrow & \\color{red}{\\mathbf{\\times 2}} \\\\\n\\hline\n& & \\downarrow \\\\\n\\hline\n\\mathbf{?} & \\leftarrow & \\color{red}{\\mathbf{\\times 2}} \\\\\n\\hline\n\\end{array}\n$$",
+    "answers": ["12"],
+    "hint": "Follow the arrows! First, take 3 and multiply it by 2. Then follow the down arrow, and multiply that new answer by 2 again!"
+  },
+  {
+    "question": "Agent, the enemy has locked the safe! Use the Spy Decoder Key to translate the shapes into numbers and find the final secret code.\n$$\n\\textbf{Spy Decoder Key:}\\\\\n\\begin{array}{|c|c|c|c|}\n\\hline\n\\triangle = 9 & \\bigcirc = 5 & \\square = 2 & \\lozenge = 1 \\\\\n\\hline\n\\end{array}\n$$\n$$\n\\textbf{The Lock Box Problem:}\\\\\n\\begin{array}{rcc}\n& \\triangle & \\bigcirc \\\\\n-\\hskip{-3mm} & \\square & \\lozenge \\\\\n\\hline\n& \\mathbf{?} & \\mathbf{?}\n\\end{array}\n$$",
+    "answers": ["74"],
+    "hint": "Replace the shapes in the Lock Box with their numbers from the Key. The problem becomes $95 - 21$!"
+  },
+  {
+    "question": "You are trapped in a dungeon! To open the exit door, you must step on the correct sequence of stones. Follow the arrows and calculate the final value at the **EXIT**:\n$$\n\\begin{array}{ccccc}\n\\boxed{\\text{START: } 15} & \\rightarrow & \\boxed{\\text{Add } 7} & \\rightarrow & \\boxed{\\text{Minus } 4} \\\\\n& & & & \\downarrow \\\\\n\\boxed{\\text{EXIT: } ?} & \\leftarrow & \\boxed{\\text{Divide by } 2} & \\leftarrow & \\boxed{\\text{Multiply by } 3}\n\\end{array}\n$$",
+    "answers": ["27"],
+    "hint": "Do it step-by-step! $15 + 7 = 22$. Then $22 - 4 = 18$. Now multiply $18 \\times 3$, and finally divide that result by 2 to reach the exit!"
+  },
+  {
+    "question": "A magical item shop weighs items in groups. Looking at the grid below, we know how much the rows add up to. If a golden coin $\\mathbf{\\odot}$ weighs 3 grams, how much does a magic potion $\\mathbf{\\imath}$ weigh?\n$$\n\\begin{array}{ccc|c}\n\\odot & + & \\odot & = 6\\text{ grams} \\\\\n\\odot & + & \\imath & = 8\\text{ grams} \\\\\n\\hline\n\\text{Coin} & & \\text{Potion} & \n\\end{array}\n$$",
+    "answers": ["5", "5g", "5 g"],
+    "hint": "Look at the second row: One Coin + One Potion = 8 grams. If the Coin is worth 3, what number plus 3 equals 8?"
+  },
+  {
+    "question": "To craft 1 Golden Sword, you need to place Gold Ingots ($\\color{gold}{\\blacksquare}$) and 1 Stick ($\\color{brown}{|}$) in the crafting table exactly like this:\n$$\n\\begin{array}{|c|c|c|}\n\\hline\n & \\color{gold}{\\blacksquare} & \\\\\n\\hline\n & \\color{gold}{\\blacksquare} & \\\\\n\\hline\n & \\color{brown}{|} & \\\\\n\\hline\n\\end{array}\n$$\nIf a blacksmith wants to craft 5 Golden Swords at the same time, how many total Gold Ingots ($\\color{gold}{\\blacksquare}$) will they need to put into the grid?",
+    "answers": ["10"],
+    "hint": "Look at the recipe grid. How many Gold Ingots do you need for just one sword? Multiply that number by 5!"
+  },
+  {
+    "question": "You found a secret pirate cryptex! To open it, you must spin the dials to find the missing middle number. Look closely at how the numbers change as the gears turn from top to bottom:\n$$\n\\overbrace{\\begin{array}{|c|}\n\\hline\n32 \\\\\n\\hline\n16 \\\\\n\\hline\n\\mathbf{?} \\\\\n\\hline\n4 \\\\\n\\hline\n2 \\\\\n\\hline\n\\end{array}}^{\\text{Dial A}}\n$$",
+    "answers": ["8"],
+    "hint": "Look at the numbers from bottom to top, or top to bottom. 2 x 2 = 4. What is 4 x 2? Check if doubling that answer gets you to 16!"
+  },
+  {
+    "question": "You are fighting the Math Dragon! The dragon starts with 50 Health Points (HP). \n\nYour knight attacks twice with a sword doing 10 damage per hit. Then, your mage casts a spell doing 15 damage. \n$$\n\\text{Dragon HP: } [\\color{red}{\\blacksquare\\blacksquare\\blacksquare}\\color{gray}{\\square\\square\\square\\square\\square\\square\\square}]\n$$\nHow much HP does the dragon have left after your team's turn?",
+    "answers": ["15"],
+    "hint": "First, calculate the total damage your team did. The knight did 10 + 10 damage, and the mage added 15. Subtract that whole total from the dragon's starting 50 HP!"
+  },
+  {
+    "question": "Help the ninja climb to the top of Number Tower! To pass each floor, the number must follow the same pattern. What number belongs on the top floor?\n$$\n\\begin{array}{|c|}\n\\hline\n\\mathbf{?}\\\\\n\\hline\n54 \\\\\n\\hline\n18 \\\\\n\\hline\n6 \\\\\n\\hline\n2 \\\\\n\\hline\n\\end{array}\n$$",
+    "answers": ["162"],
+    "hint": "Look at the numbers from the bottom floor going up. How do you get from 2 to 6, and from 6 to 18? Multiply the previous floor by that same number to find the top floor!"
+  },
+  {
+    "question": "Your spaceship needs to rotate to line up with the space station docking port. Right now, your ship is upside down pointing at 180 degrees. You need to turn it to point at 90 degrees.\n$$\n\\begin{array}{ccc}\n & 0^\\circ & \\\\\n270^\\circ & \\cdot & 90^\\circ \\\\\n & 180^\\circ \\text{ (You)} & \n\\end{array}\n$$\nHow many degrees clockwise must you rotate your ship to face the docking port at 90 degrees?",
+    "answers": ["270"],
+    "hint": "Moving clockwise means turning like a clock's hands. Moving from 180 to 270 is 90 degrees. Keep going clockwise from 270 to 0, and then 0 to 90. Add those turns together!"
+  },
+  {
+    "question": "An alchemist is brewing a speed potion. The recipe book shows two combinations of magical ingredients. If 1 Fire Flower ($\\color{red}{\\curlywedge}$) is worth 4 points, how many points is 1 Moon Grass ($\\color{cyan}{\\between}$) worth?\n$$\n\\begin{array}{lcl}\n\\color{red}{\\curlywedge} + \\color{red}{\\curlywedge} & = & 8 \\text{ points} \\\\\n\\color{red}{\\curlywedge} + \\color{cyan}{\\between} + \\color{cyan}{\\between} & = & 14 \\text{ points}\n\\end{array}\n$$",
+    "answers": ["5"],
+    "hint": "Look at the second recipe. You already know 1 Fire Flower is worth 4 points. Subtract that 4 from the total of 14 points. The points left over must be split equally between the 2 Moon Grasses!"
+  },
+  {
+    "question": "When Ben was 6 years old, his little sister Lily was half his age. Now, Ben is 60 years old! How old is Lily?\n$$\n\\begin{array}{|c|c|}\n\\hline\n\\text{Ben} & \\text{Lily} \\\\\n\\text{Age: 60} & \\text{Age: ?} \\\\\n\\hline\n\\end{array}\n$$",
+    "answers": ["57"],
+    "hint": "Be careful! Lily doesn't stay half his age forever. Find out how many years younger Lily is than Ben when they are kids. She will always be that exact same number of years younger!"
+  },
+  {
+    "question": "In the Smith family, every boy has exactly 2 brothers, and every girl has exactly 1 brother. If we look at just the brothers ($\\color{blue}{\\triangle}$) and sisters ($\\color{pink}{\\bigcirc}$), how many total children are in the family?\n$$\n\\begin{array}{ccccc}\n\\color{blue}{\\triangle} & \\color{blue}{\\triangle} & \\color{blue}{\\triangle} & \\color{pink}{\\bigcirc} & \\dots?\n\\end{array}\n$$",
+    "answers": ["4"],
+    "hint": "If a boy has 2 brothers, that means there must be 3 boys in total in the family (himself + his 2 brothers). Now, look at the second rule: if every girl has exactly 1 brother, how many girls can there be?"
+  },
+  {
+    "question": "Look at this family age chart! A mother's age is equal to her two children's ages added together. A grandfather's age is equal to the mother's age multiplied by 2. How old is the Grandfather?\n$$\n\\begin{array}{ccccc}\n & & \\boxed{\\text{Grandfather: ?}} & & \\\\\n & & \\downarrow \\times 2 & & \\\\\n & & \\boxed{\\text{Mother}} & & \\\\\n & \\nearrow & & \\nwarrow & \\\\\n\\boxed{\\text{Brother: 12}} & & & & \\boxed{\\text{Sister: 18}}\n\\end{array}\n$$",
+    "answers": ["60"],
+    "hint": "Work your way up the chart! First, add the Brother's age (12) and the Sister's age (18) together to find the Mother's age. Then, multiply the Mother's age by 2 to find the Grandfather!"
+  },
+  {
+    "question": "A crazy elevator in a giant skyscraper starts on floor 7. It undergoes a massive journey! Calculate the final floor:\n$$\n7 \\times 8 - 12 + 45 \\times 9 \\times 0 + 4 = \\mathbf{?}\n$$",
+    "answers": ["4"],
+    "hint": "Look closely at the entire equation before doing any math! Remember the order of operations (PEMDAS/BODMAS) and see what happens when you multiply a huge chunk of numbers by 0."
+  },
+  {
+    "question": "Three thick math comic books sit on a shelf in order: Volume 1, Volume 2, and Volume 3. Each book is exactly 2 inches thick including its covers. \n$$\n\\begin{array}{|c|c|c|} \n\\hline\n\\text{Vol 1} & \\text{Vol 2} & \\text{Vol 3} \\\\\n\\hline\n\\end{array}\n$$\nA tiny math-bug starts eating from the very first page of Volume 1 and chews in a straight horizontal line all the way to the very last page of Volume 3. How many inches of book pages did it chew through?",
+    "answers": ["2", "2 inches"],
+    "hint": "Think about how books sit on a shelf. The front cover of Volume 1 is on the RIGHT side of the book, and the back cover of Volume 3 is on the LEFT side of the book. The bug only actually chewed through the middle book!"
+  },
+  {
+    "question": "Smok zebrał 15 worków złota. W każdym worku jest 24 monety. Ile monet ma smok łącznie?",
+    "answers": ["360"],
+    "hint": "15 × 24 = 15 × 20 + 15 × 4 = 300 + 60."
+  },
+  {
+    "question": "Czarodziej ma 5 mikstur. Każda przywraca 35 punktów zdrowia. Ile punktów zdrowia może przywrócić łącznie?",
+    "answers": ["175"],
+    "hint": "5 × 35 = 5 × 30 + 5 × 5 = 150 + 25."
+  },
+  {
+    "question": "Oddział 144 łuczników ustawił się w równych rzędach po 12. Ile rzędów tworzy oddział?",
+    "answers": ["12"],
+    "hint": "144 ÷ 12 = ?"
+  }
+]

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Fire Spritesheet Generator</title>
+    <style>
+        body {
+            background: #111;
+            color: #eee;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h2 { color: #ff9d00; margin-bottom: 5px; }
+        h3 { margin-bottom: 8px; color: #ff9d00; }
+        .section {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            margin: 8px 0;
+            text-align: center;
+            width: 100%;
+            max-width: 960px;
+            box-sizing: border-box;
+        }
+        .top-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 960px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        .preview-panel, .controls-panel {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .preview-panel { flex: 0 0 auto; }
+        .controls-panel { flex: 1; min-width: 220px; }
+        .canvas-wrap {
+            position: relative;
+            display: inline-block;
+            border: 2px solid #555;
+            cursor: crosshair;
+            line-height: 0;
+        }
+        #particleCanvas { display: block; background: #000; }
+        #selectionCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+        canvas.pixelart {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            background: #05050d;
+            border: 2px solid #555;
+        }
+        .scroll-container {
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 5px;
+        }
+        .slider-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr 48px;
+            gap: 8px 10px;
+            align-items: center;
+            text-align: left;
+        }
+        .slider-grid label { font-size: 12px; color: #ccc; }
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(180,40,5,0.45);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 13px; height: 13px;
+            background: rgba(255,100,20,0.95);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255,80,10,0.7);
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 13px; height: 13px;
+            border: none; border-radius: 50%;
+            background: rgba(255,100,20,0.95);
+        }
+        .sv { font-size: 12px; color: #ff9d00; text-align: right; font-variant-numeric: tabular-nums; }
+        .ctrl-row {
+            display: flex; gap: 14px; align-items: center;
+            flex-wrap: wrap; justify-content: center; margin-top: 10px;
+        }
+        .ctrl-row label { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .ctrl-row input[type=number] {
+            width: 70px; padding: 4px 6px;
+            background: #111; color: #eee;
+            border: 1px solid #555; border-radius: 4px; font-size: 14px;
+        }
+        button {
+            padding: 7px 20px; background: #ff6a00; color: #fff;
+            border: none; border-radius: 4px; cursor: pointer;
+            font-size: 14px; font-weight: bold;
+        }
+        button:hover { background: #ff8c00; }
+        select option { background: #1a1a2e; color: #eee; }
+        #statusText { font-size: 12px; color: #888; margin: 6px 0 0; min-height: 16px; }
+        .bg-swatch {
+            display: inline-block;
+            width: 20px; height: 20px;
+            border-radius: 3px;
+            border: 2px solid #555;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        .bg-swatch:hover { border-color: #fff; }
+        .bg-swatch.active { border-color: #ff9d00; }
+    </style>
+</head>
+<body>
+
+<h2>Particle Fire Spritesheet Generator</h2>
+
+<!-- Live preview + particle controls -->
+<div class="top-row">
+    <div class="preview-panel">
+        <h3>Live Preview</h3>
+        <p style="font-size:11px;color:#666;margin:0 0 8px">Drag to select capture region</p>
+        <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="particleCanvas" width="400" height="400"></canvas>
+            <canvas id="selectionCanvas" width="400" height="400"></canvas>
+        </div>
+        <p id="selStatus" style="font-size:11px;color:#777;margin:6px 0 0">No selection — full canvas will be captured</p>
+        <label style="font-size:11px;color:#aaa;margin:6px 0 0;display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="checkbox" id="chk-grey" checked> Grey mode (shows capture heat map)
+        </label>
+    </div>
+
+    <div class="controls-panel">
+        <h3>Particle Controls</h3>
+        <div class="ctrl-row" style="margin-top:0;margin-bottom:6px">
+            <label style="font-size:14px">Colour scheme:
+                <select id="sel-scheme" style="padding:4px 6px;background:#111;color:#eee;border:1px solid #555;border-radius:4px;font-size:14px"></select>
+            </label>
+        </div>
+        <div class="slider-grid">
+            <label>Wind</label>
+            <input type="range" id="sl-wind" min="-1" max="1" step="0.01" value="0">
+            <span class="sv" id="v-wind">0.00</span>
+
+            <label>Turbulence</label>
+            <input type="range" id="sl-turb" min="0" max="0.5" step="0.005" value="0.05">
+            <span class="sv" id="v-turb">0.050</span>
+
+            <label>Particles</label>
+            <input type="range" id="sl-part" min="50" max="1500" step="50" value="300">
+            <span class="sv" id="v-part">300</span>
+
+            <label>Min Size</label>
+            <input type="range" id="sl-minsize" min="1" max="30" step="0.5" value="5">
+            <span class="sv" id="v-minsize">5.0</span>
+
+            <label>Max Size</label>
+            <input type="range" id="sl-maxsize" min="1" max="80" step="1" value="30">
+            <span class="sv" id="v-maxsize">30</span>
+
+            <label>Heat</label>
+            <input type="range" id="sl-heat" min="0.1" max="1" step="0.01" value="0.4">
+            <span class="sv" id="v-heat">0.40</span>
+
+            <label>Spawn Radius</label>
+            <input type="range" id="sl-spawn" min="1" max="300" step="1" value="50">
+            <span class="sv" id="v-spawn">50</span>
+
+            <label>Upward Bias</label>
+            <input type="range" id="sl-bias" min="0" max="1" step="0.01" value="0">
+            <span class="sv" id="v-bias">0.00</span>
+
+            <label>Heat Retention</label>
+            <input type="range" id="sl-ret" min="0" max="1" step="0.01" value="0.4">
+            <span class="sv" id="v-ret">0.40</span>
+        </div>
+    </div>
+</div>
+
+<!-- Output settings -->
+<div class="section">
+    <h3>Output Settings</h3>
+    <div class="ctrl-row">
+        <label>Width (px): <input type="number" id="inputW" value="32" min="8" max="512" step="8"></label>
+        <label>Height (px): <input type="number" id="inputH" value="32" min="8" max="512" step="8"></label>
+        <label style="gap:8px">
+            Ticks/frame:
+            <input type="range" id="sl-tpf" min="1" max="20" step="1" value="3" style="width:90px">
+            <span id="v-tpf" style="color:#ff9d00;min-width:20px;display:inline-block">3</span>
+        </label>
+        <label style="gap:8px">
+            Intensity:
+            <input type="range" id="sl-intensity" min="5" max="300" step="5" value="100" style="width:90px">
+            <span id="v-intensity" style="color:#ff9d00;min-width:30px;display:inline-block">100%</span>
+        </label>
+        <button id="btnCapture">Capture &amp; Generate</button>
+    </div>
+    <p id="statusText">Adjust particle controls, select a region, then click Capture</p>
+</div>
+
+<!-- Spritesheet -->
+<div class="section">
+    <h3>Spritesheet (16 Frames)</h3>
+    <p style="font-size:11px;color:#888;margin:0 0 8px">Captured from particle sim · pixelated · crossfade-blended for seamless loop</p>
+    <div class="scroll-container">
+        <canvas id="spritesheetCanvas" class="pixelart"></canvas>
+    </div>
+</div>
+
+<!-- Playback -->
+<div class="section">
+    <h3>Live Playback</h3>
+    <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin:6px 0 8px;flex-wrap:wrap">
+        <label style="font-size:12px;color:#ccc">FPS</label>
+        <input type="range" id="sl-fps" min="1" max="60" step="1" value="12" style="width:140px">
+        <span id="v-fps" style="color:#ff9d00;font-size:13px;min-width:30px">12</span>
+        <span style="margin-left:10px;font-size:12px;color:#ccc">Background:</span>
+        <span class="bg-swatch active" data-bg="#05050d" style="background:#05050d" title="Dark"></span>
+        <span class="bg-swatch" data-bg="#000000" style="background:#000000" title="Black"></span>
+        <span class="bg-swatch" data-bg="#5c3317" style="background:#5c3317" title="Brown"></span>
+        <span class="bg-swatch" data-bg="#1a3a1a" style="background:#1a3a1a" title="Dark green"></span>
+        <span class="bg-swatch" data-bg="#3a7a3a" style="background:#3a7a3a" title="Green"></span>
+    </div>
+    <canvas id="playbackCanvas" class="pixelart" style="margin-top:4px;"></canvas>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════
+const SIM_FRAMES   = 46;
+const BLEND_WINDOW = 14;
+const PREVIEW_W    = 400;
+const PREVIEW_H    = 400;
+const GRAD_STEPS   = 32;
+const WIND_SCALE   = 0.06;
+const GRID_COLS    = 48;
+const GRID_ROWS    = 72;
+
+// ═══════════════════════════════════════════════════════════════════════
+// COLOUR SCHEMES
+// Each scheme has: grad (live-preview RGB gradient) + palette (output RGBA).
+// Add a new entry here and it shows up in the dropdown automatically.
+// ═══════════════════════════════════════════════════════════════════════
+const COLOR_SCHEMES = {
+    fire: {
+        name: 'Fire (orange/red)',
+        grad: [
+            { t: 0.00, r:   5, g:   0, b:   5 },
+            { t: 0.22, r:  60, g:   0, b:   5 },
+            { t: 0.45, r: 160, g:   8, b:   0 },
+            { t: 0.68, r: 230, g:  40, b:   0 },
+            { t: 0.85, r: 255, g:  80, b:   5 },
+            { t: 1.00, r: 255, g: 130, b:  20 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r: 120, g:   5, b:   0, a:  90 },
+            { t: 0.32, r: 200, g:  15, b:   0, a: 160 },
+            { t: 0.48, r: 245, g:  45, b:   0, a: 210 },
+            { t: 0.62, r: 255, g: 100, b:   0, a: 230 },
+            { t: 0.76, r: 255, g: 175, b:   0, a: 245 },
+            { t: 0.90, r: 255, g: 220, b:  20, a: 255 },
+            { t: 1.00, r: 255, g: 245, b: 100, a: 255 },
+        ],
+    },
+    blue: {
+        name: 'Blue (spirit/cold)',
+        grad: [
+            { t: 0.00, r:   0, g:   0, b:   5 },
+            { t: 0.22, r:   0, g:  10, b:  60 },
+            { t: 0.45, r:  10, g:  30, b: 160 },
+            { t: 0.68, r:  20, g:  90, b: 230 },
+            { t: 0.85, r:  60, g: 160, b: 255 },
+            { t: 1.00, r: 150, g: 220, b: 255 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r:  10, g:  10, b: 110, a:  90 },
+            { t: 0.32, r:  15, g:  40, b: 200, a: 160 },
+            { t: 0.48, r:  40, g: 100, b: 245, a: 210 },
+            { t: 0.62, r:  80, g: 160, b: 255, a: 230 },
+            { t: 0.76, r: 150, g: 210, b: 255, a: 245 },
+            { t: 0.90, r: 200, g: 235, b: 255, a: 255 },
+            { t: 1.00, r: 245, g: 250, b: 255, a: 255 },
+        ],
+    },
+    green: {
+        name: 'Green (acid/witch)',
+        grad: [
+            { t: 0.00, r:   0, g:   5, b:   0 },
+            { t: 0.22, r:   0, g:  50, b:   5 },
+            { t: 0.45, r:  10, g: 140, b:  10 },
+            { t: 0.68, r:  40, g: 210, b:  30 },
+            { t: 0.85, r: 100, g: 250, b:  60 },
+            { t: 1.00, r: 180, g: 255, b: 140 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r:   5, g: 100, b:  10, a:  90 },
+            { t: 0.32, r:  15, g: 175, b:  20, a: 160 },
+            { t: 0.48, r:  45, g: 230, b:  40, a: 210 },
+            { t: 0.62, r: 100, g: 255, b:  80, a: 230 },
+            { t: 0.76, r: 170, g: 255, b: 130, a: 245 },
+            { t: 0.90, r: 220, g: 255, b: 180, a: 255 },
+            { t: 1.00, r: 245, g: 255, b: 220, a: 255 },
+        ],
+    },
+    purple: {
+        name: 'Purple (arcane/void)',
+        grad: [
+            { t: 0.00, r:   5, g:   0, b:   5 },
+            { t: 0.22, r:  50, g:   0, b:  60 },
+            { t: 0.45, r: 130, g:  10, b: 160 },
+            { t: 0.68, r: 200, g:  40, b: 230 },
+            { t: 0.85, r: 240, g: 100, b: 255 },
+            { t: 1.00, r: 250, g: 180, b: 255 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r:  90, g:  10, b: 110, a:  90 },
+            { t: 0.32, r: 155, g:  25, b: 195, a: 160 },
+            { t: 0.48, r: 210, g:  55, b: 245, a: 210 },
+            { t: 0.62, r: 240, g: 110, b: 255, a: 230 },
+            { t: 0.76, r: 250, g: 180, b: 255, a: 245 },
+            { t: 0.90, r: 252, g: 220, b: 255, a: 255 },
+            { t: 1.00, r: 255, g: 245, b: 255, a: 255 },
+        ],
+    },
+    cyan: {
+        name: 'Cyan (electric/plasma)',
+        grad: [
+            { t: 0.00, r:   0, g:   5, b:   5 },
+            { t: 0.22, r:   0, g:  50, b:  60 },
+            { t: 0.45, r:  10, g: 140, b: 160 },
+            { t: 0.68, r:  30, g: 210, b: 230 },
+            { t: 0.85, r:  90, g: 240, b: 250 },
+            { t: 1.00, r: 180, g: 252, b: 255 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r:  10, g: 100, b: 120, a:  90 },
+            { t: 0.32, r:  20, g: 175, b: 205, a: 160 },
+            { t: 0.48, r:  50, g: 225, b: 245, a: 210 },
+            { t: 0.62, r: 110, g: 240, b: 250, a: 230 },
+            { t: 0.76, r: 175, g: 248, b: 252, a: 245 },
+            { t: 0.90, r: 215, g: 252, b: 252, a: 255 },
+            { t: 1.00, r: 245, g: 255, b: 255, a: 255 },
+        ],
+    },
+    red: {
+        name: 'Red (blood/demon)',
+        grad: [
+            { t: 0.00, r:   5, g:   0, b:   0 },
+            { t: 0.22, r:  60, g:   0, b:   0 },
+            { t: 0.45, r: 160, g:   5, b:   5 },
+            { t: 0.68, r: 220, g:  20, b:  10 },
+            { t: 0.85, r: 255, g:  70, b:  40 },
+            { t: 1.00, r: 255, g: 160, b: 110 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r: 120, g:   5, b:   5, a:  90 },
+            { t: 0.32, r: 200, g:  20, b:  10, a: 160 },
+            { t: 0.48, r: 245, g:  45, b:  20, a: 210 },
+            { t: 0.62, r: 255, g:  90, b:  50, a: 230 },
+            { t: 0.76, r: 255, g: 150, b: 100, a: 245 },
+            { t: 0.90, r: 255, g: 200, b: 160, a: 255 },
+            { t: 1.00, r: 255, g: 235, b: 210, a: 255 },
+        ],
+    },
+    white: {
+        name: 'White (holy/ghost)',
+        grad: [
+            { t: 0.00, r:  10, g:  10, b:  10 },
+            { t: 0.22, r:  60, g:  60, b:  65 },
+            { t: 0.45, r: 130, g: 135, b: 145 },
+            { t: 0.68, r: 200, g: 205, b: 215 },
+            { t: 0.85, r: 240, g: 244, b: 248 },
+            { t: 1.00, r: 255, g: 255, b: 255 },
+        ],
+        palette: [
+            { t: 0.00, r:   0, g:   0, b:   0, a:   0 },
+            { t: 0.18, r: 100, g: 105, b: 115, a:  90 },
+            { t: 0.32, r: 170, g: 175, b: 185, a: 160 },
+            { t: 0.48, r: 220, g: 225, b: 235, a: 210 },
+            { t: 0.62, r: 240, g: 245, b: 250, a: 230 },
+            { t: 0.76, r: 250, g: 252, b: 255, a: 245 },
+            { t: 0.90, r: 253, g: 254, b: 255, a: 255 },
+            { t: 1.00, r: 255, g: 255, b: 255, a: 255 },
+        ],
+    },
+};
+
+// Active scheme — swapped by the dropdown. previewGrad is rebuilt on change.
+let FIRE_GRAD    = COLOR_SCHEMES.fire.grad;
+let FIRE_PALETTE = COLOR_SCHEMES.fire.palette;
+
+// ═══════════════════════════════════════════════════════════════════════
+// PARTICLE CONFIG  (live-updated by sliders)
+// ═══════════════════════════════════════════════════════════════════════
+const PC = {
+    emitterX: 0.5, emitterY: 0.88,
+    maxParticles: 300, baseSpeed: 0.9, initialHeat: 0.4,
+    gravity: 0.012, buoyancy: 0.110,
+    wind: 0.0, turbulence: 0.05,
+    upwardBias: 0.0, heatRetention: 0.4,
+    maxSize: 30, minSize: 5, spawnRadius: 50,
+};
+
+// ═══════════════════════════════════════════════════════════════════════
+// COLOR HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+function heatToColor(heat) {
+    const h = Math.max(0, Math.min(1, heat));
+    let lo = FIRE_GRAD[0], hi = FIRE_GRAD[FIRE_GRAD.length - 1];
+    for (let i = 0; i < FIRE_GRAD.length - 1; i++) {
+        if (h >= FIRE_GRAD[i].t && h <= FIRE_GRAD[i+1].t) {
+            lo = FIRE_GRAD[i]; hi = FIRE_GRAD[i+1]; break;
+        }
+    }
+    const f = (h - lo.t) / (hi.t - lo.t || 1);
+    return `rgb(${(lo.r + f*(hi.r-lo.r))|0},${(lo.g + f*(hi.g-lo.g))|0},${(lo.b + f*(hi.b-lo.b))|0})`;
+}
+
+// Build a gradient cache tied to a specific canvas context
+function buildGradCache(ctx) {
+    const cache = new Array(GRAD_STEPS);
+    for (let i = 0; i < GRAD_STEPS; i++) {
+        const heat  = i / (GRAD_STEPS - 1);
+        const color = heatToColor(heat);
+        const alpha = 0.10 + heat * 0.28;
+        const base  = color.slice(4, -1); // strip "rgb(" and ")"
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+        g.addColorStop(0,   `rgba(${base},${alpha.toFixed(3)})`);
+        g.addColorStop(0.4, `rgba(${base},${(alpha * 0.6).toFixed(3)})`);
+        g.addColorStop(1,   'rgba(0,0,0,0)');
+        cache[i] = g;
+    }
+    return cache;
+}
+
+// Grayscale gradient cache for capture: brightness encodes heat (40 = cool, 255 = hot).
+// No colour contamination — R channel of the rendered canvas is a pure heat map.
+function buildGrayGradCache(ctx, scale = 1.0) {
+    const cache = new Array(GRAD_STEPS);
+    for (let i = 0; i < GRAD_STEPS; i++) {
+        const heat  = i / (GRAD_STEPS - 1);
+        const bri   = Math.round(30 + heat * 180); // 30 (cool) → 210 (hot) — headroom before 255
+        const alpha = (0.04 + heat * 0.06) * scale;  // scaled deposit per particle
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+        g.addColorStop(0,   `rgba(${bri},${bri},${bri},${alpha.toFixed(3)})`);
+        g.addColorStop(0.4, `rgba(${bri},${bri},${bri},${(alpha * 0.5).toFixed(3)})`);
+        g.addColorStop(1,   'rgba(0,0,0,0)');
+        cache[i] = g;
+    }
+    return cache;
+}
+
+// Interpolate FIRE_PALETTE at normalised heat t ∈ [0,1] → [r,g,b,a] (0–255 each)
+function paletteLookup(t) {
+    let lo = FIRE_PALETTE[0], hi = FIRE_PALETTE[FIRE_PALETTE.length - 1];
+    for (let i = 0; i < FIRE_PALETTE.length - 1; i++) {
+        if (t >= FIRE_PALETTE[i].t && t <= FIRE_PALETTE[i+1].t) {
+            lo = FIRE_PALETTE[i]; hi = FIRE_PALETTE[i+1]; break;
+        }
+    }
+    const f = hi.t === lo.t ? 1 : (t - lo.t) / (hi.t - lo.t);
+    return [
+        Math.round(lo.r + f * (hi.r - lo.r)),
+        Math.round(lo.g + f * (hi.g - lo.g)),
+        Math.round(lo.b + f * (hi.b - lo.b)),
+        Math.round(lo.a + f * (hi.a - lo.a)),
+    ];
+}
+
+function pickGrad(cache, heat) {
+    return cache[Math.min(GRAD_STEPS - 1, (heat * (GRAD_STEPS - 1)) | 0)];
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PARTICLE SIMULATION STATE
+// ═══════════════════════════════════════════════════════════════════════
+let particles = [];
+let heatGrid  = new Float32Array(GRID_COLS * GRID_ROWS);
+let windTime  = 0;
+let spawnPoints = []; // user-placed; falls back to PC.emitterX/Y when empty
+
+function spawnParticle(p) {
+    let ex, ey;
+    if (spawnPoints.length > 0) {
+        const sp = spawnPoints[(Math.random() * spawnPoints.length) | 0];
+        ex = sp.x; ey = sp.y;
+    } else {
+        ex = PC.emitterX * PREVIEW_W;
+        ey = PC.emitterY * PREVIEW_H;
+    }
+    // Box-Muller Gaussian — most particles cluster at centre, tail off toward edges
+    const u1 = Math.random() || 1e-10, u2 = Math.random();
+    const mag  = Math.sqrt(-2 * Math.log(u1));
+    const gx   = mag * Math.cos(2 * Math.PI * u2); // independent x sample
+    const gy   = mag * Math.sin(2 * Math.PI * u2); // independent y sample
+    p.x  = ex + gx * (PC.spawnRadius * 0.25);
+    p.y  = ey + gy * (PC.spawnRadius * 0.25) * 0.4;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = PC.baseSpeed * (0.2 + Math.pow(Math.random(), 1.4) * 0.8);
+    p.vx        = Math.cos(angle) * (1 - PC.upwardBias) * speed;
+    p.vy        = (Math.sin(angle) * (1 - PC.upwardBias) - PC.upwardBias) * speed;
+    p.heat      = PC.initialHeat * (0.3 + Math.random() * 0.7);
+    p.decayRate = 0.004 + Math.random() * 0.008;
+    p.size      = PC.maxSize * (0.5 + Math.random() * 0.5);
+    return p;
+}
+
+function syncPool() {
+    while (particles.length < PC.maxParticles) {
+        const p = spawnParticle({ x:0, y:0, vx:0, vy:0, heat:0, decayRate:0, size:0 });
+        p.heat = Math.random();
+        particles.push(p);
+    }
+    if (particles.length > PC.maxParticles) particles.length = PC.maxParticles;
+}
+
+function gridIdx(px, py) {
+    const col = Math.floor((px / PREVIEW_W) * GRID_COLS);
+    const row = Math.floor((py / PREVIEW_H) * GRID_ROWS);
+    return (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS) ? -1 : row * GRID_COLS + col;
+}
+
+function buildHeatGrid() {
+    for (let i = 0; i < heatGrid.length; i++) heatGrid[i] *= 0.7;
+    for (const p of particles) {
+        const idx = gridIdx(p.x, p.y);
+        if (idx !== -1) heatGrid[idx] += p.heat;
+    }
+}
+
+function sampleHeatGrid(px, py) {
+    let sum = 0, count = 0;
+    const col = Math.floor((px / PREVIEW_W) * GRID_COLS);
+    const row = Math.floor((py / PREVIEW_H) * GRID_ROWS);
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const c = col+dc, r = row+dr;
+        if (c >= 0 && c < GRID_COLS && r >= 0 && r < GRID_ROWS) {
+            sum += heatGrid[r * GRID_COLS + c]; count++;
+        }
+    }
+    return count > 0 ? Math.min(1, (sum / count) / 10) : 0;
+}
+
+// One simulation tick rendered onto ctx using the given gradient cache
+function tick(ctx, gradCache, dt, transparent = false) {
+    const ex = PC.emitterX * PREVIEW_W;
+    const ey = PC.emitterY * PREVIEW_H;
+
+    // Fade: black fill for live preview, alpha-erasure for capture
+    ctx.globalCompositeOperation = transparent ? 'destination-out' : 'source-over';
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(0, 0, PREVIEW_W, PREVIEW_H);
+
+    buildHeatGrid();
+    ctx.globalCompositeOperation = 'screen';
+
+    for (const p of particles) {
+        const kickAngle = Math.random() * Math.PI * 2;
+        const kickMag   = Math.random() * Math.random() * PC.turbulence * p.heat;
+        p.vx += Math.cos(kickAngle) * kickMag * dt;
+        p.vy += Math.sin(kickAngle) * kickMag * dt;
+        p.vy += (PC.gravity - PC.buoyancy * p.heat) * dt;
+        p.vx += PC.wind * WIND_SCALE * dt;
+        p.vx *= 0.992; p.vy *= 0.997;
+        p.x  += p.vx * dt;
+        p.y  += p.vy * dt;
+
+        const nh = sampleHeatGrid(p.x, p.y);
+        const dm = 1 - PC.heatRetention * (nh * 2 - 1);
+        p.heat -= p.decayRate * Math.max(0.1, dm) * dt;
+        if (p.heat <= 0) { spawnParticle(p); continue; }
+
+        const radius = (PC.minSize + (PC.maxSize - PC.minSize) * p.heat) * (p.size / PC.maxSize);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(radius, radius);
+        ctx.fillStyle = pickGrad(gradCache, p.heat);
+        ctx.beginPath();
+        ctx.arc(0, 0, 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    windTime += 0.016 * dt;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+const particleCanvas  = document.getElementById('particleCanvas');
+const pCtx            = particleCanvas.getContext('2d');
+const selectionCanvas = document.getElementById('selectionCanvas');
+const selCtx          = selectionCanvas.getContext('2d');
+
+let previewGrad      = buildGradCache(pCtx);
+let grayAlphaScale    = 1.0;
+let previewGrayGrad   = buildGrayGradCache(pCtx, grayAlphaScale);
+syncPool();
+
+// Populate scheme dropdown + handle swaps. Rebuilds the live-preview
+// colour cache; output uses FIRE_PALETTE directly at capture time.
+(function() {
+    const sel = document.getElementById('sel-scheme');
+    for (const key in COLOR_SCHEMES) {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = COLOR_SCHEMES[key].name;
+        sel.appendChild(opt);
+    }
+    sel.addEventListener('change', () => {
+        const s = COLOR_SCHEMES[sel.value];
+        FIRE_GRAD    = s.grad;
+        FIRE_PALETTE = s.palette;
+        previewGrad  = buildGradCache(pCtx);
+        // wipe preview so the old colour doesn't linger under 'screen' blend
+        pCtx.globalCompositeOperation = 'source-over';
+        pCtx.fillStyle = '#000';
+        pCtx.fillRect(0, 0, PREVIEW_W, PREVIEW_H);
+    });
+})();
+
+let prevLast = 0;
+function previewLoop(ts) {
+    requestAnimationFrame(previewLoop);
+    const dt       = Math.min((ts - prevLast) / 16.67, 3);
+    prevLast = ts;
+    const greyMode = document.getElementById('chk-grey').checked;
+    tick(pCtx, greyMode ? previewGrayGrad : previewGrad, dt);
+}
+requestAnimationFrame(previewLoop);
+
+// ═══════════════════════════════════════════════════════════════════════
+// REGION SELECTION
+// ═══════════════════════════════════════════════════════════════════════
+let selStart = null, selEnd = null, isDragging = false, selRect = null;
+const selStatusEl = document.getElementById('selStatus');
+
+function canvasPos(e) {
+    const rect   = particleCanvas.getBoundingClientRect();
+    const scaleX = PREVIEW_W / rect.width;
+    const scaleY = PREVIEW_H / rect.height;
+    const src    = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+}
+
+function drawSel() {
+    selCtx.clearRect(0, 0, PREVIEW_W, PREVIEW_H);
+
+    // Draw spawn point markers
+    spawnPoints.forEach(sp => {
+        selCtx.save();
+        selCtx.strokeStyle = '#ffe040';
+        selCtx.fillStyle   = 'rgba(255,220,0,0.55)';
+        selCtx.lineWidth   = 1.5;
+        selCtx.beginPath();
+        selCtx.arc(sp.x, sp.y, 5, 0, Math.PI * 2);
+        selCtx.fill();
+        selCtx.stroke();
+        selCtx.beginPath();
+        selCtx.moveTo(sp.x - 8, sp.y); selCtx.lineTo(sp.x + 8, sp.y);
+        selCtx.moveTo(sp.x, sp.y - 8); selCtx.lineTo(sp.x, sp.y + 8);
+        selCtx.stroke();
+        selCtx.restore();
+    });
+
+    if (!selStart || !selEnd) return;
+    const x = Math.min(selStart.x, selEnd.x);
+    const y = Math.min(selStart.y, selEnd.y);
+    const w = Math.abs(selEnd.x - selStart.x);
+    const h = Math.abs(selEnd.y - selStart.y);
+    if (w < 2 || h < 2) return;
+    selRect = { x, y, w, h };
+    selCtx.save();
+    selCtx.strokeStyle = 'rgba(255,200,50,0.9)';
+    selCtx.lineWidth = 1.5;
+    selCtx.setLineDash([4, 3]);
+    selCtx.strokeRect(x + 0.5, y + 0.5, w, h);
+    selCtx.fillStyle = 'rgba(255,150,0,0.08)';
+    selCtx.fillRect(x, y, w, h);
+    selCtx.restore();
+    selStatusEl.textContent = `Selection: ${Math.round(w)} × ${Math.round(h)} px`;
+}
+
+let mouseDownPos = null;
+particleCanvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    mouseDownPos = canvasPos(e);
+    isDragging = true; selEnd = null;
+    selStart = mouseDownPos; drawSel();
+});
+particleCanvas.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    selEnd = canvasPos(e); drawSel();
+});
+particleCanvas.addEventListener('mouseup', e => {
+    if (e.button !== 0) return;
+    isDragging = false;
+    const pos = canvasPos(e);
+    const dx = pos.x - mouseDownPos.x, dy = pos.y - mouseDownPos.y;
+    if (Math.sqrt(dx*dx + dy*dy) < 5) {
+        // click — add spawn point
+        selStart = null; selEnd = null;
+        spawnPoints.push({ x: Math.round(pos.x), y: Math.round(pos.y) });
+        drawSel();
+        return;
+    }
+    selEnd = pos; drawSel();
+    if (!selRect || selRect.w < 4 || selRect.h < 4) {
+        selRect = null;
+        drawSel();
+        selStatusEl.textContent = 'No selection — full canvas will be captured';
+    }
+});
+particleCanvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (spawnPoints.length === 0) return;
+    const pos = canvasPos(e);
+    let nearestIdx = 0, nearestDist = Infinity;
+    spawnPoints.forEach((sp, i) => {
+        const d = Math.hypot(sp.x - pos.x, sp.y - pos.y);
+        if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    });
+    spawnPoints.splice(nearestIdx, 1);
+    drawSel();
+});
+particleCanvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+// ═══════════════════════════════════════════════════════════════════════
+// CAPTURE & GENERATE
+// ═══════════════════════════════════════════════════════════════════════
+const ssCanvas = document.getElementById('spritesheetCanvas');
+const ssCtx    = ssCanvas.getContext('2d');
+const pbCanvas = document.getElementById('playbackCanvas');
+const pbCtx    = pbCanvas.getContext('2d');
+
+let finalFrames = 0, animRunning = false, curFrame = 0, pbLast = 0;
+let fpsInterval = 1000 / 12;
+
+function captureAndGenerate() {
+    const FW = Math.max(8, parseInt(document.getElementById('inputW').value) || 32);
+    const FH = Math.max(8, parseInt(document.getElementById('inputH').value) || 32);
+    const src = (selRect && selRect.w >= 4 && selRect.h >= 4)
+        ? selRect
+        : { x: 0, y: 0, w: PREVIEW_W, h: PREVIEW_H };
+
+    document.getElementById('statusText').textContent = 'Capturing frames…';
+
+    // Single offscreen canvas — opaque black background, grayscale particles
+    // R channel of each pixel = heat intensity (0=no fire, 255=hottest)
+    const off     = document.createElement('canvas');
+    off.width     = PREVIEW_W; off.height = PREVIEW_H;
+    const offCtx  = off.getContext('2d');
+    const offGrad = buildGrayGradCache(offCtx, grayAlphaScale);
+
+    // Scaled canvas: downsample capture region → FW × FH
+    const sc    = document.createElement('canvas');
+    sc.width = FW; sc.height = FH;
+    const scCtx = sc.getContext('2d');
+    scCtx.imageSmoothingEnabled = true;
+    scCtx.imageSmoothingQuality = 'high';
+
+    // Fresh particle state for a deterministic capture run
+    particles = [];
+    heatGrid  = new Float32Array(GRID_COLS * GRID_ROWS);
+    syncPool();
+    particles.forEach(p => { p.heat = Math.random(); });
+
+    const tpf = Math.max(1, parseInt(document.getElementById('sl-tpf').value) || 3);
+
+    // Warm up until grayscale heat map reaches steady state
+    for (let i = 0; i < 80 * tpf; i++) tick(offCtx, offGrad, 1.0);
+
+    // ── Capture: R channel = heat value (0–255), map through FIRE_PALETTE ──
+    // R=0  → black background → transparent in output, no halo possible
+    // R>0  → fire present    → palette lookup gives fire RGBA
+    const frameCache = [];
+    for (let f = 0; f < SIM_FRAMES; f++) {
+        for (let t = 0; t < tpf; t++) tick(offCtx, offGrad, 1.0);
+
+        scCtx.clearRect(0, 0, FW, FH);
+        scCtx.drawImage(off, src.x, src.y, src.w, src.h, 0, 0, FW, FH);
+        const px = scCtx.getImageData(0, 0, FW, FH).data;
+
+        const frame = new Uint8ClampedArray(FW * FH * 4);
+        for (let i = 0; i < FW * FH; i++) {
+            const gray = px[i*4]; // R = G = B (grayscale), canvas is always opaque
+            if (gray < 1) continue;
+            const [r, g, b, a] = paletteLookup(gray / 255);
+            frame[i*4]   = r;
+            frame[i*4+1] = g;
+            frame[i*4+2] = b;
+            frame[i*4+3] = a;
+        }
+        frameCache.push(frame);
+    }
+
+    // Crossfade blend for seamless loop — blend all 4 RGBA channels
+    for (let f = 0; f < BLEND_WINDOW; f++) {
+        const endIdx = (SIM_FRAMES - BLEND_WINDOW) + f;
+        const weight = f / BLEND_WINDOW;
+        const dst = frameCache[f], src2 = frameCache[endIdx];
+        for (let i = 0; i < FW * FH * 4; i++) {
+            dst[i] = Math.round(src2[i] * (1 - weight) + dst[i] * weight);
+        }
+    }
+
+    // 32 active frames, skip every 2nd → 16 output frames
+    const activeFrames = SIM_FRAMES - BLEND_WINDOW;
+
+    // Resize output canvases
+    ssCanvas.width  = FW * 16;
+    ssCanvas.height = FH;
+    pbCanvas.width  = FW;
+    pbCanvas.height = FH;
+    const ps = Math.min(8, Math.max(2, Math.round(256 / Math.max(FW, FH))));
+    pbCanvas.style.width  = (FW * ps) + 'px';
+    pbCanvas.style.height = (FH * ps) + 'px';
+
+    // Paint spritesheet
+    ssCtx.clearRect(0, 0, ssCanvas.width, ssCanvas.height);
+    let col = 0;
+    for (let f = 0; f < activeFrames; f += 2) {
+        ssCtx.putImageData(new ImageData(frameCache[f], FW, FH), col * FW, 0);
+        col++;
+    }
+    finalFrames = col;
+    curFrame = 0;
+    document.getElementById('statusText').textContent =
+        `Done — ${finalFrames} frames at ${FW}×${FH} px`;
+
+    if (!animRunning) { animRunning = true; requestAnimationFrame(pbLoop); }
+}
+
+document.getElementById('btnCapture').addEventListener('click', captureAndGenerate);
+
+// ═══════════════════════════════════════════════════════════════════════
+// PLAYBACK
+// ═══════════════════════════════════════════════════════════════════════
+function pbLoop(ts) {
+    requestAnimationFrame(pbLoop);
+    if (!finalFrames) return;
+    const elapsed = ts - pbLast;
+    if (elapsed > fpsInterval) {
+        pbLast = ts - (elapsed % fpsInterval);
+        const fw = pbCanvas.width, fh = pbCanvas.height;
+        pbCtx.clearRect(0, 0, fw, fh);
+        pbCtx.drawImage(ssCanvas, curFrame * fw, 0, fw, fh, 0, 0, fw, fh);
+        curFrame = (curFrame + 1) % finalFrames;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SLIDER WIRING
+// ═══════════════════════════════════════════════════════════════════════
+function wire(id, valId, key, fmt) {
+    const sl = document.getElementById(id);
+    const vl = document.getElementById(valId);
+    sl.addEventListener('input', () => {
+        PC[key] = parseFloat(sl.value);
+        vl.textContent = fmt(PC[key]);
+        if (key === 'maxParticles') syncPool();
+    });
+    vl.textContent = fmt(parseFloat(sl.value));
+}
+wire('sl-wind',    'v-wind',    'wind',          v => v.toFixed(2));
+wire('sl-turb',    'v-turb',    'turbulence',    v => v.toFixed(3));
+wire('sl-part',    'v-part',    'maxParticles',  v => v.toFixed(0));
+wire('sl-minsize', 'v-minsize', 'minSize',       v => v.toFixed(1));
+wire('sl-maxsize', 'v-maxsize', 'maxSize',       v => v.toFixed(0));
+wire('sl-heat',    'v-heat',    'initialHeat',   v => v.toFixed(2));
+wire('sl-spawn',   'v-spawn',   'spawnRadius',   v => v.toFixed(0));
+wire('sl-bias',    'v-bias',    'upwardBias',    v => v.toFixed(2));
+wire('sl-ret',     'v-ret',     'heatRetention', v => v.toFixed(2));
+
+document.getElementById('sl-fps').addEventListener('input', function() {
+    fpsInterval = 1000 / parseInt(this.value);
+    document.getElementById('v-fps').textContent = this.value;
+});
+
+document.getElementById('sl-tpf').addEventListener('input', function() {
+    document.getElementById('v-tpf').textContent = this.value;
+});
+
+document.getElementById('sl-intensity').addEventListener('input', function() {
+    grayAlphaScale = parseInt(this.value) / 100;
+    document.getElementById('v-intensity').textContent = this.value + '%';
+    previewGrayGrad = buildGrayGradCache(pCtx, grayAlphaScale);
+});
+
+document.querySelectorAll('.bg-swatch').forEach(sw => {
+    sw.addEventListener('click', function() {
+        document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+        pbCanvas.style.background = this.dataset.bg;
+    });
+});
+</script>
+</body>
+</html>

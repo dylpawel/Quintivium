@@ -1,0 +1,5 @@
+[
+  { "id": "world", "name": "World",  "path": "../tilesets/world/tileset.json" },
+  { "id": "house", "name": "House",  "path": "../tilesets/house/tileset.json" },
+  { "id": "cave", "name": "Cave",  "path": "../tilesets/cave/tileset.json" }
+]

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Fence Shadow Definition</title>
+	<style>
+		body { margin: 0; padding: 20px; background: #1a1a1a; color: #e8e8e8; font-family: "Segoe UI", sans-serif; }
+		h1   { margin: 0 0 6px; font-size: 20px; }
+		p    { margin: 0 0 16px; color: #aaa; font-size: 13px; }
+
+		.section-label {
+			font-size: 12px; font-weight: bold; text-transform: uppercase;
+			color: #7dc8ff; margin-bottom: 6px; letter-spacing: .04em;
+		}
+
+		#selector-wrap {
+			background: #262626; border: 1px solid #404040;
+			border-radius: 6px; padding: 10px; margin-bottom: 16px;
+			display: inline-flex; flex-direction: column; gap: 8px;
+		}
+		#selector-row { display: flex; align-items: center; gap: 16px; }
+		#selectorCanvas {
+			/* intrinsic T×T, displayed 6× */
+			width: 192px; height: 192px;
+			image-rendering: pixelated; image-rendering: crisp-edges;
+			cursor: crosshair; border: 1px solid #555;
+		}
+		#pivotInfo { font-family: Consolas, monospace; font-size: 13px; color: #ffd080; }
+
+		.slider-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+		.slider-row label { width: 50px; color: #aaa; }
+		.slider-row input[type=range] { width: 160px; accent-color: #7dc8ff; }
+		.slider-row .val { font-family: Consolas, monospace; color: #ffd080; width: 40px; }
+
+		#grid { display: flex; flex-wrap: wrap; gap: 10px; }
+		.tile-card {
+			background: #262626; border: 1px solid #404040;
+			border-radius: 6px; padding: 6px;
+		}
+		.tile-label {
+			font-family: Consolas, monospace; font-size: 11px;
+			color: #7dc8ff; margin-bottom: 4px; text-align: center;
+		}
+		canvas.output {
+			display: block;
+			width: 192px; height: 192px;
+			image-rendering: pixelated; image-rendering: crisp-edges;
+			background-image:
+				linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+				linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+				linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+				linear-gradient(-45deg, transparent 75%, #333 75%);
+			background-size: 8px 8px;
+			background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+			border: 1px solid #444;
+		}
+		#status { margin-top: 14px; font-size: 13px; color: #8ecf8e; }
+
+		#source-wrap {
+			background: #262626; border: 1px solid #404040;
+			border-radius: 6px; padding: 10px; margin-bottom: 16px;
+			display: inline-flex; flex-direction: column; gap: 6px;
+		}
+		#drop-zone {
+			border: 2px dashed #555; border-radius: 4px;
+			padding: 8px 20px; text-align: center; font-size: 13px; color: #888;
+			cursor: pointer; transition: border-color .15s, color .15s;
+			min-width: 280px;
+		}
+		#drop-zone.drag-over { border-color: #7dc8ff; color: #7dc8ff; }
+		#source-name { font-family: Consolas, monospace; font-size: 11px; color: #666; }
+	</style>
+</head>
+<body>
+<h1>Fence Shadow Definition</h1>
+<p>fence_wood.png — 16 tiles, 32 px each. Bits: 8=LEFT 4=RIGHT 2=TOP 1=BOTTOM. Shadow on horizontal IDs: 4, 8, 12.</p>
+
+<div id="source-wrap">
+	<div class="section-label">Source image</div>
+	<label id="drop-zone" for="fileInput">
+		Drop image here or <span style="color:#7dc8ff;text-decoration:underline">browse</span>
+		<input type="file" id="fileInput" accept="image/*" style="display:none">
+	</label>
+	<div id="source-name">fence_wood.png (default)</div>
+</div>
+
+<div id="selector-wrap">
+	<div class="section-label">Click tile to set ground point (shadow pivot)</div>
+	<div id="selector-row">
+		<canvas id="selectorCanvas" width="32" height="32"></canvas>
+		<div id="pivotInfo">Ground point: (–, –)</div>
+	</div>
+	<div class="slider-row">
+		<label>Scale</label>
+		<input type="range" id="scaleSlider" min="0.1" max="4" step="0.1" value="0.8">
+		<span class="val" id="scaleVal">0.8</span>
+	</div>
+	<div class="slider-row">
+		<label>Skew</label>
+		<input type="range" id="skewSlider" min="-3" max="3" step="0.1" value="-0.7">
+		<span class="val" id="skewVal">-0.7</span>
+	</div>
+</div>
+
+<div id="grid"></div>
+<div id="status">Loading…</div>
+
+<script>
+	const TILESET   = "../RpgApi/wwwroot/tilesets/world/fence_wood.png";
+	const T         = 32;   // source tile size px
+	const CW        = 96;   // output canvas width  (3 × T)
+	const CH        = 96;   // output canvas height (3 × T)
+	const OX        = T;    // tile origin X in output canvas (centre column)
+	const OY        = T;    // tile origin Y in output canvas (centre row)
+	const REF_ID     = 12;  // tile used in the selector (LEFT+RIGHT = good reference)
+	// Any tile with LEFT (bit 8) or RIGHT (bit 4) connection gets a horizontal shadow
+
+
+	// Ground point within the tile — default: bottom-centre
+	let groundX = 15;
+	let groundY = 23;
+	let shadowScale = 0.8;
+	let shadowSkew  = -0.7;
+
+	const statusEl     = document.getElementById("status");
+	const grid         = document.getElementById("grid");
+	const selectorCanvas = document.getElementById("selectorCanvas");
+	const pivotInfo    = document.getElementById("pivotInfo");
+
+	// ── image load ────────────────────────────────────────────────────────────
+	const img = new Image();
+	img.onload  = () => { buildSelector(); redraw(); };
+	img.onerror = () => { statusEl.textContent = "ERROR: cannot load " + TILESET; statusEl.style.color = "#f88"; };
+	img.src = TILESET;
+
+	// ── file picker / drag-and-drop ───────────────────────────────────────────
+	function loadFile(file) {
+		if (!file || !file.type.startsWith("image/")) return;
+		document.getElementById("source-name").textContent = file.name;
+		const url = URL.createObjectURL(file);
+		img.onload  = () => { URL.revokeObjectURL(url); buildSelector(); redraw(); };
+		img.onerror = () => { statusEl.textContent = "ERROR loading " + file.name; statusEl.style.color = "#f88"; };
+		img.src = url;
+	}
+
+	const dropZone = document.getElementById("drop-zone");
+	const fileInput = document.getElementById("fileInput");
+
+	fileInput.addEventListener("change", () => { loadFile(fileInput.files[0]); fileInput.value = ""; });
+
+	dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+	dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+	dropZone.addEventListener("drop", e => {
+		e.preventDefault();
+		dropZone.classList.remove("drag-over");
+		loadFile(e.dataTransfer.files[0]);
+	});
+
+	// ── selector click ────────────────────────────────────────────────────────
+	document.getElementById("scaleSlider").addEventListener("input", e => {
+		shadowScale = parseFloat(e.target.value);
+		document.getElementById("scaleVal").textContent = shadowScale.toFixed(1);
+		redraw();
+	});
+	document.getElementById("skewSlider").addEventListener("input", e => {
+		shadowSkew = parseFloat(e.target.value);
+		document.getElementById("skewVal").textContent = shadowSkew.toFixed(1);
+		redraw();
+	});
+
+	selectorCanvas.addEventListener("click", e => {
+		const rect = selectorCanvas.getBoundingClientRect();
+		// CSS 192×192, intrinsic T×T  →  scale = T / cssSize
+		groundX = Math.max(0, Math.min(T - 1, Math.floor((e.clientX - rect.left)  * T / rect.width)));
+		groundY = Math.max(0, Math.min(T - 1, Math.floor((e.clientY - rect.top)   * T / rect.height)));
+		buildSelector();
+		redraw();
+	});
+
+	// ── draw selector canvas (reference tile + crosshair) ─────────────────────
+	function buildSelector() {
+		const cols = Math.floor(img.naturalWidth / T);
+		const sx   = (REF_ID % cols) * T;
+		const sy   = Math.floor(REF_ID / cols) * T;
+
+		const ctx = selectorCanvas.getContext("2d");
+		ctx.clearRect(0, 0, T, T);
+		ctx.drawImage(img, sx, sy, T, T, 0, 0, T, T);
+
+		// Crosshair at ground point
+		ctx.strokeStyle = "rgba(255, 80, 80, 0.9)";
+		ctx.lineWidth   = 0.5;
+		ctx.beginPath();
+		ctx.moveTo(groundX + 0.5, 0);
+		ctx.lineTo(groundX + 0.5, T);
+		ctx.moveTo(0,  groundY + 0.5);
+		ctx.lineTo(T, groundY + 0.5);
+		ctx.stroke();
+
+		// Dot
+		ctx.fillStyle = "rgba(255, 80, 80, 1)";
+		ctx.fillRect(groundX, groundY, 1, 1);
+
+		pivotInfo.textContent = "Ground point: (" + groundX + ", " + groundY + ")";
+	}
+
+	// ── redraw all tile cards ─────────────────────────────────────────────────
+	function redraw() {
+		grid.innerHTML = "";
+		const cols       = Math.floor(img.naturalWidth  / T);
+		const rows       = Math.floor(img.naturalHeight / T);
+		const totalTiles = Math.min(16, cols * rows);
+
+		// Pre-extract tile 8 (LEFT) — mask for LEFT-only and TOP shadows
+		const tile8 = document.createElement("canvas");
+		tile8.width = tile8.height = T;
+		tile8.getContext("2d").drawImage(img, (8 % cols) * T, Math.floor(8 / cols) * T, T, T, 0, 0, T, T);
+
+		// Pre-extract tile 4 (RIGHT) — mask for RIGHT-only and BOTTOM shadows
+		const tile4 = document.createElement("canvas");
+		tile4.width = tile4.height = T;
+		tile4.getContext("2d").drawImage(img, (4 % cols) * T, Math.floor(4 / cols) * T, T, T, 0, 0, T, T);
+
+		// Pre-extract tile 12 (LEFT+RIGHT) — mask for tiles with both connections
+		const tile12 = document.createElement("canvas");
+		tile12.width = tile12.height = T;
+		tile12.getContext("2d").drawImage(img, (12 % cols) * T, Math.floor(12 / cols) * T, T, T, 0, 0, T, T);
+
+		const mkMask = src => {
+			const m = document.createElement("canvas"); m.width = m.height = T;
+			const mc = m.getContext("2d"); mc.drawImage(src, 0, 0);
+			mc.globalCompositeOperation = "source-in"; mc.fillStyle = "#000"; mc.fillRect(0, 0, T, T);
+			return m;
+		};
+
+		for (let id = 0; id < totalTiles; id++) {
+			const sx = (id % cols) * T;
+			const sy = Math.floor(id / cols) * T;
+
+			// Extract tile
+			const tile = document.createElement("canvas");
+			tile.width = tile.height = T;
+			tile.getContext("2d").drawImage(img, sx, sy, T, T, 0, 0, T, T);
+
+			// Output canvas
+			const out = document.createElement("canvas");
+			out.width  = CW;
+			out.height = CH;
+			out.className = "output";
+			const ctx = out.getContext("2d");
+
+			// LEFT/RIGHT shadow: tile12 for both bits, tile4 for RIGHT-only, tile8 for LEFT-only
+			if ((id & 0b1100) !== 0) {
+				const maskSrc = (id & 0b1100) === 0b1100 ? tile12 : (id & 0b0100) ? tile4 : tile8;
+				const mask = mkMask(maskSrc);
+				ctx.save();
+				ctx.translate(OX + groundX, OY + groundY);
+				ctx.scale(1, -shadowScale);
+				ctx.transform(1, 0, shadowSkew, 1, 0, 0);
+				ctx.drawImage(mask, -groundX, -groundY);
+				ctx.restore();
+			}
+
+			// TOP shadow: tile 8 (LEFT) mask reflected by y=-x (math coords) = y=x (canvas coords) around pivot
+			if ((id & 0b0010) !== 0) {
+				const mask = mkMask(tile8);
+				const px = OX + groundX, py = OY + groundY;
+				ctx.save();
+				ctx.transform(0, 1, 1, 0, px - py, py - px); // y=x reflection in canvas = y=-x in math coords
+				ctx.translate(px, py);
+				ctx.scale(1, -shadowScale);
+				ctx.transform(1, 0, shadowSkew, 1, 0, 0);
+				ctx.drawImage(mask, -groundX, -groundY);
+				ctx.restore();
+			}
+
+
+
+			// BOTTOM shadow: tile 4 (RIGHT) mask reflected by y=-x (math) = y=x (canvas) around pivot
+			if ((id & 0b0001) !== 0) {
+				const mask = mkMask(tile4);
+				const px = OX + groundX, py = OY + groundY;
+				ctx.save();
+				ctx.transform(0, 1, 1, 0, px - py, py - px);
+				ctx.translate(px, py);
+				ctx.scale(1, -shadowScale);
+				ctx.transform(1, 0, shadowSkew, 1, 0, 0);
+				ctx.drawImage(mask, -groundX, -groundY);
+				ctx.restore();
+			}
+
+			// Source tile
+			ctx.drawImage(tile, OX, OY);
+
+			// Pivot dot indicator
+			ctx.fillStyle = "rgba(255, 80, 80, 0.85)";
+			ctx.fillRect(OX + groundX, OY + groundY, 1, 1);
+
+			// Card
+			const label = document.createElement("div");
+			label.className = "tile-label";
+			label.textContent = id + "  " + id.toString(2).padStart(4, "0");
+
+			const card = document.createElement("div");
+			card.className = "tile-card";
+			card.appendChild(label);
+			card.appendChild(out);
+			grid.appendChild(card);
+		}
+
+		statusEl.textContent = "Rendered " + Math.min(16, Math.floor(img.naturalWidth/T) * Math.floor(img.naturalHeight/T)) + " tiles.";
+	}
+</script>
+</body>
+</html>

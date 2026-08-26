@@ -1,0 +1,7 @@
+[
+  {
+    "question": "Podróżnik przeszedł w 3 dni łącznie 126 km. Każdego dnia pokonał tę samą odległość. Ile kilometrów szedł dziennie?",
+    "answers": ["42"],
+    "hint": "126 ÷ 3 = ?"
+  }
+]

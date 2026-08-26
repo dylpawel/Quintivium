@@ -1,0 +1,131 @@
+[
+  {
+    "id": "on_map_enter",
+    "on": "map_enter",
+    "once": true,
+    "actions": [
+      { "type": "spawn_monster", "monster": "Skeleton", "x": 20, "y": 12 },
+      { "type": "spawn_monster", "monster": "Skeleton", "x": 14, "y": 10 },
+      { "type": "spawn_monster", "monster": "Rogue", "x": 20, "y": 13 },
+      { "type": "spawn_monster", "monster": "Crab", "x": 9, "y": 5, "id": "crab_1" },
+      { "type": "spawn_monster", "monster": "Crab", "x": 14, "y": 6, "id": "crab_2" },
+      { "type": "spawn_monster", "monster": "Crab", "x": 7, "y": 14, "id": "crab_3" },
+      { "type": "spawn_monster", "monster": "Gorilla", "x": 8, "y": 12, "id": "gorilla_1" },
+      { "type": "spawn_item", "item_id": "gold", "x": 11, "y": 7, "qty": 5 },
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 17, "y": 17 },
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 24, "y": 15 },
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 26, "y": 12 },
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 17, "y": 16 },
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 23, "y": 15 },
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 25, "y": 12 },
+      { "type": "spawn_item", "item_id": "Thick Chitin", "x": 5, "y": 14 },
+      { "type": "show_dialog", "text": "Co się dzieje? Gdzie ja jestem?" },
+      { "type": "show_dialog", "text":"Muszę się stąd wydostać!" }
+    ]
+  },
+  {
+    "id": "crab_1_defeated",
+    "on": "monster_defeated",
+    "condition": "id == 'crab_1'",
+    "actions": [
+      { "type": "give_item", "item_id": "Oak Plank", "qty": 1 },
+      { "type": "show_dialog", "text": "Uff, był twardy, ale dobrze, że to nie był japoński krab pajęczy. Tamtym olbrzymom z głębin odnóża rosną nawet na cztery metry szerokości... Przeciwko takiemu potworowi mój stary kordelas wyglądałby jak wykałaczka." },
+      { "type": "show_message", "text": "Znalazłem deskę!", "item": "Oak Plank" }
+    ]
+  },
+  {
+    "id": "crab_2_defeated",
+    "on": "monster_defeated",
+    "condition": "id == 'crab_2'",
+    "actions": [
+      { "type": "give_item", "item_id": "Oak Plank", "qty": 1 },
+      { "type": "show_dialog", "text": "Wygląda na to, że ten stawonóg niedawno przeszedł wylinkę. Szkoda, że nie trafiłem na niego zaraz po zrzuceniu starego pancerza – wtedy ich ciała są miękkie jak guma i bezbronne. Ten zdążył już całkiem nieźle stwardnieć..." },
+      { "type": "show_message", "text": "Znalazłem deskę!", "item": "Oak Plank" }
+    ]
+  },
+  {
+    "id": "crab_3_defeated",
+    "on": "monster_defeated",
+    "condition": "id == 'crab_3'",
+    "actions": [
+      { "type": "give_item", "item_id": "Oak Plank", "qty": 1 },
+      { "type": "show_dialog", "text": "Ten spryciarz obkleił swój pancerz glonami i gąbkami ze starych desek. Kraby-dekoratorzy robią dokładnie to samo na rafach, tworząc żywy kamuflaż. Ten tutaj pomylił jednak rafę z wrakiem mojego statku." },
+      { "type": "show_message", "text": "Znalazłem deskę!", "item": "Oak Plank" }
+    ]
+  },
+  {
+    "id": "gorilla_1_defeated",
+    "on": "monster_defeated",
+    "condition": "id == 'gorilla_1'",
+    "actions": [
+      { "type": "show_dialog", "text": "Miał bystre spojrzenie, prawie ludzkie... Nic dziwnego, w końcu dzielimy z nimi ponad dziewięćdziesiąt osiem procent DNA. Wolę jednak polegać na tych pozostałych dwóch procentach różnicy, bo na samą siłę mięśni nie miałbym z tym olbrzymem najmniejszych szans." },
+      { "type": "show_dialog", "text": "Ale bestia! Schował topór pod drzewem!", "give": {"Axe": 1} }
+    ]
+  },
+  {
+    "id": "more_nails_in_fireplace",
+    "on": "tile_enter",
+    "tile": { "x": 6, "y": 8 },
+    "once": true,
+    "condition": "has_item('Wrought Iron Nail', 4)",
+    "actions": [
+      { "type": "show_dialog", "text": "O! Jeszcze kilka! Wystarczyło lepiej poszukać!", "give": {"Wrought Iron Nail": 2} }
+    ]
+  },
+  {
+    "id": "strange_pumice",
+    "on": "tile_enter",
+    "tile": { "x": 3, "y": 11 },
+    "condition": "!flag(pumice_lifted)",
+    "actions": [
+      { "type": "show_choice", "text": "Zaraz... ten kamień jest dziwnie lekki i pełen małych pęcherzyków. To pumeks – zastyga tak szybko podczas wybuchu wulkanu, że uwięzione w nim gazy tworzą z niego wręcz gąbkę. To jedyna skała na świecie, która potrafi unosić się na wodzie jak drewno. Czyżby na tej wyspie był kiedyś czynny wulkan?", "choices": [
+        { "label": "Zmykam stąd!" },
+        { "label": "A gdyby go podnieść?", "actions": [
+          { "type": "show_dialog", "text": "Wszędzie te skorupiaki!" },
+          { "type": "start_combat", "enemy_id": "Crab" },
+          { "type": "show_dialog", "text": "Zatrzymaj się, maluchu! Oczywiście, musiał ewakuować się bokiem. Zastanawiałem się kiedyś, dlaczego kraby tak chodzą – okazuje się, że ich stawy w odnóżach zginają się tylko w jednej płaszczyźnie, wzdłuż ciała. Chodzenie w bok to dla nich najszybszy i najbardziej wydajny sposób poruszania się bez plątania własnych nóg." },
+          { "type": "set_flag", "name": "pumice_lifted" }
+        ]}
+      ]}
+    ]
+  },
+  {
+    "id": "pumice_lifted_after_battle",
+    "on": "tile_enter",
+    "once": true,
+    "tile": { "x": 4, "y": 7 },
+    "actions": [
+      { "type": "show_dialog", "text": "Ten kamień ma charakterystyczny, rdzawoczerwony odcień... To ruda żelaza, najpewniej hematyt. Ten sam proces utleniania, który niszczy żelazne gwoździe na moim statku, od miliardów lat barwi skały na czerwień. Zresztą... to dokładnie ten sam tlenek żelaza nadaje naszej krwi czerwony kolor i sprawia, że Mars wygląda z daleka jak płonąca kula.", "give": { "Iron Ore": 1 }}
+    ]
+  },
+  {
+    "id": "nails_in_fireplace",
+    "on": "tile_enter",
+    "tile": { "x": 6, "y": 8 },
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "W ognisku znalazłem kilka gwoździ! Ogień ich nie spalił!", "give": {"Wrought Iron Nail": 4} }
+    ]
+  },
+  {
+    "id": "build_bridge",
+    "on": "tile_enter",
+    "tile": { "x": 14, "y": 10 },
+    "condition": "has_item('Oak Plank', 3)",
+    "actions": [
+      { "type": "show_dialog", "text": "Używasz 3 desek, aby zbudować most.", "item": "Oak Plank" },
+      { "type": "remove_item", "item_id": "Oak Plank", "qty": 3 },
+      { "type": "spawn_decoration", "asset_id": "bridge_planks", "x": 15, "y": 10 },
+      { "type": "set_flag", "name": "bridge_built" }
+    ]
+  },
+  {
+    "id": "build_bridge",
+    "on": "tile_enter",
+    "tile": { "x": 14, "y": 10 },
+    "condition": "!has_item('Oak Plank', 3) && !flag(bridge_built)",
+    "actions": [
+      { "type": "show_dialog", "text": "Przejście wydaje się dość wąskie. Gdybym tylko miał jakieś deski! Na moje oko wystarczą trzy!", "item": "Oak Plank" }
+    ]
+  }
+]

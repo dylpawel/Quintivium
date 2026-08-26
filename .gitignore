@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# dotnet
+*.swp
+*.*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+Unprocessed/
+litellm_config.yaml
+.claude/

@@ -1,0 +1,12 @@
+[
+  {
+    "question": "Forteca ma mury o obwodzie 480 metrów. Strażnicy stoją co 16 metrów. Ilu strażników stoi na murach?",
+    "answers": ["30"],
+    "hint": "480 ÷ 16 = ?"
+  },
+  {
+    "question": "Podróżnik przeszedł w 3 dni łącznie 126 km. Każdego dnia pokonał tę samą odległość. Ile kilometrów szedł dziennie?",
+    "answers": ["42"],
+    "hint": "126 ÷ 3 = ?"
+  }
+]
