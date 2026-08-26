@@ -19,5 +19,4 @@ obj/
 Thumbs.db
 
 Unprocessed/
-litellm_config.yaml
 .claude/
