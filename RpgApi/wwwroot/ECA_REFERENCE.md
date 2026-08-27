@@ -55,7 +55,7 @@ If `scriptFiles` is absent the engine falls back to loading `scripts.json` as be
 | `tile_approach` | When the player tries to step onto a tile (before moving). | `x`, `y` |
 | `tile_enter` | After the player successfully moves onto a tile. | `x`, `y` |
 | `npc_interact` | When the player interacts with (bumps into) an NPC. | `npc_id`, `x`, `y` |
-| `monster_defeated` | When the player wins a battle against a monster (walk-in or `start_combat`). Auto-increments kill counters. | `monster_type`, `x`, `y`, `kills`, `total_kills` |
+| `monster_defeated` | When the player wins a battle against a monster (walk-in or `start_combat`). Auto-increments kill counters. | `monster_type`, `monster_id`, `x`, `y`, `kills`, `total_kills` |
 
 ### Custom events
 

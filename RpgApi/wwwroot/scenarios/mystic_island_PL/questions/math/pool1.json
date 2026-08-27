@@ -1,7 +1,109 @@
 [
   {
-    "question": "Podróżnik przeszedł w 3 dni łącznie 126 km. Każdego dnia pokonał tę samą odległość. Ile kilometrów szedł dziennie?",
-    "answers": ["42"],
-    "hint": "126 ÷ 3 = ?"
+    "question": "Mali piraci szli do ładowni parami, trzymając się za ręce. Wszystkich par było $16$. Do środka zdążyło wejść $14$ dzieci. Ile par zostało jeszcze na pokładzie?",
+    "answers": ["9"],
+    "hint": "Przelicz dzieci na pary: $14$ dzieci to $7$ par ($14 : 2 = 7$). Odejmij te $7$ par od wszystkich $16$ par."
+  },
+  {
+    "question": "W skarbcu na gwoździach wisiało $10$ par skrzyżowanych pistoletów skałkowych. Rusznikarz zdjął do czyszczenia $6$ pistoletów. Ile par pistoletów zostało na ścianie?",
+    "answers": ["7"],
+    "hint": "Zamień $6$ pojedynczych pistoletów na pary ($6 : 2 = 3$ pary), a następnie odejmij je od $10$ par."
+  },
+  {
+    "question": "Nawigator przygotował do opuszczenia na wodę $8$ par wioseł do szalupy. Majtek pokładowy wrzucił do morza $6$ pojedynczych wioseł. Ile par wioseł zostało na pokładzie?",
+    "answers": ["5"],
+    "hint": "$6$ pojedynczych wioseł stanowi $3$ kompletne pary ($6 : 2 = 3$). Odejmij $3$ pary od $8$ par."
+  },
+  {
+    "question": "W zbrojowni na stojakach leżało $6$ par zakrzywionych szabli. Strażnik przyniósł ze skrzyni i dołożył na stojaki jeszcze $8$ pojedynczych szabli. Ile par szabli znajduje się teraz w zbrojowni?",
+    "answers": ["10"],
+    "hint": "Przelicz przyniesione szable na pary ($8 : 2 = 4$ pary) i dodaj je do $6$ par, które już tam były."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#2c3e50\" stroke=\"#f1c40f\" stroke-width=\"3\"/><g fill=\"#f1c40f\" stroke=\"#d35400\" stroke-width=\"1.5\"><circle cx=\"35\" cy=\"45\" r=\"9\"/><circle cx=\"55\" cy=\"45\" r=\"9\"/><circle cx=\"75\" cy=\"45\" r=\"9\"/><circle cx=\"95\" cy=\"45\" r=\"9\"/><circle cx=\"115\" cy=\"45\" r=\"9\"/><circle cx=\"135\" cy=\"45\" r=\"9\"/><circle cx=\"155\" cy=\"45\" r=\"9\"/><circle cx=\"175\" cy=\"45\" r=\"9\"/><circle cx=\"195\" cy=\"45\" r=\"9\"/><circle cx=\"215\" cy=\"45\" r=\"9\"/></g><rect x=\"25\" y=\"70\" width=\"90\" height=\"30\" rx=\"5\" fill=\"#e74c3c\"/><text x=\"70\" y=\"90\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#ffffff\">Marek</text><rect x=\"145\" y=\"70\" width=\"90\" height=\"30\" rx=\"5\" fill=\"#3498db\"/><text x=\"190\" y=\"90\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#ffffff\">Kacper</text></svg>\nKacper i Marek podzielili między siebie $10$ złotych monet. Kacper dostał o $2$ monety mniej niż Marek. Ile monet dostał Marek?",
+    "answers": ["6"],
+    "hint": "Gdyby dostali po równo, każdy miałby po $5$ monet. Skoro Marek ma o $2$ monety więcej niż Kacper, zabierz $1$ monetę Kacprowi i daj ją Markowi!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#1e272c\" stroke=\"#2ecc71\" stroke-width=\"3\"/><g fill=\"#2ecc71\" stroke=\"#117a8b\" stroke-width=\"1.5\"><circle cx=\"40\" cy=\"45\" r=\"9\"/><circle cx=\"60\" cy=\"45\" r=\"9\"/><circle cx=\"80\" cy=\"45\" r=\"9\"/><circle cx=\"100\" cy=\"45\" r=\"9\"/><circle cx=\"120\" cy=\"45\" r=\"9\"/><circle cx=\"140\" cy=\"45\" r=\"9\"/><circle cx=\"160\" cy=\"45\" r=\"9\"/><circle cx=\"180\" cy=\"45\" r=\"9\"/><circle cx=\"200\" cy=\"45\" r=\"9\"/><circle cx=\"220\" cy=\"45\" r=\"9\"/></g><text x=\"130\" y=\"90\" font-family=\"sans-serif\" font-size=\"13\" fill=\"#ffffff\" text-anchor=\"middle\">Dwa mieszki na szmaragdy</text></svg>\nDwaj piraci wyciągnęli ze skrzyni $10$ szmaragdów. Pierwszy pirat dostał o $4$ szmaragdy więcej niż drugi. Ile szmaragdów otrzymał pierwszy pirat?",
+    "answers": ["7"],
+    "hint": "Odejmij najpierw te różnicę ($4$) od $10$. Zostanie $6$ szmaragdów. Podziel je po równo po $3$. Teraz dodaj zabrane $4$ szmaragdy pierwszemu piratowi ($3 + 4$)."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#34495e\" stroke=\"#e67e22\" stroke-width=\"3\"/><g fill=\"#e67e22\" stroke=\"#d35400\" stroke-width=\"1.5\"><circle cx=\"50\" cy=\"40\" r=\"9\"/><circle cx=\"70\" cy=\"40\" r=\"9\"/><circle cx=\"90\" cy=\"40\" r=\"9\"/><circle cx=\"110\" cy=\"40\" r=\"9\"/><circle cx=\"130\" cy=\"40\" r=\"9\"/><circle cx=\"150\" cy=\"40\" r=\"9\"/><circle cx=\"170\" cy=\"40\" r=\"9\"/><circle cx=\"190\" cy=\"40\" r=\"9\"/><circle cx=\"210\" cy=\"40\" r=\"9\"/><circle cx=\"70\" cy=\"65\" r=\"9\"/><circle cx=\"90\" cy=\"65\" r=\"9\"/><circle cx=\"110\" cy=\"65\" r=\"9\"/><circle cx=\"130\" cy=\"65\" r=\"9\"/><circle cx=\"150\" cy=\"65\" r=\"9\"/><circle cx=\"170\" cy=\"65\" r=\"9\"/><circle cx=\"190\" cy=\"65\" r=\"9\"/></g><text x=\"130\" y=\"98\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#ffffff\" text-anchor=\"middle\">Razem: 16 monet</text></svg>\nStary Kapitan i jego Majtek znaleźli razem $16$ monet. Kapitan wziął o $2$ monety więcej niż Majtek. Ile monet dostał Majtek?",
+    "answers": ["7"],
+    "hint": "Gdyby podzielili monety po równo, każdy dostałby po $8$. Skoro Kapitan wziął o $2$ monety więcej, oddaj jedną jego monetę Majtkowi ($8 - 1$)."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#2c3e50\" stroke=\"#9b59b6\" stroke-width=\"3\"/><path d=\"M 40 45 L 220 45\" stroke=\"#9b59b6\" stroke-width=\"3\" stroke-dasharray=\"4\"/><circle cx=\"40\" cy=\"45\" r=\"8\" fill=\"#f1c40f\"/><circle cx=\"220\" cy=\"45\" r=\"8\" fill=\"#f1c40f\"/><text x=\"130\" y=\"35\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" fill=\"#f1c40f\" text-anchor=\"middle\">12 metrów</text><text x=\"130\" y=\"85\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#ffffff\" text-anchor=\"middle\">Chorągiewki co 3 metry</text></svg>\nNa piaszczystej ścieżce wbito chorągiewki co $3$ metry wzdłuż prostej linii. Pierwsza i ostatnia chorągiewka są oddalone od siebie o $12$ metrów. Ile wszystkich chorągiewek wbito?",
+    "answers": ["5"],
+    "hint": "Podziel całą długość przez odległość między chorągiewkami ($12 : 3 = 4$). Otrzymasz liczbę przerw. Chorągiewek jest zawsze o $1$ więcej niż przerw!"
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#16a085\" stroke=\"#f39c12\" stroke-width=\"3\"/><g fill=\"#f39c12\" stroke=\"#d35400\" stroke-width=\"1.5\"><circle cx=\"50\" cy=\"45\" r=\"10\"/><circle cx=\"75\" cy=\"45\" r=\"10\"/><circle cx=\"100\" cy=\"45\" r=\"10\"/><circle cx=\"125\" cy=\"45\" r=\"10\"/><circle cx=\"150\" cy=\"45\" r=\"10\"/><circle cx=\"175\" cy=\"45\" r=\"10\"/><circle cx=\"200\" cy=\"45\" r=\"10\"/></g><text x=\"130\" y=\"85\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#ffffff\" text-anchor=\"middle\">7 pereł w rzędzie</text></svg>\nNa brzegu morza leży $7$ czarodziejskich pereł w jednym rzędzie, w równych odstępach. Odległość między pierwszą a drugą perłą wynosi $2$ metry. Jaka jest odległość od pierwszej do ostatniej perły?",
+    "answers": ["12"],
+    "hint": "Jeśli pereł jest $7$, to przerw między nimi jest o jedną mniej ($6$ przerw). Pomnóż liczbę przerw przez $2$ metry ($6 \\cdot 2$)."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"130\" viewBox=\"0 0 260 130\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"110\" rx=\"8\" fill=\"#2c3e50\" stroke=\"#95a5a6\" stroke-width=\"2\"/><g fill=\"#f39c12\" stroke=\"#d35400\" stroke-width=\"2\"><circle cx=\"45\" cy=\"40\" r=\"10\"/><circle cx=\"75\" cy=\"40\" r=\"10\"/><circle cx=\"105\" cy=\"40\" r=\"10\"/><circle cx=\"135\" cy=\"40\" r=\"10\"/><circle cx=\"165\" cy=\"40\" r=\"10\"/><circle cx=\"45\" cy=\"70\" r=\"10\"/><circle cx=\"75\" cy=\"70\" r=\"10\"/><circle cx=\"105\" cy=\"70\" r=\"10\"/><circle cx=\"135\" cy=\"70\" r=\"10\"/><circle cx=\"165\" cy=\"70\" r=\"10\"/></g><text x=\"210\" y=\"60\" font-family=\"sans-serif\" font-size=\"16\" font-weight=\"bold\" fill=\"#e74c3c\">- 4</text></svg>\nW małej skrzynce było $10$ złotych dublonów. Majtek Pokładowy zabrał $4$ z nich. Ile monet zostało w skrzyni?",
+    "answers": ["6"],
+    "hint": "Odejmij $4$ od $10$ ($10 - 4$). Możesz też odliczyć $4$ skreślone monety na obrazku."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"260\" height=\"120\" viewBox=\"0 0 260 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"240\" height=\"100\" rx=\"10\" fill=\"#16a085\" stroke=\"#f1c40f\" stroke-width=\"3\"/><text x=\"35\" y=\"65\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"#ffffff\">20</text><text x=\"75\" y=\"65\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"#f1c40f\">-</text><text x=\"105\" y=\"65\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"#ffffff\">?</text><text x=\"135\" y=\"65\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"#f1c40f\">=</text><text x=\"175\" y=\"65\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"#ffffff\">13</text><text x=\"130\" y=\"95\" font-family=\"sans-serif\" font-size=\"12\" fill=\"#ffffff\" text-anchor=\"middle\">Tajemna Kłódka Syreny</text></svg>\nStara skrzynia wymaga podania brakującej liczby. Jaka wartość kryje się pod znakiem zapytania?\n$$20 - ? = 13$$",
+    "answers": ["7"],
+    "hint": "Ile trzeba odjąć od $20$, aby otrzymać $13$? Możesz obliczyć $20 - 13$."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"280\" height=\"130\" viewBox=\"0 0 280 130\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"260\" height=\"110\" rx=\"8\" fill=\"#2980b9\" stroke=\"#f39c12\" stroke-width=\"2\"/><g fill=\"#e67e22\" stroke=\"#d35400\" stroke-width=\"1.5\"><rect x=\"30\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"55\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"80\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"30\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"55\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"80\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"140\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"165\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"190\" y=\"35\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"140\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"165\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/><rect x=\"190\" y=\"60\" width=\"20\" height=\"15\" rx=\"2\"/></g><text x=\"117\" y=\"60\" font-family=\"sans-serif\" font-size=\"22\" font-weight=\"bold\" fill=\"#f1c40f\">+</text><text x=\"140\" y=\"105\" font-family=\"sans-serif\" font-size=\"13\" fill=\"#ffffff\" text-anchor=\"middle\">Skrzynie w dwóch ładowniach</text></svg>\nW pierwszej ładowni statku ułożono $6$ skrzyń z zapasami, a w drugiej ładowni również $6$ skrzyń. Ile wszystkich skrzyń znajduje się na statku?",
+    "answers": ["12"],
+    "hint": "Policz skrzynie w obu grupach: $6 + 6$ lub pomnóż $2 \\cdot 6$."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"280\" height=\"110\" viewBox=\"0 0 280 110\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"5\" y=\"5\" width=\"270\" height=\"100\" rx=\"10\" fill=\"#2c3e50\" stroke=\"#e74c3c\" stroke-width=\"3\"/><circle cx=\"45\" cy=\"55\" r=\"18\" fill=\"#f1c40f\"/><text x=\"45\" y=\"61\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2c3e50\">2</text><circle cx=\"95\" cy=\"55\" r=\"18\" fill=\"#f1c40f\"/><text x=\"95\" y=\"61\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2c3e50\">4</text><circle cx=\"145\" cy=\"55\" r=\"18\" fill=\"#f1c40f\"/><text x=\"145\" y=\"61\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2c3e50\">6</text><circle cx=\"195\" cy=\"55\" r=\"18\" fill=\"#f1c40f\"/><text x=\"195\" y=\"61\" font-family=\"sans-serif\" font-size=\"14\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2c3e50\">8</text><circle cx=\"240\" cy=\"55\" r=\"18\" fill=\"#e74c3c\" stroke=\"#f1c40f\" stroke-width=\"2\" stroke-dasharray=\"3\"/><text x=\"240\" y=\"62\" font-family=\"sans-serif\" font-size=\"18\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#ffffff\">?</text></svg>\nŚcieżka na Wyspie Czaszek oznaczona jest numerowanymi kamieniami: $2, 4, 6, 8...$ Jaka liczba powinna znaleźć się na czerwonym kamieniu ze znakiem zapytania?",
+    "answers": ["10"],
+    "hint": "Liczby na kamieniach rosną o $2$ (są to kolejne liczby parzyste). Dodaj $2$ do liczby $8$."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"280\" height=\"120\" viewBox=\"0 0 280 120\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"5\" y=\"5\" width=\"270\" height=\"110\" rx=\"10\" fill=\"#2b1d0c\" stroke=\"#c99a2e\" stroke-width=\"3\"/><circle cx=\"45\" cy=\"45\" r=\"20\" fill=\"#d4af37\" stroke=\"#8b6508\" stroke-width=\"2\"/><text x=\"45\" y=\"52\" font-family=\"sans-serif\" font-size=\"18\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2b1d0c\">3</text><circle cx=\"95\" cy=\"45\" r=\"20\" fill=\"#d4af37\" stroke=\"#8b6508\" stroke-width=\"2\"/><text x=\"95\" y=\"52\" font-family=\"sans-serif\" font-size=\"18\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2b1d0c\">6</text><circle cx=\"145\" cy=\"45\" r=\"20\" fill=\"#d4af37\" stroke=\"#8b6508\" stroke-width=\"2\"/><text x=\"145\" y=\"52\" font-family=\"sans-serif\" font-size=\"18\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2b1d0c\">9</text><circle cx=\"195\" cy=\"45\" r=\"20\" fill=\"#d4af37\" stroke=\"#8b6508\" stroke-width=\"2\"/><text x=\"195\" y=\"52\" font-family=\"sans-serif\" font-size=\"18\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#2b1d0c\">12</text><circle cx=\"240\" cy=\"45\" r=\"20\" fill=\"#e6c656\" stroke=\"#8b6508\" stroke-width=\"2\" stroke-dasharray=\"4\"/><text x=\"240\" y=\"52\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" text-anchor=\"middle\" fill=\"#8b6508\">?</text><text x=\"140\" y=\"95\" font-family=\"sans-serif\" font-size=\"13\" fill=\"#e6c656\" text-anchor=\"middle\">Szyfr Starożytnych Monet</text></svg>\nW Mrocznej Zatoczce piraci odnaleźli starożytną tablicę z symbolami monet. Jaka liczba kryje się pod znakiem zapytania?",
+    "answers": ["15"],
+    "hint": "Spórz na liczby wewnątrz złotych monet: $3, 6, 9, 12$. Liczby rosną co $3$. Dodaj $3$ do ostatniej liczby."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"240\" height=\"130\" viewBox=\"0 0 240 130\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"10\" y=\"10\" width=\"220\" height=\"110\" rx=\"8\" fill=\"#1a3323\" stroke=\"#2ecc71\" stroke-width=\"2\"/><g fill=\"#2ecc71\" stroke=\"#145a32\" stroke-width=\"2\"><circle cx=\"50\" cy=\"35\" r=\"12\"/><circle cx=\"90\" cy=\"35\" r=\"12\"/><circle cx=\"130\" cy=\"35\" r=\"12\"/><circle cx=\"170\" cy=\"35\" r=\"12\"/><circle cx=\"50\" cy=\"65\" r=\"12\"/><circle cx=\"90\" cy=\"65\" r=\"12\"/><circle cx=\"130\" cy=\"65\" r=\"12\"/><circle cx=\"170\" cy=\"65\" r=\"12\"/><circle cx=\"50\" cy=\"95\" r=\"12\"/><circle cx=\"90\" cy=\"95\" r=\"12\"/><circle cx=\"130\" cy=\"95\" r=\"12\"/><circle cx=\"170\" cy=\"95\" r=\"12\"/></g></svg>\nNa plaży Rozbitków leżą szmaragdy ułożone w równe rzędy. Ile wszystkich szmaragdów znajduje się na rysunku?",
+    "answers": ["12"],
+    "hint": "Kamienie ułożone są w $3$ rzędy, a w każdym rzędzie są $4$ szmaragdy. Pomnóż $3 \\cdot 4$ lub dodaj $4 + 4 + 4$."
+  },
+  {
+    "question": "<svg style=\"display:block;margin:0 auto 15px\" width=\"280\" height=\"100\" viewBox=\"0 0 280 100\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"5\" y=\"5\" width=\"270\" height=\"90\" rx=\"5\" fill=\"#f4e4bc\" stroke=\"#8b5a2b\" stroke-width=\"3\"/><path d=\"M 30 65 L 160 65 L 160 25\" fill=\"none\" stroke=\"#c0392b\" stroke-width=\"4\" stroke-dasharray=\"5,5\"/><circle cx=\"30\" cy=\"65\" r=\"6\" fill=\"#2c3e50\"/><text x=\"30\" y=\"83\" font-family=\"sans-serif\" font-size=\"11\" text-anchor=\"middle\" fill=\"#2c3e50\">Start</text><circle cx=\"160\" cy=\"25\" r=\"6\" fill=\"#27ae60\"/><text x=\"185\" y=\"30\" font-family=\"sans-serif\" font-size=\"11\" fill=\"#27ae60\">Skarb</text><text x=\"95\" y=\"58\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" fill=\"#c0392b\">11 m</text><text x=\"170\" y=\"50\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" fill=\"#c0392b\">8 m</text></svg>\nDroga do schronu piratów składa się z dwóch przerywanych linii na mapie ($11\\text{ m}$ oraz $8\\text{ m}$). Ile metrów ma cała trasa od Startu do Skarbu?",
+    "choices": ["$17\\text{ m}$", "$18\\text{ m}$", "$19\\text{ m}$", "$20\\text{ m}$"],
+    "answers": ["$19\\text{ m}$"],
+    "hint": "Dodaj do siebie długości obu odcinków drogi: $11 + 8$."
+  },
+  {
+    "question": "Wzdłuż piaszczystego brzegu pirackiej przystani wbito drewniane paliki co $2$ metry, aby przywiązać do nich tratwy. Pierwszy i ostatni palik są oddalone od siebie o $14$ metrów. Ile wszystkich palików wbito wzdłuż brzegu?",
+    "choices": ["$7$", "$8$", "$9$", "$12$"],
+    "answers": ["$8$"],
+    "hint": "Narysuj sobie odcinki! Między palikami są przerwy po $2$ metry. Podziel $14$ przez $2$, aby dowiedzieć się, ile jest przerw, a potem dodaj $1$, by policzyć wszystkie paliki."
+  },
+  {
+    "question": "W mrocznej Jaskini Szeptów leżą dwa zakurzone mieszki z diamentami. W pierwszym mieszku jest $18$ diamentów, a w drugim $6$. Kapitan Broda chce przełożyć trochę diamentów z pierwszego mieszka do drugiego, tak aby w obu było dokładnie tyle samo klejnotów. Ile diamentów musi przełożyć?",
+    "answers": ["6"],
+    "hint": "Najpierw policz, ile diamentów mają razem ($18 + 6$). Potem podziel tę sumę po równo na dwa mieszki. Gdy dowiesz się, ile powinno być w każdym, sprawdź, o ile trzeba powiększyć drugi mieszek."
+  },
+  {
+    "question": "Stary Syreni Grobowiec zamknięty jest na czarodziejską kłódkę. Kłódka otworzy się, gdy odgadniesz brakującą liczbę na kamiennej tablicy:\n$$\n\\begin{array}{rcc}\n\\text{Muszla} & \\rightarrow & 3, 6, 9, 12 \\\\\n\\text{Rozgwiazda} & \\rightarrow & 4, 8, 12, 16 \\\\\n\\text{Perła} & \\rightarrow & 5, 10, 15, ?\n\\end{array}\n$$\nJaka liczba powinna zastąpić znak zapytania?",
+    "answers": ["20"],
+    "hint": "Przyjrzyj się ciągom liczb. W pierwszym rzędzie skaczemy co $3$, w drugim co $4$. Co ile skaczą liczby w rzędzie z Perłą?"
+  },
+  {
+    "question": "Kapitan Ośmiornica zebrał swoją załogę do podziału złota. Każdy z $4$ piratów otrzymał po $5$ złotych monet, ale w skrzyni zostało jeszcze $7$ monet. Ile wszystkich monet było w skrzyni przed podziałem?",
+    "answers": ["27"],
+    "hint": "Pomnóż liczbę piratów przez liczbę monet, które dostał każdy z nich ($4 \\cdot 5$). Do otrzymanego wyniku dodaj monety, które wciąż leżą na dnie skrzyni."
+  },
+  {
+    "question": "Na Tajemniczym Wzgórzu stoi strażnik – gigantyczna papuga. Zada Ci zagadkę: 'Mam $3$ klatki z listami od rozbitków. W pierwszej jest $12$ listów, w drugiej o $5$ listów mniej niż w pierwszej, a w trzeciej jest tyle, ile w pierwszej i drugiej razem.' Ile listów znajduje się w trzeciej klatce?",
+    "answers": ["19"],
+    "hint": "Najpierw oblicz, ile listów jest w drugiej klatce ($12 - 5$). Gdy już to wiesz, dodaj do siebie listy z pierwszej i drugiej klatki!"
   }
 ]

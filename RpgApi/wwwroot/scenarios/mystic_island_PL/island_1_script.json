@@ -4,20 +4,13 @@
     "on": "map_enter",
     "once": true,
     "actions": [
-      { "type": "spawn_monster", "monster": "Skeleton", "x": 20, "y": 12 },
       { "type": "spawn_monster", "monster": "Skeleton", "x": 14, "y": 10 },
-      { "type": "spawn_monster", "monster": "Rogue", "x": 20, "y": 13 },
+      { "type": "spawn_monster", "monster": "Rogue", "x": 20, "y": 13, "id": "rogue_1" },
       { "type": "spawn_monster", "monster": "Crab", "x": 9, "y": 5, "id": "crab_1" },
       { "type": "spawn_monster", "monster": "Crab", "x": 14, "y": 6, "id": "crab_2" },
       { "type": "spawn_monster", "monster": "Crab", "x": 7, "y": 14, "id": "crab_3" },
       { "type": "spawn_monster", "monster": "Gorilla", "x": 8, "y": 12, "id": "gorilla_1" },
       { "type": "spawn_item", "item_id": "Gold", "x": 11, "y": 7, "qty": 5 },
-      { "type": "spawn_item", "item_id": "Runed Slate", "x": 17, "y": 17 },
-      { "type": "spawn_item", "item_id": "Runed Slate", "x": 24, "y": 15 },
-      { "type": "spawn_item", "item_id": "Runed Slate", "x": 26, "y": 12 },
-      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 17, "y": 16 },
-      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 23, "y": 15 },
-      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 25, "y": 12 },
       { "type": "spawn_item", "item_id": "Thick Chitin", "x": 5, "y": 14 },
       { "type": "spawn_monster", "monster": "Skeleton Soldier", "x": 21, "y": 5 },
       { "type": "spawn_monster", "monster": "Skeleton Piercer", "x": 18, "y": 4, "id": "skeleton_piercer_1" },
@@ -53,6 +46,15 @@
       { "type": "give_item", "item_id": "Oak Plank", "qty": 1 },
       { "type": "show_dialog", "text": "Ten spryciarz obkleił swój pancerz glonami i gąbkami ze starych desek. Kraby-dekoratorzy robią dokładnie to samo na rafach, tworząc żywy kamuflaż. Ten tutaj pomylił jednak rafę z wrakiem mojego statku." },
       { "type": "show_message", "text": "Znalazłem deskę!", "item": "Oak Plank" }
+    ]
+  },
+  {
+    "id": "rogue_1_defeated",
+    "on": "monster_defeated",
+    "condition": "id == 'rogue_1'",
+    "actions": [
+      { "type": "show_dialog", "text": "Walczył dzielnie, ale ostatecznie przegrał. Czegoś tu pilnował. Muszę się dokładnie przyjrzeć tym obeliskom!" },
+      { "type": "set_flag", "name": "obelisk_quest" }
     ]
   },
   {
@@ -131,7 +133,7 @@
     ]
   },
   {
-    "id": "build_bridge",
+    "id": "build_bridge_fail",
     "on": "tile_enter",
     "tile": { "x": 14, "y": 10 },
     "condition": "!has_item('Oak Plank', 3) && !flag(bridge_built)",
@@ -144,10 +146,51 @@
     "on": "tile_enter",
     "tile": { "x": 19, "y": 12 },
     "once": true,
-    "condition": "!has_item('Runed Slate')",
+    "condition": "flag('obelisk_quest') && !has_item('Runed Slate')",
     "actions": [
       { "type": "show_dialog", "text": "Wydaje się, że jest to miejsce kultu. Wiele kultur na całym świecie stawiało takie obeliski w miejscach, które uważali za święte. Ciekawe, kto i po co postawił ten tutaj." },
-      { "type": "show_dialog", "text": "Dziwne... Wygląda jakby ktoś celowo wyciął tu fragment i stworzył mechanizmy! Może to miejsce na jakiś element?", "item": "Runed Slate" }
+      { "type": "show_dialog", "text": "Dziwne... Wygląda jakby ktoś celowo wyciął tu fragment i stworzył mechanizmy! Może to miejsce na jakiś element?" },
+      { "type": "add_variable", "name": "obelisk_seen", "delta": 1 },
+      { "type": "fire_event", "event": "obelisk_seen" }
+    ]
+  },
+  {
+    "id": "see_obelisk_2",
+    "on": "tile_enter",
+    "tile": { "x": 21, "y": 12 },
+    "once": true,
+    "condition": "!has_item('Runed Slate')",
+    "actions": [
+      { "type": "show_dialog", "text": "Spójrz na tę monolityczną igłę... Starożytni Egipcjanie wycinali takie obeliski z jednego ogromnego bloku granitu. Wyobraź sobie wysiłek: transportowali te giganty wyciosanymi łodziami podczas wylewów Nilu, a potem podnosili je pionowo wyłącznie za pomocą piaszczystych ramp, lin i ludzkich mięśni, bez ani jednej śrubki czy przekładni." },
+      { "type": "add_variable", "name": "obelisk_seen", "delta": 1 },
+      { "type": "fire_event", "event": "obelisk_seen" }
+    ]
+  },
+  {
+    "id": "see_obelisk_3",
+    "on": "tile_enter",
+    "tile": { "x": 20, "y": 11 },
+    "once": true,
+    "condition": "!has_item('Runed Slate')",
+    "actions": [
+      { "type": "show_dialog", "text": "Ciekawe, czy te znaki to zatarte hieroglify... Rzymscy cesarze tak bardzo zachwycili się egipskimi obeliskami, że wywozili je na statkach przez Morze Śródziemne jako trofea wojenne. Do dziś w samym Rzymie stoi więcej starożytnych egipskich obelisków niż w całym dzisiejszym Egipcie." },
+      { "type": "add_variable", "name": "obelisk_seen", "delta": 1 },
+      { "type": "fire_event", "event": "obelisk_seen" }
+    ]
+  },
+  {
+    "id": "obelisk_seen",
+    "on": "obelisk_seen",
+    "condition": "stat(obelisk_seen >= 3)",
+    "actions": [
+      { "type": "show_dialog", "text": "Wszystkie obeliski zostały zauważone." },
+      { "type": "show_dialog", "text": "Wydaje się, że wszystkie trzy obeliski mają miejsce na włożenie jakiegoś elementu. Spróbuję go poszukać.", "item": "Runed Slate"},
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 17, "y": 16 }, 
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 17, "y": 17 },
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 23, "y": 15 },
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 26, "y": 12 },
+      { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 25, "y": 12 },
+      { "type": "spawn_item", "item_id": "Runed Slate", "x": 24, "y": 15 }
     ]
   },
   {
@@ -159,19 +202,9 @@
     "actions": [
       { "type": "show_dialog", "text": "Te kamienne bloki stoją idealnie równo, choć nie ma tu ani kropli zaprawy. W starożytnej architekturze monolity i kolumny utrzymywały się w pionie wyłącznie dzięki własnemu gigantycznemu ciężarowi oraz idealnemu oszlifowaniu płaszczyzn st styku. Jeden fałszywy ruch przy szlifowaniu i cała struktura zawaliłaby się jak domek z kart." },
       { "type": "remove_item", "item_id": "Runed Slate" },
-      { "type": "show_dialog", "text": "Ten element pasuje idealnie!", "item_id": "Runed Slate" },
+      { "type": "show_dialog", "text": "Ten element pasuje idealnie!", "item": "Runed Slate" },
       { "type": "add_variable", "name": "obelisk_activated", "delta": 1 },
       { "type": "fire_event", "event": "obelisk_activated" }
-    ]
-  },
-  {
-    "id": "see_obelisk_2",
-    "on": "tile_enter",
-    "tile": { "x": 21, "y": 12 },
-    "once": true,
-    "condition": "!has_item('Runed Slate')",
-    "actions": [
-      { "type": "show_dialog", "text": "Spójrz na tę monolityczną igłę... Starożytni Egipcjanie wycinali takie obeliski z jednego ogromnego bloku granitu. Wyobraź sobie wysiłek: transportowali te giganty wyciosanymi łodziami podczas wylewów Nilu, a potem podnosili je pionowo wyłącznie za pomocą piaszczystych ramp, lin i ludzkich mięśni, bez ani jednej śrubki czy przekładni." }
     ]
   },
   {
@@ -183,19 +216,9 @@
     "actions": [
       { "type": "show_dialog", "text": "W starożytnym Egipcie obeliski były symbolem władzy i boskości. Wierzono, że ich szczyt, zwany piramidionem, jest miejscem, w którym słońce dotyka ziemi. Dlatego też obeliski były często ustawiane w pobliżu świątyń i grobowców, aby zapewnić ochronę i błogosławieństwo bogów." },
       { "type": "remove_item", "item_id": "Runed Slate" },
-      { "type": "show_dialog", "text": "Umieszczasz kamień w obelisku. Słyszysz cichy klik...", "item_id": "Runed Slate" },
+      { "type": "show_dialog", "text": "Umieszczasz kamień w obelisku. Słyszysz cichy klik...", "item": "Runed Slate" },
       { "type": "add_variable", "name": "obelisk_activated", "delta": 1 },
       { "type": "fire_event", "event": "obelisk_activated" }
-    ]
-  },
-  {
-    "id": "see_obelisk_3",
-    "on": "tile_enter",
-    "tile": { "x": 20, "y": 11 },
-    "once": true,
-    "condition": "!has_item('Runed Slate')",
-    "actions": [
-      { "type": "show_dialog", "text": "Ciekawe, czy te znaki to zatarte hieroglify... Rzymscy cesarze tak bardzo zachwycili się egipskimi obeliskami, że wywozili je na statkach przez Morze Śródziemne jako trofea wojenne. Do dziś w samym Rzymie stoi więcej starożytnych egipskich obelisków niż w całym dzisiejszym Egipcie." }
     ]
   },
   {
@@ -207,7 +230,7 @@
     "actions": [
       { "type": "show_dialog", "text": "Gnomon... Właśnie dzięki cieniom rzucanym przez obeliski Eratostenes z Aleksandrii w III wieku p.n.e. zdołał zmierzyć obwód całej Ziemi! Wystarczyło porównać kąt padania cienia w dwóch różnych miastach o tej samej porze. Geniusz prostoty – czysta matematyka i kamień." },
       { "type": "remove_item", "item_id": "Runed Slate" },
-      { "type": "show_dialog", "text": "Ten obelisk ma otwór w kształcie tego dziwnego kamienia!", "item_id": "Runed Slate" },
+      { "type": "show_dialog", "text": "Ten obelisk ma otwór w kształcie tego dziwnego kamienia!", "item": "Runed Slate" },
       { "type": "add_variable", "name": "obelisk_activated", "delta": 1 },
       { "type": "fire_event", "event": "obelisk_activated" }
     ]
@@ -219,7 +242,7 @@
     "actions": [
       { "type": "show_dialog", "text": "Co się dzieje? Ziemia drży!" },
       { "type": "change_tile", "x": 21, "y": 7, "terrain": "dirt" },
-      { "type": "set_lighting", "lighting": { "col": [0, 1, 10], "a": 0.80 }, "transition_secs": 4 },
+      { "type": "set_lighting", "lighting": { "col": [0, 1, 10], "a": 0.50 }, "transition_secs": 4 },
       { "type": "spawn_decoration", "asset_id": "portal_1", "x": 23, "y": 3 }
     ]
   }
