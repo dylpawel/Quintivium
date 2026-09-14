@@ -398,8 +398,9 @@ const SPRITE_DEFS = {
     'Hero-Mage':   {},
     'Hero-Boy':    {},
     'Hero-Farmer': {},        // 256×32 col sheet (8 frames) — matches defaults
-    'Hero-Crab':      { frames: 4, layout: 'row' },
-    'Gorilla':        { frames: 4, layout: 'row' }
+    'Hero-Crab':   { frames: 4, layout: 'row' },
+    'Gorilla':     { frames: 4, layout: 'row' },
+    'Bat':         { frames: 4, layout: 'row' }
 }
 
 /**

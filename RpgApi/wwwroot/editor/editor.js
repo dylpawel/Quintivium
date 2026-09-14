@@ -65,6 +65,7 @@ const EFFECT_SNAP_DIST = 20   // px — click within this radius to remove an ef
 const SELECT_DRAG_THRESHOLD = 5  // px — must move this far from mousedown to start a drag
 
 let tileset = null
+let tilesetRegistry = null
 let map = null
 let sortedItems     = null  // full-map sorted decoration+fence list
 let sortedItemsDirty = true  // rebuild on next render after any structural change
@@ -79,6 +80,7 @@ let preview = true
 let isPainting = false
 let raiseLockLevel = null  // target height locked on mousedown for raise/lower drag
 let showGrid = true
+let showCoords = false
 let showLevels = false
 let showTraversable = false
 let showCacheStats = false
@@ -262,6 +264,7 @@ function getWindFrame(frames, phaseMs = 0, fps = 6) {
 
 async function init() {
     const registry = await loadTilesetRegistry()
+    tilesetRegistry = registry
     const select = document.getElementById('tilesetSelect')
 
     registry.forEach(t => {
@@ -318,6 +321,12 @@ async function init() {
     document.addEventListener('keydown', e => {
         if (e.key === 'g' || e.key === 'G') {
             showGrid = !showGrid
+            invalidateStaticCache()
+            scheduleRender()
+        }
+        if (e.ctrlKey && e.code === 'KeyH') {
+            e.preventDefault()
+            showCoords = !showCoords
             invalidateStaticCache()
             scheduleRender()
         }
@@ -392,6 +401,7 @@ async function init() {
 
 async function switchTileset(path) {
     tileset = await loadTileset(path)
+    tileset.path = path
     tileset.priorityIndex = new Map(tileset.priority.map((id, i) => [id, i]))
     plainTileCache.clear()
     maskedTileCache.clear()
@@ -1198,6 +1208,22 @@ function drawGrid() {
         ctx.lineTo(endX * TILE, y * TILE)
     }
     ctx.stroke()
+
+    if (showCoords) {
+        ctx.font = `${12 / zoom}px monospace`
+        ctx.textBaseline = 'top'
+        for (let y = startY; y < endY; y++) {
+            for (let x = startX; x < endX; x++) {
+                const label = `${x},${y}`
+                const tx = x * TILE + 2 / zoom
+                const ty = y * TILE + 2 / zoom
+                ctx.fillStyle = 'rgba(0,0,0,0.55)'
+                ctx.fillText(label, tx + 1 / zoom, ty + 1 / zoom)
+                ctx.fillStyle = 'rgba(255,255,255,0.85)'
+                ctx.fillText(label, tx, ty)
+            }
+        }
+    }
 }
 
 const silhouetteCache = new Map()
@@ -3032,7 +3058,18 @@ function downloadMap(name, body) {
     URL.revokeObjectURL(a.href)
 }
 
-function applyMap(name, data) {
+async function applyMap(name, data) {
+    // Check if the loaded map has a different tileset and switch if needed
+    if (data.tileset && tilesetRegistry) {
+        const targetTileset = tilesetRegistry.find(t => t.id === data.tileset)
+        if (targetTileset && targetTileset.path !== tileset?.path) {
+            await switchTileset(targetTileset.path)
+            // Update the combobox selection
+            const select = document.getElementById('tilesetSelect')
+            if (select) select.value = targetTileset.path
+        }
+    }
+
     map = deserializeMap(data, tileset)
     currentMapName = name
     // the loaded map is no longer the on-disk file a prior Save local pinned

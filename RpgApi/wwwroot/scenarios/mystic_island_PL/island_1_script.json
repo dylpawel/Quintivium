@@ -183,7 +183,6 @@
     "on": "obelisk_seen",
     "condition": "stat(obelisk_seen >= 3)",
     "actions": [
-      { "type": "show_dialog", "text": "Wszystkie obeliski zostały zauważone." },
       { "type": "show_dialog", "text": "Wydaje się, że wszystkie trzy obeliski mają miejsce na włożenie jakiegoś elementu. Spróbuję go poszukać.", "item": "Runed Slate"},
       { "type": "spawn_monster", "monster": "Skeleton Scholar", "x": 17, "y": 16 }, 
       { "type": "spawn_item", "item_id": "Runed Slate", "x": 17, "y": 17 },
@@ -200,7 +199,7 @@
     "once": true,
     "condition": "has_item('Runed Slate')",
     "actions": [
-      { "type": "show_dialog", "text": "Te kamienne bloki stoją idealnie równo, choć nie ma tu ani kropli zaprawy. W starożytnej architekturze monolity i kolumny utrzymywały się w pionie wyłącznie dzięki własnemu gigantycznemu ciężarowi oraz idealnemu oszlifowaniu płaszczyzn st styku. Jeden fałszywy ruch przy szlifowaniu i cała struktura zawaliłaby się jak domek z kart." },
+      { "type": "show_dialog", "text": "Te kamienne bloki stoją idealnie równo, choć nie ma tu ani kropli zaprawy. W starożytnej architekturze monolity i kolumny utrzymywały się w pionie wyłącznie dzięki własnemu gigantycznemu ciężarowi oraz idealnemu oszlifowaniu płaszczyzn styku. Jeden fałszywy ruch przy szlifowaniu i cała struktura zawaliłaby się jak domek z kart." },
       { "type": "remove_item", "item_id": "Runed Slate" },
       { "type": "show_dialog", "text": "Ten element pasuje idealnie!", "item": "Runed Slate" },
       { "type": "add_variable", "name": "obelisk_activated", "delta": 1 },
