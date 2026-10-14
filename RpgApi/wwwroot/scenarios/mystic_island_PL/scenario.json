@@ -1,7 +1,7 @@
 {
   "title": "Mistyczna Wyspa",
   "description": "Podróż po tajemniczej wyspie.",
-  "start_map": "island_1",
+  "start_map": "cave_1",
   "start_position": "start",
   "hero": "Tom",
   "questionPools": 1,
@@ -11,8 +11,12 @@
   },
   "scriptFiles": [
     "scripts.json",
-    { "file": "island_1_script.json", "map": "island_1" }
+    { "file": "island_1_script.json", "map": "island_1" },
+    { "file": "cave_1_script.json", "map": "cave_1" }
   ],
+  "lighting": {
+    "cave_1": { "col": [0, 0, 0], "a": 0.95 }
+  },
   "variables": {
     "level": 1,
     "hp": 100

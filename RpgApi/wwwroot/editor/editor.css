@@ -218,3 +218,17 @@ input[type="text"], input#mapName, select {
   font-size: 10px;
   color: #555;
 }
+
+/* --- Script Panel (right sidebar) --- */
+#scriptPanel {
+  width: 380px;
+  min-width: 320px;
+  max-width: 500px;
+  background: #1e1e1e;
+  border-left: 1px solid #333;
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+#scriptPanel.visible { display: flex; }

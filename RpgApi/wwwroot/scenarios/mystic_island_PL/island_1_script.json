@@ -244,5 +244,15 @@
       { "type": "set_lighting", "lighting": { "col": [0, 1, 10], "a": 0.50 }, "transition_secs": 4 },
       { "type": "spawn_decoration", "asset_id": "portal_1", "x": 23, "y": 3 }
     ]
+  },
+  {
+    "id": "portal_entered",
+    "on": "tile_enter",
+    "tile": { "x": 23, "y": 3 },
+    "once": true,
+    "actions": [
+      { "type": "show_dialog", "text": "Wchodzisz do portalu i czujesz, jak przenosisz się w inne miejsce..." },
+      { "type": "change_map", "map_id": "cave_1", "mark": "Start" }
+    ]
   }
 ]

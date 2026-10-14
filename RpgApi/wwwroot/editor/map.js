@@ -26,7 +26,8 @@ export function createMap(width, height, tileset) {
     // cy ∈ [0, height-1], cx ∈ [0, width]
     _vFences: Array.from({ length: height }, () => Array(width + 1).fill(null)),
     _marks: {},  // key: "x,y" → name string
-    _effects: [] // [{ type, wx, wy, scale, phase }]
+    _effects: [], // [{ type, wx, wy, scale, phase }]
+    _scripts: [] // [{ id, name, event, conditions, actions, map?, enabled }]
   }
 }
 
@@ -174,6 +175,15 @@ export function serializeMap(map) {
       return { x, y, name: v }
     }),
     effects: map._effects ?? [],
+    scripts: map._scripts?.map(s => ({
+      id: s.id,
+      name: s.name,
+      event: s.event,
+      conditions: s.conditions ?? '',
+      actions: s.actions ?? [],
+      map: s.map,
+      enabled: s.enabled !== false
+    })) ?? [],
     hFences: (() => {
       const arr = []
       for (let cy = 0; cy <= map.height; cy++)
@@ -211,6 +221,8 @@ export function deserializeMap(data, tileset) {
   for (const { x, y, t } of data.hFences ?? []) setHFence(map, x, y, t)
   for (const { x, y, t } of data.vFences ?? []) setVFence(map, x, y, t)
   map._effects = [...(data.effects ?? [])]
+  // Load scripts
+  map._scripts = [...(data.scripts ?? [])]
   // Migrate old wx/wy world-pixel format to x/y/dx/dy tile format (TILE=32)
   for (const ef of map._effects) {
     if ('wx' in ef && !('x' in ef)) {
@@ -223,4 +235,52 @@ export function deserializeMap(data, tileset) {
     }
   }
   return map
+}
+
+/**
+ * Script management helpers
+ */
+
+export function addScript(map, script) {
+  const newScript = {
+    id: script.id ?? crypto.randomUUID(),
+    name: script.name ?? 'Unnamed Script',
+    event: script.event ?? 'onEnter',
+    conditions: script.conditions ?? '',
+    actions: script.actions ?? [],
+    map: script.map ?? map.id,
+    enabled: script.enabled !== false
+  }
+  map._scripts.push(newScript)
+  return newScript
+}
+
+export function removeScript(map, scriptId) {
+  const idx = map._scripts.findIndex(s => s.id === scriptId)
+  if (idx !== -1) {
+    map._scripts.splice(idx, 1)
+    return true
+  }
+  return false
+}
+
+export function getScript(map, scriptId) {
+  return map._scripts.find(s => s.id === scriptId) ?? null
+}
+
+export function updateScript(map, scriptId, updates) {
+  const script = getScript(map, scriptId)
+  if (script) {
+    Object.assign(script, updates)
+    return script
+  }
+  return null
+}
+
+export function getScriptsForMap(map) {
+  return [...map._scripts]
+}
+
+export function getAllScripts(map) {
+  return [...map._scripts]
 }

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "torch_acquired",
+    "once": true,
+    "on": "tile_enter",
+    "tile": { "x": 2, "y": 3 },
+    "actions": [
+      { "type": "show_dialog", "text": "aaa", "give": {
+          "torch": 1
+        } }
+    ]
+  },
+  {
+    "id": "enter_cave_1",
+    "once": true,
+    "on": "map_enter",
+    "actions": [
+      { "type": "spawn_monster", "monster": "Skeleton Fighter", "x": 4, "y": 8 },
+      { "type": "spawn_monster", "monster": "Skeleton Bandit", "x": 2, "y": 16 },
+      { "type": "spawn_monster", "monster": "Skeleton Footman", "x": 10, "y": 16 },
+      { "type": "spawn_item", "item_id": "Gold", "x": 2, "y": 10, "qty": 4 }
+    ]
+  }
+]

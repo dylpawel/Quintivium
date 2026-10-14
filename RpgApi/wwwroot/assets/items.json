@@ -7,6 +7,7 @@
     "torch": { "icon": [9, 5], "type": "hand", "bonuses": {"attack":1}, "light": { "radius": 3.5, "color": "#ff8b3a", "alpha": 0.8 } },
     "sword": { "icon": [0, 12], "type": "hand", "bonuses": {"attack":5} },
     "Gold": [1, 3],
+    "Chest": [3, 4],
     "key": [4, 4],
     "gold_chest": [3, 4],
     "medium_bag": [9, 44],

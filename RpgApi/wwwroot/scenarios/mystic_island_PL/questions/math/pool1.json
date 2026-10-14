@@ -1,5 +1,55 @@
 [
   {
+    "question": "Ogr Leszek i ogr Jerzy stoją razem jako jedna para w kolejce po żabie udka. Przed nimi stoją 3 pary ogrów, a za nimi 4 pary. Ile ogrów stoi w całej kolejce?",
+    "answers": ["16"],
+    "hint": "Kolejka liczy $3 + 1 + 4 = 8$ par. Ponieważ w każdej parze są 2 ogry, łączna liczba osób to $8 \\cdot 2 = 16$."
+  },
+  {
+    "question": "W kolejce do elfiątka rozdającego magiczne owoce stoją dwójkami rodzeństwa. Para elfów, Lira i Milo, stoi na 4. miejscu od początku kolejki. Za nimi stoją jeszcze 3 pary. Ile elfów stoi w tej kolejce?",
+    "answers": ["14"],
+    "hint": "Skoro są na 4. miejscu, przed nimi są 3 pary. Łącznie jest $4 + 3 = 7$ par. Wszystkich elfów jest $7 \\cdot 2 = 14$."
+  },
+  {
+    "question": "W czarodziejskim pojedynku do rejestracji ustawiają się pary magów. Przed parą Merlina i Morgana stoi 10 magów, a za nimi stoją 3 pary. Ile par magów stoi w całej kolejce?",
+    "answers": ["9"],
+    "hint": "10 magów przed nimi to $10 / 2 = 5$ par. Łączna liczba par w kolejce wynosi $5 + 1 + 3 = 9$ par."
+  },
+  {
+    "question": "Gnijące gobliny stoją w dwuosobowych patrolach w kolejce do mostu. W całej kolejce stoi 20 goblinów. Przed patrolem zwiadowców Pika i Boka stoi 4 goblinów. Ile par goblinów stoi za nimi?",
+    "answers": ["7"],
+    "hint": "20 goblinów to 10 par. 4 goblinów przed nimi to 2 pary. Za patrolem zwiadowców stoi więc $10 - 2 - 1 = 7$ par."
+  },
+  {
+    "question": "Krasnoludzkie pary kupców stoją w kolejce do skarbczyka. Przed parą Thorina i Balina stoi 5 par. Za nimi stoi 8 krasnoludów. Ile krasnoludów stoi w całej kolejce?",
+    "answers": ["20"],
+    "hint": "Przed nimi stoi $5 \\cdot 2 = 10$ krasnoludów. Za nimi stoi 8 krasnoludów. Wraz z Thorinem i Balinem (2 krasnoludy) cała kolejka liczy $10 + 2 + 8 = 20$ krasnoludów."
+  },
+  {
+    "question": "Pirat Brat stał w kolejce po rum na pokładzie statku. Przed nim stało 3 piratów, a za nim 5. Ile wszystkich osób stało w tej kolejce?",
+    "answers": ["9"],
+    "hint": "Dodajemy osoby przed nim (3), osoby za nim (5) oraz samego Brata (1): $3 + 5 + 1 = 9$."
+  },
+  {
+    "question": "Rycerz Artur stał w kolejce do królewskiej zbrojowni. Przed nim stało 6 paziów, a za nim 4. Ile osób liczyła cała kolejka?",
+    "answers": ["11"],
+    "hint": "Dodajemy osoby przed nim (6), osoby za nim (4) oraz Artura (1): $6 + 4 + 1 = 11$."
+  },
+  {
+    "question": "Elfia łuczniczka stojąca w kolejce do portalu zajmowała 4. miejsce od początku. Za nią stało jeszcze 7 podróżnych. Ile osób stało w kolejce do portalu?",
+    "answers": ["11"],
+    "hint": "Skoro zajmowała 4. miejsce, to wraz z nią na początku były 4 osoby. Dodajemy 7 osób stojących za nią: $4 + 7 = 11$."
+  },
+  {
+    "question": "Krasnoludzki górnik czekał na wjazd windą do kopalni. Przed nim stało 8 krasnoludów, a cała kolejka liczyła 15 osób. Ile krasnoludów stało za nim?",
+    "answers": ["6"],
+    "hint": "Odejmujemy od wszystkich osób (15) osoby przed nim (8) oraz jego samego (1): $15 - 8 - 1 = 6$."
+  },
+  {
+    "question": "Młody czarodziej stoi dokładnie na środku kolejki po magiczne różdżki. Przed nim stoi 5 adeptów. Ile osób stoi w całej kolejce?",
+    "answers": ["11"],
+    "hint": "Skoro stoi na środku i przed nim jest 5 osób, to za nim też musi być 5 osób. Cała kolejka to: $5 + 5 + 1 = 11$."
+  },
+  {
     "question": "Ogr Grzmot 3 lata temu miał 15 lat. Ile lat będzie miał za 5 lat, kiedy według tradycji swojego plemienia stanie się dorosłym wojownikiem?",
     "answers": ["23"],
     "hint": "Obecny wiek ogra to $15 + 3 = 18$ lat. Za 5 lat będzie miał $18 + 5 = 23$ lata."

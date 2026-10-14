@@ -1,7 +1,15 @@
 import { loadTilesetRegistry, loadTileset } from './tileset.js'
-import { createMap, setCell, getCell, getRaw, floodFill, serializeMap, deserializeMap, placeDecoration, removeDecoration, getDecorations, getHeight, setHeight, getRawHeight, getRamp, setRamp, setHFence, removeHFence, setVFence, removeVFence } from './map.js'
+import { createMap, setCell, getCell, getRaw, floodFill, serializeMap, deserializeMap, placeDecoration, removeDecoration, getDecorations, getHeight, setHeight, getRawHeight, getRamp, setRamp, setHFence, removeHFence, setVFence, removeVFence, addScript, removeScript, getScript, updateScript, getScriptsForMap, getAllScripts } from './map.js'
 import { loadAssets } from './assets.js'
 import { tileHash, getVariantIndex, buildTileCanvas } from './tilemath.js'
+import { createTilePickerTool } from './scripts/tilePicker.js'
+import { loadAllScripts, saveMapScripts, getScriptFileForMap, saveScriptFile, loadScriptFile, getScriptFilesInfo, createScriptFileForMap } from './scripts/scriptStorage.js'
+import { createScriptFileManager } from './scripts/scriptFileManager.js'
+import { createScriptEventEditor } from './scripts/scriptEventEditor.js'
+import { createScriptActionEditor } from './scripts/scriptActionEditor.js'
+import { createScriptNestedActionEditor } from './scripts/scriptNestedActionEditor.js'
+import { scriptState, PANEL_MODE } from './scripts/scriptState.js'
+import { preloadMonsterImages, getMonsterPreviewSprite, getCharacterSprite, drawMonsterPreview, drawCompositeEnemy } from './scripts/monsterSprites.js'
 
 const canvas = document.getElementById('mapCanvas')
 let ctx = canvas.getContext('2d', { alpha: false })
@@ -102,6 +110,29 @@ let selectDragItem = null      // { kind:'decoration', origX, origY } | { kind:'
 let selectPickCandidate = null // item picked on mousedown; drag confirmed after threshold
 let selectPickStartWx = 0      // cursor world pos at mousedown
 let selectPickStartWy = 0
+
+// --- Script Editor (3-Panel System) ---
+let showScriptPanel = false
+let scriptFileManagerPanel = null
+let scriptEventEditorPanel = null
+let scriptActionEditorPanel = null
+let scriptNestedActionEditorPanel = null
+let tilePickerTool = null
+
+// --- Map Enter Preview ---
+let showMapEnterPreview = false
+let mapEnterPreviewData = null // { monsters: [], items: [], npcs: [], decorations: [], tileChanges: [] }
+
+// Utility function for HTML escaping
+function escapeHtml(text) {
+  if (text === null || text === undefined) return ''
+  return String(text)
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, "\"")
+    .replace(/'/g, "'")
+}
 
 // --- Wind animation ---
 
@@ -262,6 +293,19 @@ function getWindFrame(frames, phaseMs = 0, fps = 6) {
 
 // --- Boot ---
 
+// Expose editor instance globally for script panels (tile picker, etc.)
+function exposeEditor() {
+    window.editor = {
+        get currentMap() { return map; },
+        get currentTileset() { return tileset; },
+        get tilesetRegistry() { return tilesetRegistry; },
+        get assets() { return assets; },
+        get assetMap() { return assetMap; },
+        get zoom() { return zoom; },
+        get TILE() { return TILE; }
+    };
+}
+
 async function init() {
     const registry = await loadTilesetRegistry()
     tilesetRegistry = registry
@@ -275,6 +319,7 @@ async function init() {
     })
 
     await switchTileset(registry[0].path)
+    exposeEditor()
     const assetDefs = await loadAssets('../assets/')
     assets = assetDefs.assets
     assetMap = assetDefs.assetMap
@@ -299,6 +344,9 @@ async function init() {
     }
     buildEffectPalette()
 
+    // Load enemy sprites for map_enter preview (shared module)
+    await preloadMonsterImages()
+
     select.addEventListener('change', e => switchTileset(e.target.value))
     document.getElementById('previewToggle').addEventListener('change', e => {
         preview = e.target.checked
@@ -313,10 +361,22 @@ async function init() {
         map = createMap(w, h, tileset)
         currentMapName = null
         localFileHandle = null
+
+        // Reset map_enter preview
+        showMapEnterPreview = false
+        mapEnterPreviewData = null
+        const previewBtn = document.getElementById('btnMapEnterPreview')
+        if (previewBtn) {
+            previewBtn.classList.remove('active')
+            previewBtn.textContent = '👁️'
+            previewBtn.title = 'Preview map_enter (initial state)'
+        }
+
         sortedItemsDirty = true
         invalidateStaticCache()
         updateSpacer()
         scheduleRender()
+        exposeEditor()
     })
     document.addEventListener('keydown', e => {
         if (e.key === 'g' || e.key === 'G') {
@@ -339,6 +399,7 @@ async function init() {
             scheduleRender()
         }
         if (e.key === 'm' || e.key === 'M') setTool('mark')
+        if (e.key === 't' || e.key === 'T') toggleTilePicker()
         if (e.key === 'Delete' && tool === 'select') {
             if (selectedDecoration) {
                 removeDecoration(map, selectedDecoration.x, selectedDecoration.y)
@@ -369,6 +430,9 @@ async function init() {
     document.getElementById('btnMark').addEventListener('click', () => setTool('mark'))
     document.getElementById('btnSelect').addEventListener('click', () => setTool('select'))
     document.getElementById('btnEffect').addEventListener('click', () => { setTool('effect'); buildEffectPalette() })
+    document.getElementById('btnTilePicker').addEventListener('click', toggleTilePicker)
+    document.getElementById('btnScripts').addEventListener('click', toggleScriptPanel)
+    document.getElementById('btnMapEnterPreview').addEventListener('click', toggleMapEnterPreview)
     document.getElementById('btnBrushShape').addEventListener('click', () => {
         brushShape = brushShape === 'circle' ? 'square' : 'circle'
         document.getElementById('btnBrushShape').textContent = brushShape === 'circle' ? '⭕' : '⬜'
@@ -397,6 +461,30 @@ async function init() {
     canvas.addEventListener('mousemove', onMouseMove)
     canvas.addEventListener('mouseup', onMouseUp)
     canvas.addEventListener('mouseleave', onMouseLeave)
+
+    // Custom events for script editor tile/mark picking
+    window.addEventListener('script-editor-pick-tile', (e) => {
+      const { onTilePicked } = e.detail
+      if (onTilePicked && tilePickerTool) {
+        // Activate tile picker tool with temporary callback
+        tilePickerTool.setCallback((info) => {
+          onTilePicked(info.x, info.y)
+          // Restore original callback after pick
+          tilePickerTool.restoreCallback()
+        })
+        tilePickerTool.activate()
+        document.getElementById('btnTilePicker').classList.add('active')
+        // Don't call setTool('tilePicker') - it conflicts with direct activation
+      }
+    })
+
+    window.addEventListener('script-editor-pick-mark', (e) => {
+      const { onMarkPicked, map } = e.detail
+      if (onMarkPicked && map) {
+        // Show mark picker dialog
+        showMarkPicker(map, onMarkPicked)
+      }
+    })
 }
 
 async function switchTileset(path) {
@@ -417,6 +505,17 @@ async function switchTileset(path) {
     if (tileset.waterTerrain) buildWaterFrames()
     sortedItemsDirty = true
     map = createMap(COLS, ROWS, tileset)
+
+    // Reset map_enter preview
+    showMapEnterPreview = false
+    mapEnterPreviewData = null
+    const previewBtn = document.getElementById('btnMapEnterPreview')
+    if (previewBtn) {
+        previewBtn.classList.remove('active')
+        previewBtn.textContent = '👁️'
+        previewBtn.title = 'Preview map_enter (initial state)'
+    }
+
     activeTerrain = typeof tileset.waterTerrain?.waterFlat === 'number'
         ? tileset.waterTerrain.waterFlat
         : tileset.terrains[0].id
@@ -424,6 +523,7 @@ async function switchTileset(path) {
     buildPalette()
     buildFencePalette()
     syncCursor()
+    exposeEditor()
     invalidateStaticCache()
     updateSpacer()
     scheduleRender()
@@ -837,6 +937,482 @@ function setTool(t) {
         selectPickCandidate = null
         updatePropPanel()
     }
+    // Deactivate tile picker if active
+    if (tilePickerTool?.isActive?.()) {
+        tilePickerTool.deactivate()
+        document.getElementById('btnTilePicker').classList.remove('active')
+    }
+}
+
+// --- Tile Picker Tool ---
+function toggleTilePicker() {
+    if (!tilePickerTool) {
+        tilePickerTool = createTilePickerTool({
+            canvas,
+            container,
+            getZoom: () => zoom,
+            getMap: () => map,
+            onCoordsPicked: (info) => {
+                tilePickerTool.lastPicked = info
+                console.log('[TilePicker] Picked:', info)
+            }
+        })
+    }
+
+    if (tilePickerTool.isActive()) {
+        tilePickerTool.deactivate()
+        document.getElementById('btnTilePicker').classList.remove('active')
+    } else {
+        // Deactivate other tools
+        setTool('paint')
+        tilePickerTool.activate()
+        document.getElementById('btnTilePicker').classList.add('active')
+    }
+}
+
+// --- Script Panel (3-Panel System) ---
+function toggleScriptPanel() {
+    const btn = document.getElementById('btnScripts')
+    const panelContainer = document.getElementById('scriptPanel')
+
+    if (showScriptPanel) {
+        // Hide panel
+        showScriptPanel = false
+        panelContainer.style.display = 'none'
+        panelContainer.innerHTML = ''
+        btn.classList.remove('active')
+        // Reset panel references
+        scriptFileManagerPanel = null
+        scriptEventEditorPanel = null
+        scriptActionEditorPanel = null
+        scriptNestedActionEditorPanel = null
+        // Reset script state
+        scriptState.goToFileManager()
+    } else {
+        // Show panel
+        showScriptPanel = true
+        panelContainer.style.display = 'flex'
+        panelContainer.style.cssText = `
+            width: 380px;
+            min-width: 320px;
+            max-width: 500px;
+            background: #1e1e1e;
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        `
+        btn.classList.add('active')
+
+        // Create all panels (they'll be shown/hidden by scriptState)
+        scriptFileManagerPanel = createScriptFileManager({ map })
+        scriptEventEditorPanel = createScriptEventEditor()
+        scriptActionEditorPanel = createScriptActionEditor()
+        scriptNestedActionEditorPanel = createScriptNestedActionEditor()
+
+        panelContainer.appendChild(scriptFileManagerPanel)
+        panelContainer.appendChild(scriptEventEditorPanel)
+        panelContainer.appendChild(scriptActionEditorPanel)
+        panelContainer.appendChild(scriptNestedActionEditorPanel)
+
+        // Wire up scriptState callbacks
+        scriptState.onPanelChange = (newMode, prevMode) => {
+            // Hide all panels
+            scriptFileManagerPanel?.hide()
+            scriptEventEditorPanel?.hide()
+            scriptActionEditorPanel?.hide()
+            scriptNestedActionEditorPanel?.hide()
+
+            // Show current panel
+            switch (newMode) {
+                case PANEL_MODE.FILE_MANAGER:
+                    scriptFileManagerPanel?.show()
+                    break
+                case PANEL_MODE.EVENT_EDITOR:
+                    scriptEventEditorPanel?.show()
+                    break
+                case PANEL_MODE.ACTION_EDITOR:
+                    scriptActionEditorPanel?.show()
+                    break
+                case PANEL_MODE.NESTED_ACTION_EDITOR:
+                    scriptNestedActionEditorPanel?.show()
+                    break
+            }
+        }
+
+        scriptState.onLoadFile = async (fileName) => {
+            return await loadScriptFile(fileName)
+        }
+
+        scriptState.onSaveFile = async (fileName, events) => {
+            return await saveScriptFile(fileName, events)
+        }
+
+        scriptState.onCreateFile = async (mapId) => {
+            return await createScriptFileForMap(mapId)
+        }
+
+        scriptState.onSaveEvent = (event, index) => {
+            // Event saved, refresh file manager
+            scriptFileManagerPanel?.refresh()
+        }
+
+        scriptState.onDeleteEvent = (index) => {
+            scriptFileManagerPanel?.refresh()
+        }
+
+        scriptState.onSaveAction = (action, parentContext) => {
+            // Action saved, refresh event editor
+            scriptEventEditorPanel?.renderActionsList?.(scriptState.currentEvent)
+        }
+
+        scriptState.onDeleteAction = (parentContext, index) => {
+            scriptEventEditorPanel?.renderActionsList?.(scriptState.currentEvent)
+        }
+
+        // Start at file manager
+        scriptFileManagerPanel.show()
+    }
+}
+
+// --- Map Enter Preview ---
+async function toggleMapEnterPreview() {
+    const btn = document.getElementById('btnMapEnterPreview')
+
+    if (showMapEnterPreview) {
+        // Hide preview
+        showMapEnterPreview = false
+        mapEnterPreviewData = null
+        btn.classList.remove('active')
+        btn.title = 'Preview map_enter (initial state)'
+        scheduleRender()
+    } else {
+        // Show preview - simulate map_enter
+        if (!map) {
+            alert('No map loaded')
+            return
+        }
+
+        const mapId = map.id || currentMapName
+        if (!mapId || mapId === 'untitled') {
+            alert('Map must be saved with a name first')
+            return
+        }
+
+        showMapEnterPreview = true
+        btn.classList.add('active')
+        btn.title = 'Hide map_enter preview'
+        btn.textContent = '👁️'
+
+        // Pre-load monster and item data for preview rendering
+        await preloadMonsterImages()
+        loadMonsterPreviewData()
+        // Pre-load items data
+        if (!window._itemsPreviewCache) {
+            fetch('../assets/items.json').then(res => res.ok && res.json()).then(data => {
+                window._itemsPreviewCache = data
+            }).catch(e => {
+                console.warn('[Editor] Failed to load items data for preview:', e)
+                window._itemsPreviewCache = { items: {}, crafting: {} }
+            })
+        }
+
+        // Run simulation
+        mapEnterPreviewData = await simulateMapEnter(mapId)
+
+        btn.textContent = '👁️'
+
+        scheduleRender()
+    }
+}
+
+/**
+ * Simulate map_enter event actions to preview initial state
+ * @param {string} mapId - Map identifier
+ * @returns {Promise<Object>} Preview data with monsters, items, npcs, decorations, tileChanges
+ */
+async function simulateMapEnter(mapId) {
+    // Load scripts for this map
+    const { loadMapScripts } = await import('./scripts/scriptStorage.js')
+    const scripts = await loadMapScripts(mapId)
+
+    // Find map_enter event
+    const mapEnterEvent = scripts.find(s => s.on === 'map_enter')
+    if (!mapEnterEvent || !mapEnterEvent.actions) {
+        return { monsters: [], items: [], npcs: [], decorations: [], tileChanges: [] }
+    }
+
+    // Import action schemas for field definitions
+    const { ACTION_SCHEMAS } = await import('./scripts/actionSchemas.js')
+
+    const previewData = {
+        monsters: [],
+        items: [],
+        npcs: [],
+        decorations: [],
+        tileChanges: []
+    }
+
+    // Simulate each action (skip conditionals and pick_random)
+    for (const action of mapEnterEvent.actions) {
+        await simulateAction(action, previewData, ACTION_SCHEMAS)
+    }
+
+    return previewData
+}
+
+/**
+ * Recursively simulate an action and its nested actions
+ * @param {Object} action - Action to simulate
+ * @param {Object} previewData - Preview data object to populate
+ * @param {Object} ACTION_SCHEMAS - Action schemas for field defaults
+ */
+async function simulateAction(action, previewData, ACTION_SCHEMAS) {
+    if (!action || !action.type) return
+
+    const schema = ACTION_SCHEMAS[action.type]
+    if (!schema) return
+
+    // Skip conditionals and pick_random
+    if (action.type === 'if' || action.type === 'pick_random') {
+        return
+    }
+
+    // Get field values with defaults from schema
+    const values = {}
+    if (schema.fields) {
+        for (const field of schema.fields) {
+            values[field.name] = action[field.name] ?? field.default
+        }
+    }
+    // Also copy any additional properties from action not in schema (for backward compatibility with old formats)
+    for (const key of Object.keys(action)) {
+        if (!(key in values)) {
+            values[key] = action[key]
+        }
+    }
+
+    switch (action.type) {
+        case 'spawn_monster': {
+            // Support both new positionPicker format {x, y, mark} and old format {x, y}
+            const position = resolvePosition(values.position, map) ||
+                           (values.x !== undefined && values.y !== undefined ? { x: values.x, y: values.y } : null)
+            if (position) {
+                previewData.monsters.push({
+                    x: position.x,
+                    y: position.y,
+                    monster: values.monster,
+                    id: values.id,
+                    radius: values.radius ?? 0
+                })
+            }
+            break
+        }
+
+        case 'spawn_item': {
+            // Support both new positionPicker format {x, y, mark} and old format {x, y}
+            const position = resolvePosition(values.position, map) ||
+                           (values.x !== undefined && values.y !== undefined ? { x: values.x, y: values.y } : null)
+            if (position) {
+                previewData.items.push({
+                    x: position.x,
+                    y: position.y,
+                    item_id: values.item_id,
+                    qty: values.qty ?? 1
+                })
+            }
+            break
+        }
+
+        case 'spawn_npc': {
+            if (values.npc && values.x !== undefined && values.y !== undefined) {
+                previewData.npcs.push({
+                    x: values.x,
+                    y: values.y,
+                    npc: values.npc,
+                    id: values.id,
+                    flip_x: values.flip_x ?? false
+                })
+            }
+            break
+        }
+
+        case 'spawn_decoration': {
+            if (values.asset_id && values.x !== undefined && values.y !== undefined) {
+                previewData.decorations.push({
+                    x: values.x,
+                    y: values.y,
+                    asset_id: values.asset_id
+                })
+            }
+            break
+        }
+
+        case 'change_tile': {
+            const position = resolvePosition(values.tile, map) ||
+                           (values.mark ? findMarkPosition(values.mark) : null) ||
+                           (values.x !== undefined && values.y !== undefined ? { x: values.x, y: values.y } : null)
+            if (position && values.terrain !== undefined) {
+                previewData.tileChanges.push({
+                    x: position.x,
+                    y: position.y,
+                    terrain: values.terrain
+                })
+            }
+            break
+        }
+
+        case 'remove_decoration': {
+            if (values.x !== undefined && values.y !== undefined) {
+                previewData.tileChanges.push({
+                    x: values.x,
+                    y: values.y,
+                    terrain: null, // null means remove decoration
+                    removeDecoration: true
+                })
+            }
+            break
+        }
+    }
+
+    // Handle nested actions (then, else, branches, choices, actions)
+    const nestedKeys = ['then', 'else', 'branches', 'choices', 'actions']
+    for (const key of nestedKeys) {
+        if (action[key] && Array.isArray(action[key])) {
+            for (const nestedAction of action[key]) {
+                await simulateAction(nestedAction, previewData, ACTION_SCHEMAS)
+            }
+        } else if (action[key] && action[key].type) {
+            // Single nested action object
+            await simulateAction(action[key], previewData, ACTION_SCHEMAS)
+        }
+    }
+}
+
+/**
+ * Resolve position from various formats
+ * @param {Object|Array} pos - Position object {x, y, mark} or tilePicker format {x, y}
+ * @param {Object} map - Map object
+ * @returns {Object|null} Resolved {x, y} or null
+ */
+function resolvePosition(pos, map) {
+    if (!pos) return null
+
+    // positionPicker format: {x, y, mark}
+    if (pos.x !== undefined && pos.y !== undefined) {
+        return { x: pos.x, y: pos.y }
+    }
+
+    // tilePicker format or direct x,y
+    if (pos.x !== undefined && pos.y !== undefined) {
+        return { x: pos.x, y: pos.y }
+    }
+
+    // mark format - would need mark lookup
+    if (pos.mark && map._marks) {
+        const markKey = Object.keys(map._marks).find(k => map._marks[k] === pos.mark)
+        if (markKey) {
+            const [x, y] = markKey.split(',').map(Number)
+            return { x, y }
+        }
+    }
+
+    return null
+}
+
+/**
+ * Find position by mark name
+ * @param {string} markName - Mark name
+ * @returns {Object|null} Position {x, y} or null
+ */
+function findMarkPosition(markName) {
+    if (!map || !map._marks) return null
+    const markKey = Object.keys(map._marks).find(k => map._marks[k] === markName)
+    if (markKey) {
+        const [x, y] = markKey.split(',').map(Number)
+        return { x, y }
+    }
+    return null
+}
+
+// Show mark picker dialog for script editor
+function showMarkPicker(map, onMarkPicked) {
+  const marks = Object.entries(map._marks ?? {})
+  if (marks.length === 0) {
+    alert('No named marks on this map. Add marks first using the Mark tool (M).')
+    return
+  }
+
+  const modal = document.createElement('div')
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `
+  modal.innerHTML = `
+    <div style="
+      background: #252526;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 16px;
+      width: 350px;
+      max-height: 80vh;
+      overflow-y: auto;
+      color: #e0e0e0;
+    ">
+      <h4 style="margin: 0 0 12px 0;">Select a Mark</h4>
+      <div style="display: grid; gap: 4px; max-height: 300px; overflow-y: auto;">
+        ${marks.map(([key, name]) => {
+          const [x, y] = key.split(',').map(Number)
+          return `<button data-x="${x}" data-y="${y}" data-name="${escapeHtml(name)}" style="
+            padding: 10px;
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 3px;
+            color: #e0e0e0;
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+          ">
+            <strong>${escapeHtml(name)}</strong><br>
+            <span style="font-size: 11px; color: #888;">Position: (${x}, ${y})</span>
+          </button>`
+        }).join('')}
+      </div>
+      <button id="mark-picker-cancel" style="
+        margin-top: 16px;
+        width: 100%;
+        padding: 8px;
+        background: #3a3a3a;
+        border: 1px solid #444;
+        border-radius: 3px;
+        color: #e0e0e0;
+        cursor: pointer;
+      ">Cancel</button>
+    </div>
+  `
+
+  const cancelBtn = modal.querySelector('#mark-picker-cancel')
+  const markButtons = modal.querySelectorAll('[data-x]')
+
+  markButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const x = parseInt(btn.dataset.x, 10)
+      const y = parseInt(btn.dataset.y, 10)
+      const name = btn.dataset.name
+      document.body.removeChild(modal)
+      onMarkPicked(name, x, y)
+    })
+  })
+
+  cancelBtn.addEventListener('click', () => document.body.removeChild(modal))
+  modal.addEventListener('click', (e) => { if (e.target === modal) document.body.removeChild(modal) })
+
+  document.body.appendChild(modal)
 }
 
 function syncCursor() {
@@ -853,6 +1429,9 @@ function getCellFromEvent(e) {
 }
 
 function onMouseUp() {
+    // Skip normal tool handling if tile picker is active
+    if (tilePickerTool?.isActive?.()) return
+
     selectPickCandidate = null  // always clear pick candidate on release
     // Finish drag-to-move
     if (isDraggingSelect && selectDragItem) {
@@ -894,6 +1473,9 @@ function onMouseUp() {
 }
 
 function onMouseDown(e) {
+    // Skip normal tool handling if tile picker is active
+    if (tilePickerTool?.isActive?.()) return
+
     if (layer === 'fence') {
         isPainting = true
         fenceDragStart = hoveredFenceCorner ? { ...hoveredFenceCorner } : null
@@ -944,6 +1526,9 @@ function onMouseDown(e) {
 }
 
 function onMouseMove(e) {
+    // Skip normal tool handling if tile picker is active
+    if (tilePickerTool?.isActive?.()) return
+
     const rect = canvas.getBoundingClientRect()
     cursorWx = (e.clientX - rect.left + container.scrollLeft) / zoom
     cursorWy = (e.clientY - rect.top  + container.scrollTop)  / zoom
@@ -1662,6 +2247,280 @@ function renderDecorationsAndTops() {
     }
 }
 
+async function renderMapEnterPreview() {
+    if (!mapEnterPreviewData || !map) return
+
+    const { startX, startY, endX, endY } = getVisibleRange()
+
+    // Render preview tile changes (terrain changes)
+    if (mapEnterPreviewData.tileChanges.length > 0) {
+        for (const change of mapEnterPreviewData.tileChanges) {
+            if (change.x < startX || change.x >= endX || change.y < startY || change.y >= endY) continue
+
+            const terrainId = (typeof change.terrain === 'string')
+                ? ((tileset.terrains.find(t => t.name === change.terrain)?.id ?? parseInt(change.terrain)) || 0)
+                : (change.terrain ?? 0)
+
+            if (change.removeDecoration) {
+                // Show a subtle marker for removed decoration
+                ctx.save()
+                ctx.globalAlpha = 0.5
+                ctx.fillStyle = '#ff4444'
+                ctx.fillRect(change.x * TILE + 4, change.y * TILE + 4, TILE - 8, TILE - 8)
+                ctx.restore()
+            } else if (terrainId !== undefined) {
+                // Draw the changed terrain
+                const terrain = tileset.terrains.find(t => t.id === terrainId)
+                if (terrain) {
+                    ctx.drawImage(terrain.img, 15 * TILE, 0, TILE, TILE, change.x * TILE, change.y * TILE, TILE, TILE)
+                }
+            }
+        }
+    }
+
+    // Render preview decorations
+    if (mapEnterPreviewData.decorations.length > 0) {
+        for (const deco of mapEnterPreviewData.decorations) {
+            if (deco.x < startX || deco.x >= endX || deco.y < startY || deco.y >= endY) continue
+
+            const asset = assetMap[deco.asset_id]
+            if (!asset) continue
+
+            const ts = asset.tileset
+            const state = asset.states[0] // Use default state
+            const [tx, ty, tw, th] = state.region
+            const [px, py] = asset.pivot
+
+            const srcX = tx * ts.size[0]
+            const srcY = ty * ts.size[1]
+            const srcW = tw * ts.size[0]
+            const srcH = th * ts.size[1]
+            const dstW = srcW
+            const dstH = srcH
+
+            const worldX = deco.x * TILE + TILE / 2
+            const worldY = deco.y * TILE + TILE / 2
+
+            ctx.save()
+            ctx.globalAlpha = 0.7 // Semi-transparent to indicate preview
+            ctx.translate(worldX, worldY)
+            ctx.drawImage(ts.img, srcX, srcY, srcW, srcH, -px * dstW, -py * dstH, dstW, dstH)
+            ctx.restore()
+        }
+    }
+
+    // Render preview items
+    if (mapEnterPreviewData.items.length > 0) {
+        for (const item of mapEnterPreviewData.items) {
+            if (item.x < startX || item.x >= endX || item.y < startY || item.y >= endY) continue
+
+            // Get item icon from items.json
+            // For now, draw a simple placeholder
+            const worldX = item.x * TILE + TILE / 2
+            const worldY = item.y * TILE + TILE / 2
+
+            ctx.save()
+            ctx.globalAlpha = 0.8
+            ctx.fillStyle = '#ffd700'
+            ctx.beginPath()
+            ctx.arc(worldX, worldY, 8, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.strokeStyle = '#b8860b'
+            ctx.lineWidth = 1
+            ctx.stroke()
+            // Draw quantity if > 1
+            if (item.qty > 1) {
+                ctx.fillStyle = '#000'
+                ctx.font = 'bold 10px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.textBaseline = 'middle'
+                ctx.fillText(item.qty.toString(), worldX, worldY + 1)
+            }
+            ctx.restore()
+        }
+    }
+
+    // Render preview NPCs
+    if (mapEnterPreviewData.npcs.length > 0) {
+        for (const npc of mapEnterPreviewData.npcs) {
+            if (npc.x < startX || npc.x >= endX || npc.y < startY || npc.y >= endY) continue
+
+            // Draw NPC as a simple colored rectangle for now
+            // In a full implementation, this would use the NPC sprite
+            const worldX = npc.x * TILE + TILE / 2
+            const worldY = npc.y * TILE + TILE / 2
+
+            ctx.save()
+            ctx.globalAlpha = 0.7
+            ctx.fillStyle = '#44ff44'
+            ctx.fillRect(worldX - 12, worldY - 24, 24, 24)
+            ctx.strokeStyle = '#228822'
+            ctx.lineWidth = 1
+            ctx.strokeRect(worldX - 12, worldY - 24, 24, 24)
+            ctx.restore()
+        }
+    }
+
+    // Render preview monsters
+    renderPreviewMonsters(ctx, startX, startY, endX, endY)
+
+    // Render preview items with actual sprites
+    await renderPreviewItems(ctx, startX, startY, endX, endY)
+}
+
+// Monster data cache for preview rendering
+let monsterPreviewDataCache = null
+
+async function loadMonsterPreviewData() {
+    if (monsterPreviewDataCache) return monsterPreviewDataCache
+    try {
+        const res = await fetch('../characters/enemies.json')
+        if (!res.ok) throw new Error('Failed to load enemies.json')
+        monsterPreviewDataCache = await res.json()
+        return monsterPreviewDataCache
+    } catch (e) {
+        console.warn('[Editor] Failed to load monster data for preview:', e)
+        return []
+    }
+}
+
+function findMonsterDefByName(name) {
+    if (!monsterPreviewDataCache) return null
+    return monsterPreviewDataCache.find(m => m.name === name) || null
+}
+
+function renderPreviewMonsters(ctx, startX, startY, endX, endY) {
+    if (!mapEnterPreviewData || !mapEnterPreviewData.monsters.length) return
+
+    for (const monster of mapEnterPreviewData.monsters) {
+        if (monster.x < startX || monster.x >= endX || monster.y < startY || monster.y >= endY) continue
+
+        const worldX = monster.x * TILE + TILE / 2
+        const worldY = monster.y * TILE + TILE / 2
+
+        // Draw full composite monster (body + hands + weapons) using shared module
+        const monsterDef = findMonsterDefByName(monster.monster)
+        if (monsterDef) {
+            // Check if character sprite is available
+            const charSprite = getCharacterSprite(monsterDef.charName)
+            if (charSprite) {
+                // drawCompositeEnemy draws centered at (16*scale, 16*scale) from current transform origin
+                // For scale=1, it draws centered at (16, 16). We want it centered at (worldX, worldY).
+                // So translate to (worldX - 16, worldY - 16) before calling.
+                ctx.save()
+                ctx.globalAlpha = 0.7
+                ctx.translate(worldX - 16, worldY - 16)
+                drawCompositeEnemy(ctx, monsterDef, 1)
+                ctx.restore()
+            } else {
+                // Fallback to simple preview if sprite not loaded
+                drawMonsterPreview(ctx, monster.monster, worldX, worldY, 1, 0.7)
+            }
+        } else {
+            // Fallback to simple preview if monster not found
+            drawMonsterPreview(ctx, monster.monster, worldX, worldY, 1, 0.7)
+        }
+
+        // Draw radius indicator if specified
+        if (monster.radius > 0) {
+            ctx.save()
+            ctx.strokeStyle = 'rgba(255, 68, 68, 0.3)'
+            ctx.lineWidth = 1
+            ctx.setLineDash([4, 4])
+            ctx.beginPath()
+            ctx.arc(worldX, worldY, monster.radius * TILE, 0, Math.PI * 2)
+            ctx.stroke()
+            ctx.setLineDash([])
+            ctx.restore()
+        }
+    }
+}
+
+async function renderPreviewItems(ctx, startX, startY, endX, endY) {
+    if (!mapEnterPreviewData || !mapEnterPreviewData.items.length) return
+
+    // Load items data if not already cached
+    if (!window._itemsPreviewCache) {
+        try {
+            const res = await fetch('../assets/items.json')
+            if (res.ok) {
+                window._itemsPreviewCache = await res.json()
+            }
+        } catch (e) {
+            console.warn('[Editor] Failed to load items data for preview:', e)
+            window._itemsPreviewCache = { items: {}, crafting: {} }
+        }
+    }
+    const itemsData = window._itemsPreviewCache || { items: {}, crafting: {} }
+
+    // Build lookup for item icons - items.json has { "itemName": [x,y] } or { "itemName": { icon: [x,y], ... } }
+    const itemIconMap = {}
+    if (itemsData.items) {
+        for (const [name, def] of Object.entries(itemsData.items)) {
+            if (Array.isArray(def)) {
+                itemIconMap[name] = { icon: def }
+            } else if (def && def.icon) {
+                itemIconMap[name] = def
+            }
+        }
+    }
+    if (itemsData.crafting) {
+        for (const [name, def] of Object.entries(itemsData.crafting)) {
+            if (Array.isArray(def)) {
+                itemIconMap[name] = { icon: def }
+            } else if (def && def.icon) {
+                itemIconMap[name] = def
+            }
+        }
+    }
+
+    for (const item of mapEnterPreviewData.items) {
+        if (item.x < startX || item.x >= endX || item.y < startY || item.y >= endY) continue
+
+        const worldX = item.x * TILE + TILE / 2
+        const worldY = item.y * TILE + TILE / 2
+
+        const itemDef = itemIconMap[item.item]
+        if (itemDef && itemDef.icon) {
+            // Draw actual item sprite from tileset
+            const ts = tileset?.tilesets?.find(t => t.name === 'items') || tileset?.tilesets?.[0]
+            if (ts?.img) {
+                const [ix, iy] = itemDef.icon
+                const srcX = ix * TILE
+                const srcY = iy * TILE
+
+                ctx.save()
+                ctx.globalAlpha = 0.8
+                ctx.drawImage(ts.img, srcX, srcY, TILE, TILE, worldX - TILE/2, worldY - TILE/2, TILE, TILE)
+                ctx.restore()
+            }
+        } else {
+            // Fallback: draw a simple placeholder
+            ctx.save()
+            ctx.globalAlpha = 0.8
+            ctx.fillStyle = '#ffd700'
+            ctx.beginPath()
+            ctx.arc(worldX, worldY, 8, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.strokeStyle = '#b8860b'
+            ctx.lineWidth = 1
+            ctx.stroke()
+            ctx.restore()
+        }
+
+        // Draw quantity if > 1
+        if (item.qty > 1) {
+            ctx.save()
+            ctx.fillStyle = '#000'
+            ctx.font = 'bold 10px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(item.qty.toString(), worldX, worldY + 1)
+            ctx.restore()
+        }
+    }
+}
+
 function drawMapUnderlay() {
     if (!map) return
 
@@ -1838,6 +2697,7 @@ function render() {
 
     if (preview) renderObjectFoam()
     renderDecorationsAndTops()
+    if (showMapEnterPreview) renderMapEnterPreview()
     if (showTraversable) renderTraversable()
 
     if (tool === 'ramp') drawRampCursor()
@@ -3071,9 +3931,21 @@ async function applyMap(name, data) {
     }
 
     map = deserializeMap(data, tileset)
+    map.id = name
     currentMapName = name
     // the loaded map is no longer the on-disk file a prior Save local pinned
     localFileHandle = null
+
+    // Reset map_enter preview
+    showMapEnterPreview = false
+    mapEnterPreviewData = null
+    const previewBtn = document.getElementById('btnMapEnterPreview')
+    if (previewBtn) {
+        previewBtn.classList.remove('active')
+        previewBtn.textContent = '👁️'
+        previewBtn.title = 'Preview map_enter (initial state)'
+    }
+
     const field = document.getElementById('mapName')
     if (field) field.value = name
     sortedItemsDirty = true
@@ -3081,6 +3953,7 @@ async function applyMap(name, data) {
     updateSpacer()
     renderMarksList()
     scheduleRender()
+    exposeEditor()
 }
 
 async function save() {
@@ -3126,14 +3999,17 @@ async function saveLocal() {
 
 async function load() {
     const name = document.getElementById('mapName').value.trim() || 'untitled'
-    try {
-        const res = await fetch(`/maps/${name}`)
-        if (res.ok) {
-            applyMap(name, await res.json())
-            return
-        }
-    } catch {}
-    // fallback: open file picker
+    // Don't try to fetch 'untitled' from server - it doesn't exist
+    if (name !== 'untitled') {
+        try {
+            const res = await fetch(`/maps/${name}`)
+            if (res.ok) {
+                applyMap(name, await res.json())
+                return
+            }
+        } catch {}
+    }
+    // fallback: open file picker (for 'untitled' or if server fetch failed)
     const input = Object.assign(document.createElement('input'), { type: 'file', accept: '.json' })
     input.onchange = async () => {
         const f = input.files[0]
