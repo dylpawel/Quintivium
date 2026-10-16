@@ -504,7 +504,7 @@ export function createScriptFileManager({ map }) {
     delete cleaned.name;
     delete cleaned.enabled;
     if (!cleaned.condition || cleaned.condition.trim() === '') delete cleaned.condition;
-    if (cleaned.tile && (cleaned.tile.x === undefined && cleaned.tile.y === undefined && !cleaned.tile.mark)) {
+    if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
       delete cleaned.tile;
     }
     if (!cleaned.map) delete cleaned.map;

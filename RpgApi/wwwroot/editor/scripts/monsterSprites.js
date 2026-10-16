@@ -1,20 +1,21 @@
 /**
  * Shared Monster Sprite Rendering
  * Used by both scriptActionEditor (dropdown thumbnails) and editor (map_enter preview)
+ * Reads sprite configuration from unified enemies.json
  */
 
-// Monster types in Enemies.png (matching game.js MONSTER_TYPES)
-export const MONSTER_TYPES = [
-  'Knight', 'Orc', 'OrcRogue', 'OrcShaman', 'OrcWarrior',
-  'Rogue', 'Skeleton', 'SkeletonMage', 'SkeletonRogue', 'SkeletonWarrior', 'Wizard'
-]
-
-// Constants from game.js
+// Constants (matching game.js)
 export const MONSTER_FRAME_W = 32
 export const MONSTER_FRAME_H = 32
 export const ENEMY_HAND_CELL = 16
 export const ENEMY_WEP_CELL = 16
 export const FRAME_BOB = [0, 1, 2, 1]
+
+// Fixed row order in Enemies.png (must match game.js MONSTER_TYPES)
+export const MONSTER_TYPES = [
+  'Knight', 'Orc', 'OrcRogue', 'OrcShaman', 'OrcWarrior',
+  'Rogue', 'Skeleton', 'SkeletonMage', 'SkeletonRogue', 'SkeletonWarrior', 'Wizard'
+]
 
 // Image caches (shared across importers)
 let enemiesImg = null
@@ -23,31 +24,61 @@ let weaponHandsImg = null
 let weaponBoneImg = null
 let weaponWoodImg = null
 
-const MONSTER_NAME_MAP = {
-  'Skeleton Fighter': 'Skeleton',
-  'Skeleton Bandit': 'SkeletonRogue',
-  'Skeleton Footman': 'SkeletonWarrior',
-  'Skeleton Soldier': 'SkeletonWarrior',
-  'Skeleton Piercer': 'SkeletonRogue',
-  'Skeleton Mage': 'SkeletonMage',
-  'Skeleton Scholar': 'SkeletonMage',
-  'Skeleton Rogue': 'SkeletonRogue',
-  'Skeleton Warrior': 'SkeletonWarrior',
-  'Skeleton': 'Skeleton',
-  'Orc': 'Orc',
-  'Orc Rogue': 'OrcRogue',
-  'Orc Shaman': 'OrcShaman',
-  'Orc Warrior': 'OrcWarrior',
-  'Knight': 'Knight',
-  'Rogue': 'Rogue',
-  'Wizard': 'Wizard',
-  'Gorilla': 'Gorilla',
-  'Hero-Crab': 'Hero-Crab',
-  'Crab': 'Hero-Crab'
-}
+// Data cache
+let enemiesData = null
 
 // Weapon trim cache (replicates game.js _wepTrimCache)
 const wepTrimCache = {}
+
+/**
+ * Load enemies data and derive MONSTER_NAME_MAP
+ * @returns {Promise<Array>} Array of enemy definitions
+ */
+export async function loadEnemiesData() {
+  if (enemiesData) return enemiesData
+  const res = await fetch('../characters/enemies.json')
+  if (!res.ok) throw new Error('Failed to load enemies.json')
+  enemiesData = await res.json()
+  return enemiesData
+}
+
+/**
+ * Get MONSTER_TYPES actually used in enemies.json (in Enemies.png row order)
+ * @returns {Promise<Array<string>>}
+ */
+export async function getMonsterTypes() {
+  const data = await loadEnemiesData()
+  const usedBases = new Set()
+  for (const e of data) {
+    if (e.sprite && (e.sprite.mode === 'composite' || e.sprite.mode === 'sheet')) {
+      usedBases.add(e.sprite.base)
+    }
+  }
+  // Return in the fixed Enemies.png row order
+  return MONSTER_TYPES.filter(base => usedBases.has(base))
+}
+
+/**
+ * Get MONSTER_NAME_MAP derived from enemies.json
+ * Maps enemy display name -> sprite base name
+ * @returns {Promise<Object>}
+ */
+export async function getMonsterNameMap() {
+  const data = await loadEnemiesData()
+  const map = {}
+  for (const e of data) {
+    if (e.sprite) {
+      map[e.name] = e.sprite.base
+    }
+  }
+  // Add fallback for names not in data (e.g., base names themselves)
+  for (const e of data) {
+    if (e.sprite) {
+      map[e.sprite.base] = e.sprite.base
+    }
+  }
+  return map
+}
 
 /**
  * Compute weapon trim (replicates game.js _computeWeaponTrim)
@@ -82,10 +113,8 @@ function computeWeaponTrim(img, sx, sy, sw, sh) {
   const tw = maxX - minX + 1
   const th = maxY - minY + 1
   return {
-    // Absolute source coordinates in the original image (matching AnimationDemo.html)
     sx: sx + minX, sy: sy + minY,
     sw: tw, sh: th,
-    // dx, dy = offset from cell center to visual center (matching AnimationDemo.html)
     dx: (minX + tw / 2) - sw / 2,
     dy: (minY + th / 2) - sh / 2
   }
@@ -101,7 +130,6 @@ function computeWeaponTrim(img, sx, sy, sw, sh) {
  * @returns {Object|null} Trim data or null
  */
 function getWeaponTrim(file, col, row, cols, rows) {
-  // Handle undefined col/row (missing weapon data)
   if (col == null || row == null) return null
   const key = `${file}:${col},${row},${cols},${rows}`
   if (key in wepTrimCache) return wepTrimCache[key]
@@ -118,15 +146,15 @@ function getWeaponTrim(file, col, row, cols, rows) {
 }
 
 /**
- * Preload all required monster images
+ * Preload all required monster images based on enemies.json
  * @returns {Promise<void>}
  */
 export async function preloadMonsterImages() {
+  const data = await loadEnemiesData()
   const promises = []
 
   // Helper to load/retry an image
   const loadImg = (imgRef, src) => {
-    // If image exists and loaded successfully, skip
     if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
       return Promise.resolve()
     }
@@ -136,44 +164,139 @@ export async function preloadMonsterImages() {
     return new Promise(resolve => { img.onload = img.onerror = resolve })
   }
 
-  // Use refs to allow reassignment
-  const enemiesRef = { current: enemiesImg }
-  const handsRef = { current: weaponHandsImg }
-  const boneRef = { current: weaponBoneImg }
-  const woodRef = { current: weaponWoodImg }
+  // Collect unique sprite bases/files needed
+  const sheetBases = new Set()
+  const individualFiles = new Set()
+  for (const e of data) {
+    const s = e.sprite
+    if (s.mode === 'composite' || s.mode === 'sheet') {
+      sheetBases.add(s.base)
+    } else if (s.mode === 'simple' || s.mode === 'hero') {
+      individualFiles.add(s.file)
+    }
+  }
 
-  promises.push(loadImg(enemiesRef, '../characters/Enemies.png'))
-  promises.push(loadImg(handsRef, '../characters/Weapon-Hands.png'))
-  promises.push(loadImg(boneRef, '../characters/Weapon-Bone.png'))
-  promises.push(loadImg(woodRef, '../characters/Weapon-Wood.png'))
-
-  for (const charName of ['Gorilla', 'Hero-Crab']) {
-    const ref = { current: individualMonsterSprites[charName] }
-    promises.push(loadImg(ref, `../characters/${charName}.png`).then(() => {
-      individualMonsterSprites[charName] = ref.current
+  // Load Enemies.png if any sheet-based sprites needed
+  if (sheetBases.size > 0) {
+    const enemiesRef = { current: enemiesImg }
+    promises.push(loadImg(enemiesRef, '../characters/Enemies.png').then(() => {
+      enemiesImg = enemiesRef.current
     }))
   }
 
-  await Promise.all(promises)
+  // Load individual sprite files
+  for (const file of individualFiles) {
+    const base = file.replace('.png', '')
+    const ref = { current: individualMonsterSprites[base] }
+    promises.push(loadImg(ref, `../characters/${file}`).then(() => {
+      individualMonsterSprites[base] = ref.current
+    }))
+  }
 
-  // Update module-level variables
-  enemiesImg = enemiesRef.current
-  weaponHandsImg = handsRef.current
-  weaponBoneImg = boneRef.current
-  weaponWoodImg = woodRef.current
+  // Weapon sprites
+  const handsRef = { current: weaponHandsImg }
+  const boneRef = { current: weaponBoneImg }
+  const woodRef = { current: weaponWoodImg }
+  promises.push(loadImg(handsRef, '../characters/Weapon-Hands.png').then(() => { weaponHandsImg = handsRef.current }))
+  promises.push(loadImg(boneRef, '../characters/Weapon-Bone.png').then(() => { weaponBoneImg = boneRef.current }))
+  promises.push(loadImg(woodRef, '../characters/Weapon-Wood.png').then(() => { weaponWoodImg = woodRef.current }))
+
+  await Promise.all(promises)
 }
 
 /**
- * Get monster sprite canvas (first frame only) for preview/thumbnails
- * @param {string} monsterName - Monster display name
+ * Get monster thumbnail (first frame) for combobox/dropdown previews
+ * Handles all sprite modes: composite, sheet, simple, hero
+ * @param {string} enemyName - Enemy display name
+ * @param {number} size - Output size (default 32)
+ * @returns {Promise<HTMLCanvasElement|null>} Canvas with thumbnail or null
+ */
+export async function getMonsterThumbnail(enemyName, size = 32) {
+  const data = await loadEnemiesData()
+  const enemy = data.find(e => e.name === enemyName)
+  if (!enemy || !enemy.sprite) return null
+
+  await preloadMonsterImages()
+
+  const sprite = enemy.sprite
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')
+  ctx.imageSmoothingEnabled = false
+
+  switch (sprite.mode) {
+    case 'composite':
+      // Draw composite at frame 0, scaled to size
+      // Use a temporary canvas at base resolution then scale
+      const baseCanvas = document.createElement('canvas')
+      baseCanvas.width = MONSTER_FRAME_W
+      baseCanvas.height = MONSTER_FRAME_H
+      const bctx = baseCanvas.getContext('2d')
+      bctx.imageSmoothingEnabled = false
+      drawCompositeEnemyOnContext(bctx, enemy, 1, 0)
+      ctx.drawImage(baseCanvas, 0, 0, size, size)
+      break
+
+    case 'sheet': {
+      // Draw first frame from Enemies.png row (use full MONSTER_TYPES for correct row positions)
+      const rowIndex = MONSTER_TYPES.indexOf(sprite.base)
+      if (rowIndex >= 0 && enemiesImg && enemiesImg.complete && enemiesImg.naturalWidth > 0) {
+        const rowHeight = enemiesImg.height / MONSTER_TYPES.length
+        ctx.drawImage(enemiesImg, 0, rowIndex * rowHeight, enemiesImg.width, rowHeight, 0, 0, size, size)
+      }
+      break
+    }
+
+    case 'simple':
+    case 'hero': {
+      // Draw first frame from individual file
+      const img = individualMonsterSprites[sprite.base]
+      if (img && img.complete && img.naturalWidth > 0) {
+        const frameW = img.width / (sprite.frames || 4)
+        const srcW = frameW
+        const srcH = img.height
+        ctx.drawImage(img, 0, 0, srcW, srcH, 0, 0, size, size)
+      }
+      break
+    }
+  }
+
+  return canvas
+}
+
+/**
+ * Get monster preview sprite (first frame) - synchronous version using cached images
+ * @param {string} enemyName - Enemy display name
  * @returns {HTMLCanvasElement|null} 32x32 canvas with first frame, or null
  */
-export function getMonsterPreviewSprite(monsterName) {
-  const spriteName = MONSTER_NAME_MAP[monsterName] || monsterName
+export function getMonsterPreviewSprite(enemyName) {
+  // Find enemy in cached data
+  if (!enemiesData) return null
+  const enemy = enemiesData.find(e => e.name === enemyName)
+  if (!enemy || !enemy.sprite) return null
 
-  // Check Enemies.png first
-  const rowIndex = MONSTER_TYPES.indexOf(spriteName)
-  if (rowIndex >= 0 && enemiesImg && enemiesImg.complete && enemiesImg.naturalWidth > 0) {
+  const sprite = enemy.sprite
+
+  // Check individual sprite files first (for simple/hero)
+  if ((sprite.mode === 'simple' || sprite.mode === 'hero') &&
+      individualMonsterSprites[sprite.base] &&
+      individualMonsterSprites[sprite.base].complete &&
+      individualMonsterSprites[sprite.base].naturalWidth > 0) {
+    const img = individualMonsterSprites[sprite.base]
+    const canvas = document.createElement('canvas')
+    canvas.width = MONSTER_FRAME_W
+    canvas.height = MONSTER_FRAME_H
+    const cctx = canvas.getContext('2d')
+    cctx.imageSmoothingEnabled = false
+    const frameW = img.width / (sprite.frames || 4)
+    cctx.drawImage(img, 0, 0, frameW, img.height, 0, 0, MONSTER_FRAME_W, MONSTER_FRAME_H)
+    return canvas
+  }
+
+  // Check Enemies.png for sheet/composite
+  const rowIndex = MONSTER_TYPES.indexOf(sprite.base)
+  if ((sprite.mode === 'composite' || sprite.mode === 'sheet') &&
+      rowIndex >= 0 && enemiesImg && enemiesImg.complete && enemiesImg.naturalWidth > 0) {
     const rowHeight = enemiesImg.height / MONSTER_TYPES.length
     const canvas = document.createElement('canvas')
     canvas.width = MONSTER_FRAME_W
@@ -184,33 +307,20 @@ export function getMonsterPreviewSprite(monsterName) {
     return canvas
   }
 
-  // Check individual sprite files
-  if (individualMonsterSprites[spriteName] && individualMonsterSprites[spriteName].complete && individualMonsterSprites[spriteName].naturalWidth > 0) {
-    const img = individualMonsterSprites[spriteName]
-    const canvas = document.createElement('canvas')
-    canvas.width = MONSTER_FRAME_W
-    canvas.height = MONSTER_FRAME_H
-    const cctx = canvas.getContext('2d')
-    cctx.imageSmoothingEnabled = false
-    const frameW = img.width / 4
-    cctx.drawImage(img, 0, 0, frameW, img.height, 0, 0, MONSTER_FRAME_W, MONSTER_FRAME_H)
-    return canvas
-  }
-
   return null
 }
 
 /**
  * Draw monster preview sprite at world position (for map_enter preview)
  * @param {CanvasRenderingContext2D} ctx - Canvas context
- * @param {string} monsterName - Monster display name
+ * @param {string} enemyName - Enemy display name
  * @param {number} worldX - World X position (center)
  * @param {number} worldY - World Y position (center)
  * @param {number} scale - Scale factor (default 1)
  * @param {number} alpha - Opacity (default 0.7)
  */
-export function drawMonsterPreview(ctx, monsterName, worldX, worldY, scale = 1, alpha = 0.7) {
-  const sprite = getMonsterPreviewSprite(monsterName)
+export function drawMonsterPreview(ctx, enemyName, worldX, worldY, scale = 1, alpha = 0.7) {
+  const sprite = getMonsterPreviewSprite(enemyName)
   if (!sprite) return false
 
   const dw = MONSTER_FRAME_W * scale
@@ -227,18 +337,29 @@ export function drawMonsterPreview(ctx, monsterName, worldX, worldY, scale = 1, 
 /**
  * Draw composite enemy (body + hands + weapons) to canvas at given scale
  * For use in dropdown thumbnails (scale=1) and stats display (scale=3 or 4)
- * @param {CanvasRenderingContext2D} ctx - Canvas context (canvas should be sized appropriately for scale)
- * @param {Object} def - Monster definition from enemies.json
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {Object} enemy - Enemy definition from enemies.json (with sprite config)
  * @param {number} scale - Scale factor (1 = 32x32, 3 = 96x96, 4 = 128x128)
  * @param {number} frame - Animation frame (default 0 for idle)
  */
-export function drawCompositeEnemy(ctx, def, scale = 1, frame = 0) {
+export function drawCompositeEnemy(ctx, enemy, scale = 1, frame = 0) {
+  const sprite = enemy.sprite
+  if (sprite.mode !== 'composite') return
+
+  drawCompositeEnemyOnContext(ctx, enemy, scale, frame)
+}
+
+/**
+ * Internal: Draw composite enemy on a context
+ */
+function drawCompositeEnemyOnContext(ctx, enemy, scale, frame) {
+  const sprite = enemy.sprite
   const bob = FRAME_BOB[frame]
-  const lh = def.lh ?? { x: -10, y: 6, z: 3 }
-  const rh = def.rh ?? { x: 10, y: 6, z: 3 }
-  const charZ = def.charZ ?? def.char?.z ?? 1
-  const handRow = def.handRow ?? null
-  const weps = [def.wep1, def.wep2].filter(w => w && w.col != null)
+  const lh = sprite.hands?.left ?? { x: -10, y: 6, z: 3 }
+  const rh = sprite.hands?.right ?? { x: 10, y: 6, z: 3 }
+  const charZ = sprite.z ?? 1
+  const handRow = sprite.handRow ?? null
+  const weps = (sprite.weapons ?? []).filter(w => w && w.col != null)
 
   // Center of the canvas
   const cx = (MONSTER_FRAME_W * scale) / 2
@@ -251,7 +372,7 @@ export function drawCompositeEnemy(ctx, def, scale = 1, frame = 0) {
   const layers = []
 
   // Character body
-  const charSprite = getCharacterSprite(def.charName)
+  const charSprite = getCharacterSprite(sprite.base)
   if (charSprite) {
     layers.push({ z: charZ, fn: () => {
       const fw = MONSTER_FRAME_W * scale
@@ -313,12 +434,11 @@ export function drawCompositeEnemy(ctx, def, scale = 1, frame = 0) {
 
 /**
  * Get the full character sprite row (all frames) for custom dropdown rendering
- * @param {string} charName - Character/sprite name
+ * @param {string} baseName - Character/sprite base name (e.g., "Skeleton")
  * @returns {HTMLCanvasElement|null} Canvas with full row, or null
  */
-export function getCharacterSprite(charName) {
-  const spriteName = MONSTER_NAME_MAP[charName] || charName
-  const rowIndex = MONSTER_TYPES.indexOf(spriteName)
+export function getCharacterSprite(baseName) {
+  const rowIndex = MONSTER_TYPES.indexOf(baseName)
 
   if (rowIndex >= 0 && enemiesImg && enemiesImg.complete && enemiesImg.naturalWidth > 0) {
     const rowHeight = enemiesImg.height / MONSTER_TYPES.length
@@ -331,9 +451,22 @@ export function getCharacterSprite(charName) {
     return canvas
   }
 
-  if (individualMonsterSprites[spriteName] && individualMonsterSprites[spriteName].complete && individualMonsterSprites[spriteName].naturalWidth > 0) {
-    return individualMonsterSprites[spriteName]
+  if (individualMonsterSprites[baseName] && individualMonsterSprites[baseName].complete && individualMonsterSprites[baseName].naturalWidth > 0) {
+    return individualMonsterSprites[baseName]
   }
 
   return null
+}
+
+// Derived constants - populated after loadEnemiesData()
+export let USED_MONSTER_TYPES = []
+export let MONSTER_NAME_MAP = {}
+
+/**
+ * Initialize derived constants (call after loadEnemiesData)
+ */
+export async function initMonsterConstants() {
+  await loadEnemiesData()
+  USED_MONSTER_TYPES = await getMonsterTypes()
+  MONSTER_NAME_MAP = await getMonsterNameMap()
 }

@@ -50,14 +50,16 @@ async function findMonsterByName(name) {
 
 /**
  * Render monster stats display
- * @param {Object} monster - Monster object from enemies.json
+ * @param {Object} monster - Monster object from enemies.json (with sprite config)
  * @returns {string} HTML for the stats display
  */
 function renderMonsterStats(monster) {
   if (!monster) return '';
 
-  const spriteUrl = `../characters/${monster.charName}.png`;
-  const charZ = monster.charZ || 1;
+  const sprite = monster.sprite;
+  const spriteBase = sprite?.base ?? monster.name;
+  const spriteUrl = `../characters/${sprite?.file ?? (spriteBase + '.png')}`;
+  const charZ = sprite?.z ?? 1;
 
   return `
     <div id="monster-stats-display" style="
@@ -150,7 +152,8 @@ function setupMonsterSelect(input, fieldName) {
       const canvas = statsContainer.querySelector('#monster-sprite-canvas');
       const fallback = statsContainer.querySelector('#monster-sprite-fallback');
 
-      if (canvas && monster.charName) {
+      const spriteBase = monster.sprite?.base;
+      if (canvas && spriteBase) {
         // Prevent concurrent draws on the same canvas
         if (canvas._drawing) return;
         canvas._drawing = true;
@@ -407,7 +410,10 @@ export function createScriptActionEditor() {
     container.innerHTML = '';
 
     for (const field of schema.fields) {
-      const value = action[field.name];
+      // saveAction flattens spawn position into top-level x/y/mark, so read them back
+      const value = field.type === 'positionPicker' && action[field.name] === undefined
+        ? { x: action.x, y: action.y, mark: action.mark }
+        : action[field.name];
       const fieldEl = createFieldElement(field, value, action);
       container.appendChild(fieldEl);
     }
@@ -505,23 +511,7 @@ export function createScriptActionEditor() {
   function onSpawnMonsterMapClick(e) {
     if (!spawnMonsterPickMode || !spawnMonsterPickInputs) return;
 
-    const canvas = document.getElementById('mapCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
-
-    // Convert to world coordinates (accounting for pan/zoom)
-    const editorZoom = window.editor?.zoom ?? 1;
-    const editorTile = window.editor?.TILE ?? 32;
-    const worldX = (clientX * scaleX) / editorZoom;
-    const worldY = (clientY * scaleY) / editorZoom;
-
-    // Convert to tile coordinates
-    const tileX = Math.floor(worldX / editorTile);
-    const tileY = Math.floor(worldY / editorTile);
+    const { x: tileX, y: tileY } = window.editor.tileFromEvent(e);
 
     // Validate bounds
     const currentMap = window.editor?.currentMap;
@@ -1581,23 +1571,7 @@ export function createScriptActionEditor() {
   function onMapTileClick(e) {
     if (!tilePickMode || !tilePickTargetField) return;
 
-    const canvas = document.getElementById('mapCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
-
-    // Convert to world coordinates (accounting for pan/zoom)
-    const editorZoom = window.editor?.zoom ?? 1;
-    const editorTile = window.editor?.TILE ?? 32;
-    const worldX = (clientX * scaleX) / editorZoom;
-    const worldY = (clientY * scaleY) / editorZoom;
-
-    // Convert to tile coordinates
-    const tileX = Math.floor(worldX / editorTile);
-    const tileY = Math.floor(worldY / editorTile);
+    const { x: tileX, y: tileY } = window.editor.tileFromEvent(e);
 
     // Validate bounds
     const currentMap = window.editor?.currentMap;
@@ -1674,21 +1648,7 @@ export function createScriptActionEditor() {
   function onPositionMapClick(e) {
     if (!positionPickMode || !positionPickTargetField) return;
 
-    const canvas = document.getElementById('mapCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
-
-    const editorZoom = window.editor?.zoom ?? 1;
-    const editorTile = window.editor?.TILE ?? 32;
-    const worldX = (clientX * scaleX) / editorZoom;
-    const worldY = (clientY * scaleY) / editorZoom;
-
-    const tileX = Math.floor(worldX / editorTile);
-    const tileY = Math.floor(worldY / editorTile);
+    const { x: tileX, y: tileY } = window.editor.tileFromEvent(e);
 
     const currentMap = window.editor?.currentMap;
     if (!currentMap || tileX < 0 || tileY < 0 || tileX >= currentMap.width || tileY >= currentMap.height) {

@@ -323,7 +323,7 @@ function cleanEventForJSON(event) {
   }
 
   // Empty tile
-  if (cleaned.tile && (cleaned.tile.x === undefined && cleaned.tile.y === undefined && !cleaned.tile.mark)) {
+  if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
     delete cleaned.tile;
   }
 

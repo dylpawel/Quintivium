@@ -398,23 +398,43 @@ const SPRITE_DEFS = {
     'Hero-Mage':   {},
     'Hero-Boy':    {},
     'Hero-Farmer': {},        // 256×32 col sheet (8 frames) — matches defaults
-    'Hero-Crab':   { frames: 4, layout: 'row' },
-    'Gorilla':     { frames: 4, layout: 'row' },
-    'Bat':         { frames: 4, layout: 'row' }
+    // Hero-Crab, Gorilla, Bat are now defined in enemies.json sprite config
 }
 
 /**
  * Resolve the draw-definition for any sprite name, whether it is spawned as a
  * monster or an NPC. Returns one of:
- *   • { composite:true,  def }              — name is an _enemyDefs entry
- *                                             (char + hands + weapon layers)
- *   • { composite:false, frameW, frameH, frames, footX, footY, fps, layout }
+ *   • { composite:true,  def, sprite }        — name is an _enemyDefs entry with sprite config
+ *   • { composite:false, frameW, frameH, frames, footX, footY, fps, layout, file }
  *                                            — simple frame-sheet geometry
  * Unregistered names fall back to SPRITE_DEFAULTS, so an arbitrary sprite can be
  * used without pre-registration. Composites win over simple-sheet geometry.
  */
 function resolveEntityDef(name) {
-    if (_enemyDefs[name]) return { composite: true, def: _enemyDefs[name] }
+    const enemyDef = _enemyDefs[name];
+    if (enemyDef) {
+        const sprite = enemyDef.sprite;
+        if (sprite.mode === 'composite') {
+            return { composite: true, def: enemyDef, sprite };
+        }
+        // simple, sheet, hero modes - return simple geometry with file info
+        // Apply defaults: frameW=32, frameH=32, footX=16, footY=32
+        // For simple/hero: frames=4, layout='row'; for sheet: frames=4 (from Enemies.png rows)
+        const isSimpleOrHero = sprite.mode === 'simple' || sprite.mode === 'hero';
+        const defaults = {
+            frameW: 32, frameH: 32, footX: 16, footY: 32,
+            frames: isSimpleOrHero ? 4 : 8,
+            layout: isSimpleOrHero ? 'row' : 'col',
+            fps: 8
+        };
+        return {
+            composite: false,
+            ...defaults,
+            ...(SPRITE_DEFS[sprite.base] ?? {}),
+            ...sprite,
+            file: sprite.file
+        };
+    }
     return { composite: false, ...SPRITE_DEFAULTS, ...(SPRITE_DEFS[name] ?? {}) }
 }
 
@@ -1759,12 +1779,13 @@ function _getWeaponTrim(file, col, row, cols, rows) {
 // ─── Composite enemy renderer ─────────────────────────────────────────────────────
 // def: _enemyDefs entry. cx,cy: character centre. scale: world→px. flipX: mirror the whole sprite.
 function _drawCompositeEnemy(def, c2d, frame, scale, cx, cy, flipX) {
+    const sprite = def.sprite;
     const bob   = FRAME_BOB[frame]
-    const lh    = def.lh    ?? { x: -10, y: 6, z: 3 }
-    const rh    = def.rh    ?? { x:  10, y: 6, z: 3 }
-    const charZ = def.charZ ?? def.char?.z ?? 1
-    const handRow = def.handRow ?? null
-    const weps  = [def.wep1, def.wep2].filter(w => w && w.col != null)
+    const lh    = sprite.hands?.left  ?? { x: -10, y: 6, z: 3 }
+    const rh    = sprite.hands?.right ?? { x:  10, y: 6, z: 3 }
+    const charZ = sprite.z ?? 1
+    const handRow = sprite.handRow ?? null
+    const weps  = (sprite.weapons ?? []).filter(w => w && w.col != null)
 
     c2d.save()
     c2d.translate(cx, cy)
@@ -1772,7 +1793,7 @@ function _drawCompositeEnemy(def, c2d, frame, scale, cx, cy, flipX) {
     c2d.imageSmoothingEnabled = false
 
     const layers = []
-    const charSprite = monsterSprites[def.charName]
+    const charSprite = monsterSprites[sprite.base]
     if (charSprite) layers.push({ z: charZ, fn: () => {
         const fw = MONSTER_FRAME_W * scale, fh = MONSTER_FRAME_H * scale
         c2d.drawImage(charSprite, frame * MONSTER_FRAME_W, 0, MONSTER_FRAME_W, MONSTER_FRAME_H,
@@ -1819,6 +1840,7 @@ function _drawCompositeEnemy(def, c2d, frame, scale, cx, cy, flipX) {
 // body centre = (0,0), foot = (0, MONSTER_FRAME_H/2)). Returns canvas-space layout:
 //   { frameW, frameH, charX, charY, footX, footY } — anchor positions inside one frame slot.
 function _computeCompositeBounds(def) {
+    const sprite = def.sprite;
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
     const expand = (x1, y1, x2, y2) => {
         if (x1 < minX) minX = x1; if (x2 > maxX) maxX = x2
@@ -1827,12 +1849,12 @@ function _computeCompositeBounds(def) {
 
     // ── Body: pixel-level trim per unique animation frame (bob doesn't affect body) ──
     // Results cached by charName:frame so enemies sharing the same base sprite pay once.
-    const charSprite = monsterSprites[def.charName]
+    const charSprite = monsterSprites[sprite.base]
     const nBodyFrames = charSprite ? Math.floor(charSprite.naturalWidth / MONSTER_FRAME_W) : 0
     // iterate frames 0..2 (frame 3 = frame 1, same sprite cell)
     let bodyTrimmed = false
     for (let f = 0; f < Math.min(nBodyFrames, 3); f++) {
-        const key = `${def.charName}:${f}`
+        const key = `${sprite.base}:${f}`
         let t = key in _bodyTrimCache ? _bodyTrimCache[key]
               : (_bodyTrimCache[key] = _computeWeaponTrim(charSprite, f * MONSTER_FRAME_W, 0, MONSTER_FRAME_W, MONSTER_FRAME_H))
         if (t) {
@@ -1843,13 +1865,13 @@ function _computeCompositeBounds(def) {
     if (!bodyTrimmed) expand(-MONSTER_FRAME_W / 2, -MONSTER_FRAME_H / 2, MONSTER_FRAME_W / 2, MONSTER_FRAME_H / 2)
 
     // ── Hands: pixel-level trim via _getWeaponTrim (reuses _wepTrimCache) ────────────
-    const lh   = def.lh ?? { x: -10, y: 6 }
-    const rh   = def.rh ?? { x:  10, y: 6 }
+    const lh   = sprite.hands?.left  ?? { x: -10, y: 6 }
+    const rh   = sprite.hands?.right ?? { x:  10, y: 6 }
     const bobs = [...new Set(FRAME_BOB)]   // [0, 1, 2]
-    if (def.handRow != null) {
+    if (sprite.handRow != null) {
         // Columns 0=left hand, 1=right hand in Weapon-Hands sheet
-        const tLH = _getWeaponTrim('Weapon-Hands', 0, def.handRow, 1, 1)
-        const tRH = _getWeaponTrim('Weapon-Hands', 1, def.handRow, 1, 1)
+        const tLH = _getWeaponTrim('Weapon-Hands', 0, sprite.handRow, 1, 1)
+        const tRH = _getWeaponTrim('Weapon-Hands', 1, sprite.handRow, 1, 1)
         for (const bob of bobs) {
             if (tLH) expand(lh.x + tLH.dx - tLH.sw/2, lh.y + bob + tLH.dy - tLH.sh/2,
                             lh.x + tLH.dx + tLH.sw/2, lh.y + bob + tLH.dy + tLH.sh/2)
@@ -1863,7 +1885,7 @@ function _computeCompositeBounds(def) {
     }
 
     // ── Weapons: use pixel-level trim, expand rotated corners if needed ─────────────
-    for (const w of [def.wep1, def.wep2].filter(w => w?.col != null)) {
+    for (const w of (sprite.weapons ?? []).filter(w => w?.col != null)) {
         const t = _getWeaponTrim(w.file, w.col, w.row, w.cols ?? 1, w.rows ?? 1)
         if (!t) {
             const ww = (w.cols ?? 1) * ENEMY_WEP_CELL / 2, wh = (w.rows ?? 1) * ENEMY_WEP_CELL / 2
@@ -1946,21 +1968,25 @@ function _bakeMonsterSheet(type, fill) {
 }
 
 function _bakeAllMonsterSheets() {
-    const types = Object.keys(_enemyDefs)
-    // Pre-compute bounds for every type once; _bakeMonsterSheet reads from _monsterSheetInfo
+    // Only bake composite enemies (those with sprite.mode === 'composite')
+    const compositeTypes = Object.keys(_enemyDefs).filter(name => {
+        const def = _enemyDefs[name];
+        return def.sprite && def.sprite.mode === 'composite';
+    });
+    // Pre-compute bounds for every composite type once; _bakeMonsterSheet reads from _monsterSheetInfo
     // so it never recomputes bounds or re-reads pixels.
-    for (const type of types) {
+    for (const type of compositeTypes) {
         _monsterSheetInfo.set(type, _computeCompositeBounds(_enemyDefs[type]))
     }
-    for (const type of types) {
+    for (const type of compositeTypes) {
         _monsterSilhouetteCache.set(type, _bakeMonsterSheet(type, '#000'))
     }
 
     // ── Summary ───────────────────────────────────────────────────────────────
-    console.group('[Monster sheets] baked %d types', types.length)
+    console.group('[Monster sheets] baked %d composite types', compositeTypes.length)
     let totalKB = 0
     const rows = []
-    for (const type of types) {
+    for (const type of compositeTypes) {
         const info = _monsterSheetInfo.get(type)
         const fW   = info.frameW
         const fH   = info.frameH
@@ -1990,8 +2016,10 @@ const _monsterSilhouetteCache = new Map()   // composite type → baked whole-sh
 const _entitySilhouetteCache = new Map()   // "name:frame" → Canvas (simple sheets only)
 
 /** Resolve the sprite image for any name, checking both caches. */
-function _getEntityImg(name) {
-    return monsterSprites[name] ?? npcSprites[name] ?? null
+function _getEntityImg(name, resolved = null) {
+    // For sheet mode, use the base name (e.g., "Skeleton" for "Skeleton Soldier")
+    const key = (resolved && resolved.base) ? resolved.base : name;
+    return monsterSprites[key] ?? npcSprites[name] ?? null
 }
 
 /** Compute the current animation frame for a resolved simple-sheet entity. */
@@ -2012,7 +2040,7 @@ function _renderEntityTo(entity, tctx) {
         _drawCompositeEnemy(resolved.def, tctx, frame, 1, worldX, worldY - MONSTER_FRAME_H / 2, flipX)
         return
     }
-    const img = _getEntityImg(name)
+    const img = _getEntityImg(name, resolved)
     if (!img) return
     const { frameW, frameH, footX, footY } = resolved
     const frame = _entityFrame(resolved)
@@ -2024,11 +2052,11 @@ function _renderEntityTo(entity, tctx) {
 }
 
 /** Get (or lazily bake) a silhouette frame for a simple-sheet sprite. Uses the shared sprite-image caches. */
-function _getSilhouette(name, frame, geom) {
+function _getSilhouette(name, frame, geom, resolved = null) {
     const key = `${name}:${frame}`
     let sil = _entitySilhouetteCache.get(key)
     if (sil) return sil
-    const img = _getEntityImg(name)
+    const img = _getEntityImg(name, resolved)
     if (!img) return null
     const { frameW, frameH } = geom
     sil = document.createElement('canvas')
@@ -2077,7 +2105,7 @@ function drawEntityShadow(entity, tctx) {
     // Simple sheet: lazy per-frame silhouette
     const { frameW, frameH, footX, footY, frames, fps } = resolved
     const frame  = Math.floor(performance.now() / (1000 / fps)) % frames
-    const sil    = _getSilhouette(name, frame, resolved); if (!sil) return
+    const sil    = _getSilhouette(name, frame, resolved, resolved); if (!sil) return
     const pivY   = footY / frameH
     const worldX = entity.tileX * TILE + TILE / 2
     const worldY = entity.tileY * TILE + TILE / 2
@@ -2159,6 +2187,7 @@ function renderDecorationsEffectsAndPlayer() {
     if (sc.width !== canvas.width || sc.height !== canvas.height) { sc.width = canvas.width; sc.height = canvas.height }
     const sctx = sc.getContext('2d')
     sctx.imageSmoothingEnabled = false
+    sctx.resetTransform() // clearRect honors the transform left over from the previous frame
     sctx.clearRect(0, 0, sc.width, sc.height)
     sctx.setTransform(ctx.getTransform())
     if (_decoShadow && !player.moving) {
@@ -2414,18 +2443,20 @@ async function spawnMonster(type, opts = {}) {
     // Resolve the effective sprite sheet: composites use def.charName; simple-sheet
     // types use the type name directly. Either way, lazy-load the PNG on demand
     // (mirrors spawnNpc) so spawn_monster can use a sprite it has never seen before.
-    const charName = _enemyDefs[type]?.charName ?? type
+    const def = _enemyDefs[type];
+    const charName = def?.sprite?.base ?? type;
     if (monsterSprites[charName] == null) {
-        try { monsterSprites[charName] = await loadImage(`../characters/${charName}.png`) }
-        catch (e) { console.warn(`[Monster] Sprite not found: ${charName}.png (will render nothing)`) }
+        const file = def?.sprite?.file ?? `${charName}.png`;
+        try { monsterSprites[charName] = await loadImage(`../characters/${file}`) }
+        catch (e) { console.warn(`[Monster] Sprite not found: ${file} (will render nothing)`) }
     }
     // Re-bake this type's shadow silhouette now that its char sprite is loaded.
     // _bakeAllMonsterSheets() runs at init before lazy-loadable char sprites
     // (Gorilla and anything not in the eager list) exist, so its baked sheet is
     // blank and its bounds default. Re-compute bounds + re-bake here so
     // drawEntityShadow has real pixels at the correct frame geometry.
-    if (_enemyDefs[type] && monsterSprites[charName]) {
-        _monsterSheetInfo.set(type, _computeCompositeBounds(_enemyDefs[type]))
+    if (def?.sprite?.mode === 'composite' && monsterSprites[charName]) {
+        _monsterSheetInfo.set(type, _computeCompositeBounds(def))
         _monsterSilhouetteCache.set(type, _bakeMonsterSheet(type, '#000'))
     }
     const known = MONSTER_TYPES.includes(type) || _enemyDefs[type]
@@ -5171,35 +5202,60 @@ async function init() {
                 try { def.img = await loadImage(def.src) } catch { /* optional */ }
             })),
 
-        // Monster sprites — one combined sheet instead of 11 individual requests
-        loadImage('../characters/Enemies.png').then(sheet => {
-            const sliceH = sheet.height / MONSTER_TYPES.length
-            for (let i = 0; i < MONSTER_TYPES.length; i++) {
-                const c = document.createElement('canvas')
-                c.width = sheet.width; c.height = sliceH
-                c.getContext('2d').drawImage(sheet, 0, i * sliceH, sheet.width, sliceH, 0, 0, sheet.width, sliceH)
-                monsterSprites[MONSTER_TYPES[i]] = c
+        // Enemy definitions first (needed to know which sprites to load)
+        fetch('../characters/enemies.json').then(r => r.json()).then(arr => {
+            for (const def of arr) _enemyDefs[def.name] = def
+            console.log(`[Enemy] Loaded ${arr.length} enemy definitions`)
+
+            // Collect unique sprite bases needed
+            const sheetBases = new Set();      // bases from Enemies.png (composite/sheet mode)
+            const individualFiles = new Set(); // individual files (simple/hero mode)
+            for (const def of arr) {
+                const s = def.sprite;
+                if (s.mode === 'composite' || s.mode === 'sheet') {
+                    sheetBases.add(s.base);
+                } else if (s.mode === 'simple' || s.mode === 'hero') {
+                    individualFiles.add(s.file);
+                }
             }
-        }).catch(() => {
-            // fallback: load individually if Enemies.png missing
-            console.warn('[Monster] Enemies.png not found, falling back to individual files')
-            return Promise.all(MONSTER_TYPES.map(async type => {
-                try { monsterSprites[type] = await loadImage(`../characters/${type}.png`) }
-                catch { console.warn(`[Monster] Sprite not found: ${type}.png`) }
-            }))
-        }),
+
+            // Load Enemies.png and slice for sheet-based sprites
+            if (sheetBases.size > 0) {
+                loadImage('../characters/Enemies.png').then(sheet => {
+                    const sliceH = sheet.height / MONSTER_TYPES.length
+                    for (const base of sheetBases) {
+                        const row = MONSTER_TYPES.indexOf(base);
+                        if (row >= 0) {
+                            const c = document.createElement('canvas')
+                            c.width = sheet.width; c.height = sliceH
+                            c.getContext('2d').drawImage(sheet, 0, row * sliceH, sheet.width, sliceH, 0, 0, sheet.width, sliceH)
+                            monsterSprites[base] = c
+                        }
+                    }
+                }).catch(() => {
+                    console.warn('[Monster] Enemies.png not found, falling back to individual files')
+                    for (const base of sheetBases) {
+                        loadImage(`../characters/${base}.png`).then(img => {
+                            monsterSprites[base] = img
+                        }).catch(() => console.warn(`[Monster] Sprite not found: ${base}.png`));
+                    }
+                });
+            }
+
+            // Load individual sprite files (simple/hero mode)
+            for (const file of individualFiles) {
+                loadImage(`../characters/${file}`).then(img => {
+                    const base = file.replace('.png', '');
+                    monsterSprites[base] = img
+                }).catch(() => console.warn(`[Monster] Sprite not found: ${file}`));
+            }
+        }).catch(e => console.warn('[Enemy] Could not load enemies.json:', e.message)),
 
         // Weapon sprites for composite enemies
         Promise.all(['Weapon-Hands', 'Weapon-Bone', 'Weapon-Wood'].map(async file => {
             try { _weaponSprites[file] = await loadImage(`../characters/${file}.png`) }
             catch { console.warn(`[Enemy] Weapon sprite not found: ${file}.png`) }
         })),
-
-        // Enemy definitions
-        fetch('../characters/enemies.json').then(r => r.json()).then(arr => {
-            for (const def of arr) _enemyDefs[def.name] = def
-            console.log(`[Enemy] Loaded ${arr.length} enemy definitions`)
-        }).catch(e => console.warn('[Enemy] Could not load enemies.json:', e.message)),
     ])
 
     console.log(`[Load] Phase 1 (parallel): ${_ms(_tPhase1)}`)
@@ -5599,14 +5655,16 @@ async function deserializeGameState(saveData) {
     // Deduplicate by type and load sprites
     const uniqueMonsterTypes = [...new Set(allRestoredMonsters.map(m => m.type))]
     for (const type of uniqueMonsterTypes) {
-        const charName = _enemyDefs[type]?.charName ?? type
+        const def = _enemyDefs[type];
+        const charName = def?.sprite?.base ?? type;
         if (monsterSprites[charName] == null) {
-            try { monsterSprites[charName] = await loadImage(`../characters/${charName}.png`) }
-            catch (e) { console.warn(`[Monster] Sprite not found: ${charName}.png (will render nothing)`) }
+            const file = def?.sprite?.file ?? `${charName}.png`;
+            try { monsterSprites[charName] = await loadImage(`../characters/${file}`) }
+            catch (e) { console.warn(`[Monster] Sprite not found: ${file} (will render nothing)`) }
         }
         // Re-bake this type's shadow silhouette now that its char sprite is loaded
-        if (_enemyDefs[type] && monsterSprites[charName]) {
-            _monsterSheetInfo.set(type, _computeCompositeBounds(_enemyDefs[type]))
+        if (def?.sprite?.mode === 'composite' && monsterSprites[charName]) {
+            _monsterSheetInfo.set(type, _computeCompositeBounds(def))
             _monsterSilhouetteCache.set(type, _bakeMonsterSheet(type, '#000'))
         }
     }

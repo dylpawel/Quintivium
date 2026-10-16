@@ -677,23 +677,7 @@ export function createScriptEventEditor() {
   function onMapTileClick(e) {
     if (!tilePickMode) return;
 
-    const canvas = document.getElementById('mapCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const clientX = e.clientX - rect.left;
-    const clientY = e.clientY - rect.top;
-
-    // Convert to world coordinates (accounting for pan/zoom)
-    const editorZoom = window.editor?.zoom ?? 1;
-    const editorTile = window.editor?.TILE ?? 32;
-    const worldX = (clientX * scaleX) / editorZoom;
-    const worldY = (clientY * scaleY) / editorZoom;
-
-    // Convert to tile coordinates
-    const tileX = Math.floor(worldX / editorTile);
-    const tileY = Math.floor(worldY / editorTile);
+    const { x: tileX, y: tileY } = window.editor.tileFromEvent(e);
 
     // Validate bounds
     const currentMap = window.editor?.currentMap;
@@ -909,10 +893,10 @@ kills('goblin') >= 10</code></pre>
     event.once = formData.get('once') === 'on';
     event.on = formData.get('on');
 
-    // Tile
-    const tileX = formData.get('tile_x');
-    const tileY = formData.get('tile_y');
-    const tileMark = formData.get('tile_mark');
+    // Tile fields are absent without tile scope, so get() returns null
+    const tileX = formData.get('tile_x') ?? '';
+    const tileY = formData.get('tile_y') ?? '';
+    const tileMark = formData.get('tile_mark') ?? '';
     if (tileX !== '' || tileY !== '' || tileMark !== '') {
       event.tile = {};
       if (tileX !== '') event.tile.x = parseInt(tileX, 10);

@@ -1,6 +1,7 @@
 import { loadTilesetRegistry, loadTileset } from './tileset.js'
 import { createMap, setCell, getCell, getRaw, floodFill, serializeMap, deserializeMap, placeDecoration, removeDecoration, getDecorations, getHeight, setHeight, getRawHeight, getRamp, setRamp, setHFence, removeHFence, setVFence, removeVFence, addScript, removeScript, getScript, updateScript, getScriptsForMap, getAllScripts } from './map.js'
 import { loadAssets } from './assets.js'
+import { loadImage } from './imaging.js'
 import { tileHash, getVariantIndex, buildTileCanvas } from './tilemath.js'
 import { createTilePickerTool } from './scripts/tilePicker.js'
 import { loadAllScripts, saveMapScripts, getScriptFileForMap, saveScriptFile, loadScriptFile, getScriptFilesInfo, createScriptFileForMap } from './scripts/scriptStorage.js'
@@ -302,7 +303,9 @@ function exposeEditor() {
         get assets() { return assets; },
         get assetMap() { return assetMap; },
         get zoom() { return zoom; },
-        get TILE() { return TILE; }
+        get TILE() { return TILE; },
+        // Tile under a mouse event, accounting for scroll and zoom
+        tileFromEvent: getCellFromEvent
     };
 }
 
@@ -346,6 +349,10 @@ async function init() {
 
     // Load enemy sprites for map_enter preview (shared module)
     await preloadMonsterImages()
+
+    // Load item spritesheets for map_enter preview
+    itemsImg = await loadImage('../assets/items.png').catch(() => null)
+    craftingImg = await loadImage('../assets/crafting.png').catch(() => null)
 
     select.addEventListener('change', e => switchTileset(e.target.value))
     document.getElementById('previewToggle').addEventListener('change', e => {
@@ -2309,37 +2316,6 @@ async function renderMapEnterPreview() {
         }
     }
 
-    // Render preview items
-    if (mapEnterPreviewData.items.length > 0) {
-        for (const item of mapEnterPreviewData.items) {
-            if (item.x < startX || item.x >= endX || item.y < startY || item.y >= endY) continue
-
-            // Get item icon from items.json
-            // For now, draw a simple placeholder
-            const worldX = item.x * TILE + TILE / 2
-            const worldY = item.y * TILE + TILE / 2
-
-            ctx.save()
-            ctx.globalAlpha = 0.8
-            ctx.fillStyle = '#ffd700'
-            ctx.beginPath()
-            ctx.arc(worldX, worldY, 8, 0, Math.PI * 2)
-            ctx.fill()
-            ctx.strokeStyle = '#b8860b'
-            ctx.lineWidth = 1
-            ctx.stroke()
-            // Draw quantity if > 1
-            if (item.qty > 1) {
-                ctx.fillStyle = '#000'
-                ctx.font = 'bold 10px sans-serif'
-                ctx.textAlign = 'center'
-                ctx.textBaseline = 'middle'
-                ctx.fillText(item.qty.toString(), worldX, worldY + 1)
-            }
-            ctx.restore()
-        }
-    }
-
     // Render preview NPCs
     if (mapEnterPreviewData.npcs.length > 0) {
         for (const npc of mapEnterPreviewData.npcs) {
@@ -2371,6 +2347,11 @@ async function renderMapEnterPreview() {
 // Monster data cache for preview rendering
 let monsterPreviewDataCache = null
 
+// Item spritesheet caches for preview rendering
+let itemsImg = null
+let craftingImg = null
+const ITEM_SIZE_HUD = 32  // source sprite size in items.png/crafting.png
+
 async function loadMonsterPreviewData() {
     if (monsterPreviewDataCache) return monsterPreviewDataCache
     try {
@@ -2401,8 +2382,9 @@ function renderPreviewMonsters(ctx, startX, startY, endX, endY) {
         // Draw full composite monster (body + hands + weapons) using shared module
         const monsterDef = findMonsterDefByName(monster.monster)
         if (monsterDef) {
-            // Check if character sprite is available
-            const charSprite = getCharacterSprite(monsterDef.charName)
+            // Check if character sprite is available (use sprite.base from new schema)
+            const spriteBase = monsterDef.sprite?.base ?? monsterDef.charName ?? monster.monster
+            const charSprite = getCharacterSprite(spriteBase)
             if (charSprite) {
                 // drawCompositeEnemy draws centered at (16*scale, 16*scale) from current transform origin
                 // For scale=1, it draws centered at (16, 16). We want it centered at (worldX, worldY).
@@ -2458,21 +2440,23 @@ async function renderPreviewItems(ctx, startX, startY, endX, endY) {
     if (itemsData.items) {
         for (const [name, def] of Object.entries(itemsData.items)) {
             if (Array.isArray(def)) {
-                itemIconMap[name] = { icon: def }
+                itemIconMap[name] = { icon: def, source: 'items' }
             } else if (def && def.icon) {
-                itemIconMap[name] = def
+                itemIconMap[name] = { icon: def.icon, source: 'items' }
             }
         }
     }
     if (itemsData.crafting) {
         for (const [name, def] of Object.entries(itemsData.crafting)) {
             if (Array.isArray(def)) {
-                itemIconMap[name] = { icon: def }
+                itemIconMap[name] = { icon: def, source: 'crafting' }
             } else if (def && def.icon) {
-                itemIconMap[name] = def
+                itemIconMap[name] = { icon: def.icon, source: 'crafting' }
             }
         }
     }
+
+    const destSize = TILE / 2  // 16px (half tile, matches game rendering)
 
     for (const item of mapEnterPreviewData.items) {
         if (item.x < startX || item.x >= endX || item.y < startY || item.y >= endY) continue
@@ -2480,42 +2464,91 @@ async function renderPreviewItems(ctx, startX, startY, endX, endY) {
         const worldX = item.x * TILE + TILE / 2
         const worldY = item.y * TILE + TILE / 2
 
-        const itemDef = itemIconMap[item.item]
+        const itemDef = itemIconMap[item.item_id]
         if (itemDef && itemDef.icon) {
-            // Draw actual item sprite from tileset
-            const ts = tileset?.tilesets?.find(t => t.name === 'items') || tileset?.tilesets?.[0]
-            if (ts?.img) {
-                const [ix, iy] = itemDef.icon
-                const srcX = ix * TILE
-                const srcY = iy * TILE
+            // Draw actual item sprite from items.png or crafting.png
+            const img = itemDef.source === 'crafting' ? craftingImg : itemsImg
+            if (img) {
+                const [col, row] = itemDef.icon
 
                 ctx.save()
                 ctx.globalAlpha = 0.8
-                ctx.drawImage(ts.img, srcX, srcY, TILE, TILE, worldX - TILE/2, worldY - TILE/2, TILE, TILE)
+                ctx.drawImage(img,
+                    col * ITEM_SIZE_HUD, row * ITEM_SIZE_HUD, ITEM_SIZE_HUD, ITEM_SIZE_HUD,
+                    worldX - destSize / 2, worldY - destSize / 2, destSize, destSize)
+                ctx.restore()
+            } else {
+                // Fallback: draw item as a rectangle (like NPCs) with gold color
+                ctx.save()
+                ctx.globalAlpha = 0.8
+                ctx.fillStyle = '#daa520'  // goldenrod
+                ctx.fillRect(worldX - 10, worldY - 16, 20, 20)
+                ctx.strokeStyle = '#b8860b'
+                ctx.lineWidth = 1
+                ctx.strokeRect(worldX - 10, worldY - 16, 20, 20)
+                // Draw first letter of item name
+                if (itemDef && itemDef.icon) {
+                    const name = item.item_id || item.item
+                    if (name) {
+                        ctx.fillStyle = '#000'
+                        ctx.font = 'bold 11px sans-serif'
+                        ctx.textAlign = 'center'
+                        ctx.textBaseline = 'middle'
+                        ctx.fillText(name.charAt(0).toUpperCase(), worldX, worldY - 6)
+                    }
+                }
                 ctx.restore()
             }
         } else {
-            // Fallback: draw a simple placeholder
+            // Fallback: draw item as a rectangle (like NPCs) with gold color
             ctx.save()
             ctx.globalAlpha = 0.8
-            ctx.fillStyle = '#ffd700'
-            ctx.beginPath()
-            ctx.arc(worldX, worldY, 8, 0, Math.PI * 2)
-            ctx.fill()
+            ctx.fillStyle = '#daa520'  // goldenrod
+            ctx.fillRect(worldX - 10, worldY - 16, 20, 20)
             ctx.strokeStyle = '#b8860b'
             ctx.lineWidth = 1
-            ctx.stroke()
+            ctx.strokeRect(worldX - 10, worldY - 16, 20, 20)
+            // Draw first letter of item name
+            const name = item.item_id || item.item
+            if (name) {
+                ctx.fillStyle = '#000'
+                ctx.font = 'bold 11px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.textBaseline = 'middle'
+                ctx.fillText(name.charAt(0).toUpperCase(), worldX, worldY - 6)
+            }
             ctx.restore()
         }
 
-        // Draw quantity if > 1
-        if (item.qty > 1) {
+        // Draw quantity badge if > 1 and zoom >= 1 (match game's toast-item-badge style)
+        if (item.qty > 1 && zoom >= 1) {
             ctx.save()
-            ctx.fillStyle = '#000'
-            ctx.font = 'bold 10px sans-serif'
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillText(item.qty.toString(), worldX, worldY + 1)
+            // Badge positioned at bottom-right of item sprite (16x16 at worldX,worldY center)
+            // Item drawn at [worldX-8, worldY-8] to [worldX+8, worldY+8]
+            // Badge at bottom-right with small offset
+            const badgeX = worldX + 11  // worldX + 8 (right edge) + 3 offset
+            const badgeY = worldY + 11  // worldY + 8 (bottom edge) + 3 offset
+            const text = `×${item.qty}`
+            const fontSize = 8
+            ctx.font = `bold ${fontSize}px monospace`
+            const textMetrics = ctx.measureText(text)
+            const paddingX = 3
+            const paddingY = 2
+            const badgeWidth = textMetrics.width + paddingX * 2
+            const badgeHeight = fontSize + paddingY * 2
+            const radius = 4
+
+            // Draw rounded rectangle background (red)
+            ctx.fillStyle = '#c84040'
+            ctx.beginPath()
+            ctx.roundRect(badgeX - badgeWidth, badgeY - badgeHeight, badgeWidth, badgeHeight, radius)
+            ctx.fill()
+
+            // Draw white text
+            ctx.fillStyle = '#fff'
+            ctx.textAlign = 'right'
+            ctx.textBaseline = 'bottom'
+            ctx.fillText(text, badgeX - paddingX, badgeY - paddingY)
             ctx.restore()
         }
     }
@@ -2540,12 +2573,22 @@ function renderFenceShadows() {
     const { startX, startY, endX, endY } = getVisibleRange()
 
     // Accumulate all fence shadows into an offscreen canvas, then composite once
+    // Make shadow canvas larger than viewport so shadows near edges don't get clipped
+    // Fence shadows can extend up to 1.5 tiles (48px) beyond tile center; use SHADOW_SIZE (64px) margin for safety
+    const shadowMargin = SHADOW_SIZE * zoom
     const sc = renderFenceShadows._sc ?? (renderFenceShadows._sc = document.createElement('canvas'))
-    if (sc.width  !== canvas.width)  sc.width  = canvas.width
-    if (sc.height !== canvas.height) sc.height = canvas.height
+    const scWidth  = canvas.width  + 2 * shadowMargin
+    const scHeight = canvas.height + 2 * shadowMargin
+    if (sc.width  !== scWidth)  sc.width  = scWidth
+    if (sc.height !== scHeight) sc.height = scHeight
     const sctx = sc.getContext('2d')
+    sctx.resetTransform() // clearRect honors the transform left over from the previous frame
     sctx.clearRect(0, 0, sc.width, sc.height)
-    sctx.setTransform(ctx.getTransform())
+    // Use adjusted transform so viewport maps to center of larger shadow canvas
+    // Get base transform from ctx (which has scroll/zoom) and add margin to translation
+    const baseTransform = ctx.getTransform()
+    sctx.setTransform(baseTransform.a, baseTransform.b, baseTransform.c, baseTransform.d,
+                      baseTransform.e + shadowMargin, baseTransform.f + shadowMargin)
 
     let drew = false
     const csX = Math.max(0, startX), csY = Math.max(0, startY)
@@ -2585,7 +2628,8 @@ function renderFenceShadows() {
         ctx.save()
         ctx.resetTransform()
         ctx.globalAlpha = 0.35
-        ctx.drawImage(sc, 0, 0)
+        // Draw only the center viewport-sized portion of the larger shadow canvas
+        ctx.drawImage(sc, shadowMargin, shadowMargin, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height)
         ctx.restore()
     }
 }
@@ -3097,17 +3141,22 @@ function renderElevation() {
     const rxEnd   = Math.min(map.width  + 1, endX + 1)
     const ryEnd   = Math.min(map.height + 1, endY + 1)
 
-    // Shared shadow offscreen canvas
+    // Shared shadow offscreen canvas — make it larger than viewport so shadows near edges don't get clipped
+    // Shadows can extend up to SHADOW_SIZE (64px = 2 tiles) beyond the tile center
+    const shadowMargin = SHADOW_SIZE * zoom
     const sc = renderElevation._sc ?? (renderElevation._sc = document.createElement('canvas'))
-    if (sc.width  !== canvas.width)  sc.width  = canvas.width
-    if (sc.height !== canvas.height) sc.height = canvas.height
+    const scWidth  = canvas.width  + 2 * shadowMargin
+    const scHeight = canvas.height + 2 * shadowMargin
+    if (sc.width  !== scWidth)  sc.width  = scWidth
+    if (sc.height !== scHeight) sc.height = scHeight
     const sctx = sc.getContext('2d')
 
     const compositeShadows = () => {
         ctx.save()
         ctx.resetTransform()
         ctx.globalAlpha = 0.35
-        ctx.drawImage(sc, 0, 0)
+        // Draw only the center viewport-sized portion of the larger shadow canvas
+        ctx.drawImage(sc, shadowMargin, shadowMargin, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height)
         ctx.restore()
     }
 
@@ -3124,8 +3173,13 @@ function renderElevation() {
 
         //Step 1 — collect all shadows for this level into one canvas, composite ONCE
         {
+            sctx.resetTransform() // clearRect honors the transform left over from the previous pass
             sctx.clearRect(0, 0, sc.width, sc.height)
-            sctx.setTransform(ctx.getTransform())
+            // Use adjusted transform so viewport maps to center of larger shadow canvas
+            // Get base transform from ctx (which has scroll/zoom) and add margin to translation
+            const baseTransform = ctx.getTransform()
+            sctx.setTransform(baseTransform.a, baseTransform.b, baseTransform.c, baseTransform.d,
+                              baseTransform.e + shadowMargin, baseTransform.f + shadowMargin)
             let drew = false
 
             if (shadowImg || botShadowImg || rampShadowImg) {

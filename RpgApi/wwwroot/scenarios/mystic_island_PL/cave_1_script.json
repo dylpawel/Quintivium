@@ -5,9 +5,7 @@
     "on": "tile_enter",
     "tile": { "x": 2, "y": 3 },
     "actions": [
-      { "type": "show_dialog", "text": "aaa", "give": {
-          "torch": 1
-        } }
+      { "type": "show_dialog", "text": "Trudno się poruszać w ciemności. Wezmę to!", "give": { "torch": 1 } }
     ]
   },
   {
@@ -18,7 +16,36 @@
       { "type": "spawn_monster", "monster": "Skeleton Fighter", "x": 4, "y": 8 },
       { "type": "spawn_monster", "monster": "Skeleton Bandit", "x": 2, "y": 16 },
       { "type": "spawn_monster", "monster": "Skeleton Footman", "x": 10, "y": 16 },
-      { "type": "spawn_item", "item_id": "Gold", "x": 2, "y": 10, "qty": 4 }
+      { "type": "spawn_item", "item_id": "Gold", "x": 2, "y": 10, "qty": 4 },
+      { "type": "spawn_item", "item_id": "Griffin Feather", "x": 3, "y": 18 },
+      { "type": "spawn_item", "item_id": "Iron Ore", "x": 8, "y": 18 },
+      { "type": "spawn_item", "item_id": "Gold", "x": 2, "y": 18, "qty": 3 },
+      { "type": "spawn_monster", "monster": "Skeleton Soldier", "x": 16, "y": 10 },
+      { "type": "spawn_item", "item_id": "Griffin Feather", "x": 14, "y": 11 }
+    ]
+  },
+  {
+    "id": "bat_warning",
+    "on": "tile_enter",
+    "tile": { "x": 7, "y": 9 },
+    "actions": [
+      { "type": "show_dialog", "text": "Słyszę nietoperze... Przeklęte żarłoki, jeden taki latający szczur potrafi wciągnąć tysiąc komarów w godzinę – gdybym ja miał taki apetyt na ucztach, królewski skarbiec poszedłby z torbami!" }
+    ]
+  },
+  {
+    "id": "bat_attack_1",
+    "on": "tile_enter",
+    "condition": "near(6, 14, 2) && chance(0.1)",
+    "actions": [
+      { "type": "start_combat", "enemy_id": "Bat" }
+    ]
+  },
+  {
+    "id": "bat_attack_2",
+    "on": "tile_enter",
+    "condition": "near(15, 5, 2) && chance(0.1)",
+    "actions": [
+      { "type": "start_combat", "enemy_id": "Bat" }
     ]
   }
 ]

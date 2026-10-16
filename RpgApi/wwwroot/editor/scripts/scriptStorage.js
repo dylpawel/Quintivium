@@ -141,7 +141,7 @@ async function loadAllScriptsInternal() {
       }
 
       try {
-        const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`);
+        const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`, { cache: 'no-store' });
         if (res.ok) {
           const scripts = await res.json();
           // Apply auto map scope to scripts that don't have one
@@ -486,7 +486,7 @@ export async function getScriptFilesInfo() {
  */
 export async function loadScriptFile(filePath) {
   try {
-    const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`);
+    const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`, { cache: 'no-store' });
     if (!res.ok) return [];
     return await res.json();
   } catch (e) {
@@ -515,7 +515,7 @@ function cleanScriptForSave(script) {
   }
 
   // Remove tile if it has no x/y/mark
-  if (cleaned.tile && (cleaned.tile.x === undefined && cleaned.tile.y === undefined && !cleaned.tile.mark)) {
+  if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
     delete cleaned.tile;
   }
 
@@ -647,6 +647,17 @@ function cleanActionForSave(action) {
 // File handle cache for File System Access API (persisted per file)
 const scriptFileHandles = new Map();
 
+async function writeToHandle(handle, body) {
+  const opts = { mode: 'readwrite' };
+  if ((await handle.queryPermission(opts)) !== 'granted' &&
+      (await handle.requestPermission(opts)) !== 'granted') {
+    throw new Error('Write permission denied');
+  }
+  const writable = await handle.createWritable();
+  await writable.write(body);
+  await writable.close();
+}
+
 /**
  * Save scripts to a specific file
  * @param {string} filePath - Path to script file relative to scenario directory
@@ -654,50 +665,60 @@ const scriptFileHandles = new Map();
  * @returns {Promise<boolean>} Success
  */
 export async function saveScriptFile(filePath, scripts) {
+  let body;
   try {
     // Clean scripts before saving
     const cleanedScripts = scripts.map(cleanScriptForSave);
-    const body = stringifyScript(cleanedScripts, 2);
+    body = stringifyScript(cleanedScripts, 2);
 
-    // Try server POST first (requires server endpoint)
-    const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body
-    });
+    const canPick = typeof window.showSaveFilePicker === 'function';
 
-    if (res.ok) {
-      invalidateScriptsCache();
-      return true;
-    }
-
-    // Fallback 1: File System Access API (allows saving to source directory)
-    if (typeof window.showSaveFilePicker === 'function') {
+    // Reuse the handle from the first save so repeat saves overwrite the same file.
+    // Done before any await so the click's user activation is still valid for re-prompting.
+    const cached = scriptFileHandles.get(filePath);
+    if (cached) {
       try {
-        let handle = scriptFileHandles.get(filePath);
-        if (!handle) {
-          // First time - prompt user to choose file location
-          handle = await window.showSaveFilePicker({
-            suggestedName: filePath,
-            types: [{ description: 'Script JSON', accept: { 'application/json': ['.json'] } }]
-          });
-          scriptFileHandles.set(filePath, handle);
-        }
-        const writable = await handle.createWritable();
-        await writable.write(body);
-        await writable.close();
+        await writeToHandle(cached, body);
         invalidateScriptsCache();
         return true;
       } catch (e) {
-        if (e && e.name === 'AbortError') {
-          // User cancelled - fall through to download
-        } else {
-          console.warn('[ScriptStorage] File System Access API failed:', e);
-        }
+        console.warn('[ScriptStorage] Cached file handle failed, re-picking:', e);
+        scriptFileHandles.delete(filePath);
       }
     }
 
-    // Fallback 2: trigger browser download
+    // With no server this throws; that must not skip the local-save fallbacks.
+    try {
+      const res = await fetch(`${SCRIPTS_BASE_PATH}/${filePath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: AbortSignal.timeout(2000)
+      });
+      if (res.ok) {
+        invalidateScriptsCache();
+        return true;
+      }
+    } catch (e) {
+      console.warn('[ScriptStorage] Server save unavailable:', e);
+    }
+
+    if (canPick) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filePath,
+          types: [{ description: 'Script JSON', accept: { 'application/json': ['.json'] } }]
+        });
+        await writeToHandle(handle, body);
+        scriptFileHandles.set(filePath, handle);
+        invalidateScriptsCache();
+        return true;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return false; // user cancelled
+        console.warn('[ScriptStorage] File System Access API failed:', e);
+      }
+    }
+
     downloadScriptFile(filePath, body);
     invalidateScriptsCache();
     return true;
