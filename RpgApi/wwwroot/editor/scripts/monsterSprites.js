@@ -283,13 +283,16 @@ export function getMonsterPreviewSprite(enemyName) {
       individualMonsterSprites[sprite.base].complete &&
       individualMonsterSprites[sprite.base].naturalWidth > 0) {
     const img = individualMonsterSprites[sprite.base]
+    // Use sprite config frame dimensions (fallback to defaults)
+    const frameW = sprite.frameW ?? MONSTER_FRAME_W
+    const frameH = sprite.frameH ?? MONSTER_FRAME_H
     const canvas = document.createElement('canvas')
-    canvas.width = MONSTER_FRAME_W
-    canvas.height = MONSTER_FRAME_H
+    canvas.width = frameW
+    canvas.height = frameH
     const cctx = canvas.getContext('2d')
     cctx.imageSmoothingEnabled = false
-    const frameW = img.width / (sprite.frames || 4)
-    cctx.drawImage(img, 0, 0, frameW, img.height, 0, 0, MONSTER_FRAME_W, MONSTER_FRAME_H)
+    const srcFrameW = img.width / (sprite.frames || 4)
+    cctx.drawImage(img, 0, 0, srcFrameW, img.height, 0, 0, frameW, frameH)
     return canvas
   }
 
@@ -320,16 +323,24 @@ export function getMonsterPreviewSprite(enemyName) {
  * @param {number} alpha - Opacity (default 0.7)
  */
 export function drawMonsterPreview(ctx, enemyName, worldX, worldY, scale = 1, alpha = 0.7) {
+  const data = enemiesData
+  if (!data) return false
+  const enemy = data.find(e => e.name === enemyName)
+  if (!enemy || !enemy.sprite) return false
+
   const sprite = getMonsterPreviewSprite(enemyName)
   if (!sprite) return false
 
-  const dw = MONSTER_FRAME_W * scale
-  const dh = MONSTER_FRAME_H * scale
+  // Use sprite config frame dimensions for proper scaling
+  const frameW = enemy.sprite.frameW ?? MONSTER_FRAME_W
+  const frameH = enemy.sprite.frameH ?? MONSTER_FRAME_H
+  const dw = frameW * scale
+  const dh = frameH * scale
 
   ctx.save()
   ctx.globalAlpha = alpha
   ctx.translate(worldX, worldY)
-  ctx.drawImage(sprite, 0, 0, MONSTER_FRAME_W, MONSTER_FRAME_H, -dw / 2, -dh / 2, dw, dh)
+  ctx.drawImage(sprite, 0, 0, frameW, frameH, -dw / 2, -dh / 2, dw, dh)
   ctx.restore()
   return true
 }

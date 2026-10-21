@@ -1,16 +1,16 @@
 import { loadTilesetRegistry, loadTileset } from './tileset.js'
-import { createMap, setCell, getCell, getRaw, floodFill, serializeMap, deserializeMap, placeDecoration, removeDecoration, getDecorations, getHeight, setHeight, getRawHeight, getRamp, setRamp, setHFence, removeHFence, setVFence, removeVFence, addScript, removeScript, getScript, updateScript, getScriptsForMap, getAllScripts } from './map.js'
+import { createMap, setCell, getCell, getRaw, floodFill, serializeMap, serializeMapFormatted, deserializeMap, placeDecoration, removeDecoration, getDecorations, getHeight, setHeight, getRawHeight, getRamp, setRamp, setHFence, removeHFence, setVFence, removeVFence, addScript, removeScript, getScript, updateScript, getScriptsForMap, getAllScripts, createEmptyScript } from './map.js'
 import { loadAssets } from './assets.js'
 import { loadImage } from './imaging.js'
 import { tileHash, getVariantIndex, buildTileCanvas } from './tilemath.js'
 import { createTilePickerTool } from './scripts/tilePicker.js'
-import { loadAllScripts, saveMapScripts, getScriptFileForMap, saveScriptFile, loadScriptFile, getScriptFilesInfo, createScriptFileForMap } from './scripts/scriptStorage.js'
-import { createScriptFileManager } from './scripts/scriptFileManager.js'
+import { createMapScriptManager } from './scripts/mapScriptManager.js'
 import { createScriptEventEditor } from './scripts/scriptEventEditor.js'
 import { createScriptActionEditor } from './scripts/scriptActionEditor.js'
 import { createScriptNestedActionEditor } from './scripts/scriptNestedActionEditor.js'
 import { scriptState, PANEL_MODE } from './scripts/scriptState.js'
-import { preloadMonsterImages, getMonsterPreviewSprite, getCharacterSprite, drawMonsterPreview, drawCompositeEnemy } from './scripts/monsterSprites.js'
+import { preloadMonsterImages, getMonsterPreviewSprite, getCharacterSprite, drawMonsterPreview, drawCompositeEnemy, getMonsterNameMap, loadEnemiesData, MONSTER_FRAME_W, MONSTER_FRAME_H } from './scripts/monsterSprites.js'
+import { getAllItemsWithData } from './scripts/actionSchemas.js'
 
 const canvas = document.getElementById('mapCanvas')
 let ctx = canvas.getContext('2d', { alpha: false })
@@ -114,15 +114,25 @@ let selectPickStartWy = 0
 
 // --- Script Editor (3-Panel System) ---
 let showScriptPanel = false
-let scriptFileManagerPanel = null
+let mapScriptManagerPanel = null
 let scriptEventEditorPanel = null
 let scriptActionEditorPanel = null
 let scriptNestedActionEditorPanel = null
 let tilePickerTool = null
 
 // --- Map Enter Preview ---
-let showMapEnterPreview = false
+let showMapEnterPreview = true
 let mapEnterPreviewData = null // { monsters: [], items: [], npcs: [], decorations: [], tileChanges: [] }
+
+// --- Spawn Palette (Monsters & Items) ---
+let spawnLayer = 'monster'  // 'monster' | 'item'
+let selectedSpawn = null    // { type: 'monster', name: 'Skeleton' } | { type: 'item', id: 'Gold' }
+let spawnItems = []         // loaded item data for palette
+let spawnMonsters = []      // loaded monster data for palette
+let itemsImg = null         // items.png spritesheet
+let craftingImg = null      // crafting.png spritesheet
+const ITEM_SIZE_HUD = 32  // source sprite size in items.png/crafting.png
+let spawnPaletteBuilt = false
 
 // Utility function for HTML escaping
 function escapeHtml(text) {
@@ -323,6 +333,12 @@ async function init() {
 
     await switchTileset(registry[0].path)
     exposeEditor()
+
+    // Listen for save-map-with-scripts event from map script manager
+    window.addEventListener('save-map-with-scripts', async () => {
+        await save()
+    })
+
     const assetDefs = await loadAssets('../assets/')
     assets = assetDefs.assets
     assetMap = assetDefs.assetMap
@@ -350,9 +366,18 @@ async function init() {
     // Load enemy sprites for map_enter preview (shared module)
     await preloadMonsterImages()
 
+    // Load monster data for preview/foot position
+    await loadMonsterPreviewData()
+
     // Load item spritesheets for map_enter preview
     itemsImg = await loadImage('../assets/items.png').catch(() => null)
     craftingImg = await loadImage('../assets/crafting.png').catch(() => null)
+
+    // Load spawn data (monsters and items)
+    await loadSpawnData()
+
+    // Build spawn palette after assets are loaded
+    await buildSpawnPalette()
 
     select.addEventListener('change', e => switchTileset(e.target.value))
     document.getElementById('previewToggle').addEventListener('change', e => {
@@ -362,28 +387,23 @@ async function init() {
     })
     document.getElementById('mapWidth').value = COLS
     document.getElementById('mapHeight').value = ROWS
-    document.getElementById('btnNew').addEventListener('click', () => {
+    document.getElementById('btnNew').addEventListener('click', async () => {
         const w = parseInt(document.getElementById('mapWidth').value)
         const h = parseInt(document.getElementById('mapHeight').value)
         map = createMap(w, h, tileset)
         currentMapName = null
         localFileHandle = null
 
-        // Reset map_enter preview
-        showMapEnterPreview = false
-        mapEnterPreviewData = null
-        const previewBtn = document.getElementById('btnMapEnterPreview')
-        if (previewBtn) {
-            previewBtn.classList.remove('active')
-            previewBtn.textContent = '👁️'
-            previewBtn.title = 'Preview map_enter (initial state)'
-        }
+        resetMapEnterPreview()
 
         sortedItemsDirty = true
         invalidateStaticCache()
         updateSpacer()
         scheduleRender()
         exposeEditor()
+
+        // Build spawn palette after assets are loaded
+        await buildSpawnPalette()
     })
     document.addEventListener('keydown', e => {
         if (e.key === 'g' || e.key === 'G') {
@@ -465,6 +485,7 @@ async function init() {
     container.addEventListener('scroll', render)
 
     canvas.addEventListener('mousedown', onMouseDown)
+    canvas.addEventListener('contextmenu', e => { if (tool === 'spawn') e.preventDefault() })
     canvas.addEventListener('mousemove', onMouseMove)
     canvas.addEventListener('mouseup', onMouseUp)
     canvas.addEventListener('mouseleave', onMouseLeave)
@@ -513,15 +534,7 @@ async function switchTileset(path) {
     sortedItemsDirty = true
     map = createMap(COLS, ROWS, tileset)
 
-    // Reset map_enter preview
-    showMapEnterPreview = false
-    mapEnterPreviewData = null
-    const previewBtn = document.getElementById('btnMapEnterPreview')
-    if (previewBtn) {
-        previewBtn.classList.remove('active')
-        previewBtn.textContent = '👁️'
-        previewBtn.title = 'Preview map_enter (initial state)'
-    }
+    resetMapEnterPreview()
 
     activeTerrain = typeof tileset.waterTerrain?.waterFlat === 'number'
         ? tileset.waterTerrain.waterFlat
@@ -529,6 +542,7 @@ async function switchTileset(path) {
     if (layer === 'fence') { layer = 'terrain'; selectedFence = null }
     buildPalette()
     buildFencePalette()
+    await buildSpawnPalette()
     syncCursor()
     exposeEditor()
     invalidateStaticCache()
@@ -657,6 +671,153 @@ function buildEffectPalette() {
         })
         palette.appendChild(btn)
     }
+}
+
+// --- Spawn Palette (Monsters & Items) ---
+
+async function loadSpawnData() {
+    if (spawnPaletteBuilt) return
+
+    // Load items
+    try {
+        const itemsData = await getAllItemsWithData()
+        spawnItems = itemsData
+    } catch (e) {
+        console.warn('[Editor] Failed to load items for spawn palette:', e)
+        spawnItems = []
+    }
+
+    // Load monsters
+    try {
+        const enemiesData = await loadEnemiesData()
+        // Filter to only unique monster names with sprite config
+        const seen = new Set()
+        spawnMonsters = enemiesData.filter(e => {
+            if (!e.name || !e.sprite || seen.has(e.name)) return false
+            seen.add(e.name)
+            return true
+        })
+    } catch (e) {
+        console.warn('[Editor] Failed to load monsters for spawn palette:', e)
+        spawnMonsters = []
+    }
+
+    // Load item spritesheets
+    itemsImg = new Image()
+    itemsImg.src = '../assets/items.png'
+    craftingImg = new Image()
+    craftingImg.src = '../assets/crafting.png'
+
+    spawnPaletteBuilt = true
+}
+
+function buildSpawnPalette() {
+    const palette = document.getElementById('spawnPalette')
+    if (!palette) return
+
+    palette.innerHTML = ''
+
+    // Tab buttons
+    const tabContainer = document.createElement('div')
+    tabContainer.className = 'spawn-tab-buttons'
+    tabContainer.innerHTML = `
+        <button class="spawn-tab-btn ${spawnLayer === 'monster' ? 'active' : ''}" data-tab="monster">⚔️ Monsters</button>
+        <button class="spawn-tab-btn ${spawnLayer === 'item' ? 'active' : ''}" data-tab="item">💰 Items</button>
+    `
+    tabContainer.querySelectorAll('.spawn-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            spawnLayer = btn.dataset.tab
+            buildSpawnPalette()
+            syncCursor()
+        })
+    })
+    palette.appendChild(tabContainer)
+
+    // Grid
+    const grid = document.createElement('div')
+    grid.className = 'spawn-grid'
+
+    const items = spawnLayer === 'monster' ? spawnMonsters : spawnItems
+
+    items.forEach(entry => {
+        const itemEl = document.createElement('div')
+        itemEl.className = 'spawn-item'
+        if (spawnLayer === 'monster') {
+            // Show monster name and basic stats in tooltip
+            itemEl.title = `${entry.name}\nHP: ${entry.hp}  ATK: ${entry.attack}  DEF: ${entry.defense}  ARM: ${entry.armor}  AGI: ${entry.agility}  XP: ${entry.xp}`
+        } else {
+            itemEl.title = entry.id
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = 32
+        canvas.height = 32
+        itemEl.appendChild(canvas)
+
+        // Draw thumbnail
+        const ctx = canvas.getContext('2d')
+        ctx.imageSmoothingEnabled = false
+
+        if (spawnLayer === 'monster') {
+            // Check if monster is composite (has hands/weapons)
+            const monsterDef = findMonsterDefByName(entry.name)
+            const isComposite = monsterDef && monsterDef.sprite && monsterDef.sprite.mode === 'composite'
+
+            if (isComposite) {
+                // Draw full composite enemy (body + hands + weapons) centered in 32x32 canvas
+                // drawCompositeEnemy draws centered at (16, 16) for scale=1
+                drawCompositeEnemy(ctx, monsterDef, 1)
+            } else {
+                // Use synchronous preview sprite from shared module
+                const sprite = getMonsterPreviewSprite(entry.name)
+                if (sprite) {
+                    ctx.drawImage(sprite, 0, 0, 32, 32, 0, 0, 32, 32)
+                }
+            }
+        } else {
+            // Draw item from spritesheet
+            const icon = entry.icon
+            if (icon && Array.isArray(icon)) {
+                const [col, row] = icon
+                const img = entry.source === 'crafting' ? craftingImg : itemsImg
+                if (img && img.complete) {
+                    ctx.drawImage(img, col * 32, row * 32, 32, 32, 0, 0, 32, 32)
+                } else if (img) {
+                    img.onload = () => {
+                        ctx.drawImage(img, col * 32, row * 32, 32, 32, 0, 0, 32, 32)
+                    }
+                }
+            }
+        }
+
+        // Highlight if selected
+        const isSelected = selectedSpawn &&
+            ((spawnLayer === 'monster' && selectedSpawn.type === 'monster' && selectedSpawn.name === entry.name) ||
+             (spawnLayer === 'item' && selectedSpawn.type === 'item' && selectedSpawn.id === entry.id))
+        if (isSelected) {
+            itemEl.classList.add('selected')
+        }
+
+        itemEl.addEventListener('click', () => {
+            selectedSpawn = spawnLayer === 'monster'
+                ? { type: 'monster', name: entry.name }
+                : { type: 'item', id: entry.id }
+            layer = 'spawn'
+            setTool('spawn')
+            buildSpawnPalette()
+            syncCursor()
+        })
+
+        grid.appendChild(itemEl)
+    })
+
+    palette.appendChild(grid)
+}
+
+// Helper to ensure spawn data is loaded before building palette
+async function ensureSpawnDataLoaded() {
+    await loadSpawnData()
+    await buildSpawnPalette()
 }
 
 // --- Fence tool ---
@@ -856,6 +1017,132 @@ function drawMarks() {
 }
 
 
+function drawSpawnMarkers() {
+    const spawns = showMapEnterPreview ? getMapEnterSpawns() : []
+    const { startX, startY, endX, endY } = getVisibleRange()
+    ctx.save()
+
+    for (const spawn of spawns) {
+        const { x, y, type } = spawn
+        if (x < startX - 1 || x > endX + 1 || y < startY - 1 || y > endY + 1) continue
+
+        const cx = x * TILE + TILE / 2
+        const cy = y * TILE + TILE / 2
+
+        if (type === 'monster') {
+            // Get monster definition to check sprite mode
+            const monsterDef = findMonsterDefByName(spawn.monster)
+            const isComposite = monsterDef && monsterDef.sprite && monsterDef.sprite.mode === 'composite'
+
+            if (isComposite) {
+                // Draw full composite enemy (body + hands + weapons) with feet at tile center
+                // drawCompositeEnemy draws centered at (16, 16) in canvas; feet at y=32.
+                // Translate so canvas center (16,16) goes to (cx, cy - 16) → feet at cy.
+                ctx.save()
+                ctx.globalAlpha = 0.7
+                ctx.translate(cx - 16, cy - 32)
+                drawCompositeEnemy(ctx, monsterDef, 1)
+                ctx.restore()
+            } else {
+                // Simple/sheet monster: draw preview sprite with feet at tile center
+                const sprite = getMonsterPreviewSprite(spawn.monster)
+                if (sprite) {
+                    // Get foot position from monster definition
+                    let footY = MONSTER_FRAME_H  // default: feet at bottom of frame
+                    if (monsterDef && monsterDef.sprite) {
+                        const spriteConfig = monsterDef.sprite
+                        if (spriteConfig.footY !== undefined) {
+                            footY = spriteConfig.footY
+                        } else if (spriteConfig.mode === 'composite') {
+                            footY = MONSTER_FRAME_H
+                        }
+                    }
+                    // Draw with feet at tile center: sprite bottom at cy
+                    const drawY = cy - footY
+                    ctx.globalAlpha = 0.7
+                    ctx.drawImage(sprite, cx - 16, drawY, 32, 32)
+                    ctx.globalAlpha = 1
+                } else {
+                    // Fallback: red circle with M
+                    ctx.fillStyle = 'rgba(255, 60, 60, 0.7)'
+                    ctx.beginPath()
+                    ctx.arc(cx, cy, 14, 0, Math.PI * 2)
+                    ctx.fill()
+                    ctx.fillStyle = '#fff'
+                    ctx.font = 'bold 11px sans-serif'
+                    ctx.textAlign = 'center'
+                    ctx.textBaseline = 'middle'
+                    ctx.fillText('M', cx, cy + 1)
+                }
+            }
+            // Radius indicator
+            if (spawn.radius > 0) {
+                ctx.strokeStyle = 'rgba(255, 100, 100, 0.5)'
+                ctx.lineWidth = 1
+                ctx.beginPath()
+                ctx.arc(cx, cy, spawn.radius * TILE, 0, Math.PI * 2)
+                ctx.stroke()
+            }
+            // ID label
+            if (spawn.id) {
+                ctx.fillStyle = 'rgba(0,0,0,0.7)'
+                ctx.font = '10px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.fillText(spawn.id, cx, cy - 20)
+            }
+        } else if (type === 'item') {
+            // Draw item icon at 16x16 (half tile) to match game rendering
+            const itemData = spawnItems.find(i => i.id === spawn.item_id)
+            const destSize = TILE / 2  // 16px (half tile, matches game)
+            if (itemData && itemData.icon && Array.isArray(itemData.icon)) {
+                const [col, row] = itemData.icon
+                const img = itemData.source === 'crafting' ? craftingImg : itemsImg
+                if (img && img.complete) {
+                    ctx.globalAlpha = 0.8
+                    ctx.drawImage(img,
+                        col * ITEM_SIZE_HUD, row * ITEM_SIZE_HUD, ITEM_SIZE_HUD, ITEM_SIZE_HUD,
+                        cx - destSize / 2, cy - destSize / 2, destSize, destSize)
+                    ctx.globalAlpha = 1
+                } else if (img) {
+                    // Image not loaded yet, draw placeholder
+                    ctx.fillStyle = 'rgba(255, 200, 0, 0.8)'
+                    ctx.beginPath()
+                    ctx.arc(cx, cy, destSize / 2, 0, Math.PI * 2)
+                    ctx.fill()
+                    ctx.fillStyle = '#000'
+                    ctx.font = 'bold 11px sans-serif'
+                    ctx.textAlign = 'center'
+                    ctx.textBaseline = 'middle'
+                    ctx.fillText('💰', cx, cy + 1)
+                }
+            } else {
+                // Fallback: gold coin
+                ctx.fillStyle = 'rgba(255, 200, 0, 0.8)'
+                ctx.beginPath()
+                ctx.arc(cx, cy, destSize / 2, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.fillStyle = '#000'
+                ctx.font = 'bold 11px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.textBaseline = 'middle'
+                ctx.fillText('💰', cx, cy + 1)
+            }
+            // Quantity label
+            drawQtyBadge(ctx, cx, cy, spawn.qty)
+        }
+    }
+
+    // Highlight cell under cursor when in spawn tool (red = a placed spawn here, right-click/Shift+click removes it)
+    if (tool === 'spawn' && cursorX >= 0 && cursorY >= 0) {
+        const occupied = spawns.some(s => s.x === cursorX && s.y === cursorY)
+        ctx.strokeStyle = occupied ? 'rgba(255, 90, 90, 0.9)' : 'rgba(100, 255, 100, 0.9)'
+        ctx.lineWidth = 2 / zoom
+        ctx.strokeRect(cursorX * TILE, cursorY * TILE, TILE, TILE)
+    }
+    ctx.restore()
+}
+
+
 function getRampCellFromEvent(e) {
     const rect = canvas.getBoundingClientRect()
     const tileSize = TILE * zoom
@@ -934,7 +1221,9 @@ function setTool(t) {
     ['Paint', 'Erase', 'Fill', 'Raise', 'Lower', 'Ramp', 'Mark', 'Select', 'Effect'].forEach(name => {
         document.getElementById(`btn${name}`).classList.remove('active')
     })
-    document.getElementById(`btn${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('active')
+    // Only add active class for toolbar buttons that exist
+    const btn = document.getElementById(`btn${t.charAt(0).toUpperCase() + t.slice(1)}`)
+    if (btn) btn.classList.add('active')
     if (t !== 'ramp') hoveredRampCell = null
     if (t !== 'select') {
         selectedDecoration = null
@@ -989,12 +1278,12 @@ function toggleScriptPanel() {
         panelContainer.innerHTML = ''
         btn.classList.remove('active')
         // Reset panel references
-        scriptFileManagerPanel = null
+        mapScriptManagerPanel = null
         scriptEventEditorPanel = null
         scriptActionEditorPanel = null
         scriptNestedActionEditorPanel = null
         // Reset script state
-        scriptState.goToFileManager()
+        scriptState.goToMapScripts()
     } else {
         // Show panel
         showScriptPanel = true
@@ -1012,28 +1301,29 @@ function toggleScriptPanel() {
         btn.classList.add('active')
 
         // Create all panels (they'll be shown/hidden by scriptState)
-        scriptFileManagerPanel = createScriptFileManager({ map })
+        mapScriptManagerPanel = createMapScriptManager({ map })
         scriptEventEditorPanel = createScriptEventEditor()
         scriptActionEditorPanel = createScriptActionEditor()
         scriptNestedActionEditorPanel = createScriptNestedActionEditor()
 
-        panelContainer.appendChild(scriptFileManagerPanel)
+        panelContainer.appendChild(mapScriptManagerPanel)
         panelContainer.appendChild(scriptEventEditorPanel)
         panelContainer.appendChild(scriptActionEditorPanel)
         panelContainer.appendChild(scriptNestedActionEditorPanel)
 
         // Wire up scriptState callbacks
         scriptState.onPanelChange = (newMode, prevMode) => {
+            refreshMapEnterPreview()
             // Hide all panels
-            scriptFileManagerPanel?.hide()
+            mapScriptManagerPanel?.hide()
             scriptEventEditorPanel?.hide()
             scriptActionEditorPanel?.hide()
             scriptNestedActionEditorPanel?.hide()
 
             // Show current panel
             switch (newMode) {
-                case PANEL_MODE.FILE_MANAGER:
-                    scriptFileManagerPanel?.show()
+                case PANEL_MODE.MAP_SCRIPTS:
+                    mapScriptManagerPanel?.show()
                     break
                 case PANEL_MODE.EVENT_EDITOR:
                     scriptEventEditorPanel?.show()
@@ -1047,25 +1337,14 @@ function toggleScriptPanel() {
             }
         }
 
-        scriptState.onLoadFile = async (fileName) => {
-            return await loadScriptFile(fileName)
-        }
-
-        scriptState.onSaveFile = async (fileName, events) => {
-            return await saveScriptFile(fileName, events)
-        }
-
-        scriptState.onCreateFile = async (mapId) => {
-            return await createScriptFileForMap(mapId)
-        }
-
+        // Map script manager uses map._scripts directly, no file callbacks needed
         scriptState.onSaveEvent = (event, index) => {
-            // Event saved, refresh file manager
-            scriptFileManagerPanel?.refresh()
+            // Event saved, refresh map script manager
+            mapScriptManagerPanel?.refresh()
         }
 
         scriptState.onDeleteEvent = (index) => {
-            scriptFileManagerPanel?.refresh()
+            mapScriptManagerPanel?.refresh()
         }
 
         scriptState.onSaveAction = (action, parentContext) => {
@@ -1077,71 +1356,93 @@ function toggleScriptPanel() {
             scriptEventEditorPanel?.renderActionsList?.(scriptState.currentEvent)
         }
 
-        // Start at file manager
-        scriptFileManagerPanel.show()
+        // Set the map for script state
+        scriptState.setMap(map)
+
+        // Start at map scripts
+        mapScriptManagerPanel.show()
     }
 }
 
 // --- Map Enter Preview ---
-async function toggleMapEnterPreview() {
+function syncMapEnterPreviewButton() {
     const btn = document.getElementById('btnMapEnterPreview')
+    if (!btn) return
+    btn.classList.toggle('active', showMapEnterPreview)
+    btn.title = showMapEnterPreview ? 'Hide map_enter monsters/items' : 'Show map_enter monsters/items'
+}
 
-    if (showMapEnterPreview) {
-        // Hide preview
-        showMapEnterPreview = false
-        mapEnterPreviewData = null
-        btn.classList.remove('active')
-        btn.title = 'Preview map_enter (initial state)'
-        scheduleRender()
-    } else {
-        // Show preview - simulate map_enter
-        if (!map) {
-            alert('No map loaded')
+// Visible by default; the button only hides it
+function resetMapEnterPreview() {
+    showMapEnterPreview = true
+    mapEnterPreviewData = null
+    syncMapEnterPreviewButton()
+}
+
+async function refreshMapEnterPreview() {
+    if (!map) return
+    const current = map
+    const data = await simulateMapEnter(current)
+    if (current !== map) return
+    mapEnterPreviewData = data
+    scheduleRender()
+}
+
+async function toggleMapEnterPreview() {
+    showMapEnterPreview = !showMapEnterPreview
+    syncMapEnterPreviewButton()
+    if (showMapEnterPreview) await refreshMapEnterPreview()
+    scheduleRender()
+}
+
+function isPlacedSpawn(type, name, x, y) {
+    return getMapEnterSpawns().some(s => s.type === type && (s.monster ?? s.item_id) === name && s.x === x && s.y === y)
+}
+
+function removeSpawnAt({ x, y }) {
+    const actions = findMapEnterScript()?.actions
+    if (!actions) return
+    for (let i = actions.length - 1; i >= 0; i--) {
+        if (isPlainSpawnAction(actions[i]) && actions[i].x === x && actions[i].y === y) {
+            actions.splice(i, 1)
+            onMapEnterChanged()
             return
         }
-
-        const mapId = map.id || currentMapName
-        if (!mapId || mapId === 'untitled') {
-            alert('Map must be saved with a name first')
-            return
-        }
-
-        showMapEnterPreview = true
-        btn.classList.add('active')
-        btn.title = 'Hide map_enter preview'
-        btn.textContent = '👁️'
-
-        // Pre-load monster and item data for preview rendering
-        await preloadMonsterImages()
-        loadMonsterPreviewData()
-        // Pre-load items data
-        if (!window._itemsPreviewCache) {
-            fetch('../assets/items.json').then(res => res.ok && res.json()).then(data => {
-                window._itemsPreviewCache = data
-            }).catch(e => {
-                console.warn('[Editor] Failed to load items data for preview:', e)
-                window._itemsPreviewCache = { items: {}, crafting: {} }
-            })
-        }
-
-        // Run simulation
-        mapEnterPreviewData = await simulateMapEnter(mapId)
-
-        btn.textContent = '👁️'
-
-        scheduleRender()
     }
+}
+
+function drawQtyBadge(ctx, worldX, worldY, qty) {
+    if (qty <= 1 || zoom < 1) return
+    ctx.save()
+    // Bottom-right of the 16x16 item sprite centred on (worldX, worldY)
+    const badgeX = worldX + 11
+    const badgeY = worldY + 11
+    const text = `×${qty}`
+    const fontSize = 8
+    ctx.font = `bold ${fontSize}px monospace`
+    const paddingX = 3
+    const paddingY = 2
+    const badgeWidth = ctx.measureText(text).width + paddingX * 2
+    const badgeHeight = fontSize + paddingY * 2
+    ctx.fillStyle = '#c84040'
+    ctx.beginPath()
+    ctx.roundRect(badgeX - badgeWidth, badgeY - badgeHeight, badgeWidth, badgeHeight, 4)
+    ctx.fill()
+    ctx.fillStyle = '#fff'
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'bottom'
+    ctx.fillText(text, badgeX - paddingX, badgeY - paddingY)
+    ctx.restore()
 }
 
 /**
  * Simulate map_enter event actions to preview initial state
- * @param {string} mapId - Map identifier
+ * @param {Object} map - Map object with _scripts array
  * @returns {Promise<Object>} Preview data with monsters, items, npcs, decorations, tileChanges
  */
-async function simulateMapEnter(mapId) {
-    // Load scripts for this map
-    const { loadMapScripts } = await import('./scripts/scriptStorage.js')
-    const scripts = await loadMapScripts(mapId)
+async function simulateMapEnter(map) {
+    // Use map._scripts directly (embedded in map file)
+    const scripts = map._scripts || []
 
     // Find map_enter event
     const mapEnterEvent = scripts.find(s => s.on === 'map_enter')
@@ -1423,7 +1724,11 @@ function showMarkPicker(map, onMarkPicked) {
 }
 
 function syncCursor() {
-    canvas.style.cursor = ''
+    if (tool === 'spawn' && selectedSpawn) {
+        canvas.style.cursor = 'crosshair'
+    } else {
+        canvas.style.cursor = ''
+    }
 }
 
 function getCellFromEvent(e) {
@@ -1528,6 +1833,12 @@ function onMouseDown(e) {
     if (tool === 'ramp') { applyRampTool(); return }
     if (tool === 'mark') { applyMarkTool(getCellFromEvent(e)); return }
     if (tool === 'effect') { applyEffectTool(e); return }
+    if (tool === 'spawn') {
+        // Right-click or Shift+click removes a placed monster/item
+        if (e.button === 2 || e.shiftKey) { removeSpawnAt(getCellFromEvent(e)); return }
+        applySpawnTool(getCellFromEvent(e))
+        return
+    }
     isPainting = true
     applyTool(getCellFromEvent(e))
 }
@@ -1603,6 +1914,208 @@ function applyEffectTool(e) {
     effects.push({ type: activeEffectType, x, y, dx, dy, scale: 1, phase: Math.random() * 100000 })
     invalidateSortedItems()
     scheduleRender()
+}
+
+function applySpawnTool({ x, y }) {
+    if (!map || !selectedSpawn) return
+    if (x < 0 || y < 0 || x >= map.width || y >= map.height) return
+
+    // Show attribute dialog for the spawn
+    showSpawnAttributeDialog(selectedSpawn, x, y)
+}
+
+function showSpawnAttributeDialog(spawn, x, y) {
+    const isMonster = spawn.type === 'monster'
+
+    const modal = document.createElement('div')
+    modal.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `
+
+    let fieldsHtml = ''
+    if (isMonster) {
+        fieldsHtml = `
+            <div style="margin-bottom: 12px;">
+                <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Monster</label>
+                <input type="text" value="${escapeHtml(spawn.name)}" readonly style="
+                    width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">X</label>
+                    <input type="number" id="spawnX" value="${x}" readonly style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Y</label>
+                    <input type="number" id="spawnY" value="${y}" readonly style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Radius</label>
+                    <input type="number" id="spawnRadius" value="0" min="0" style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">ID (optional)</label>
+                    <input type="text" id="spawnId" placeholder="unique_id" style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Pool (optional)</label>
+                <input type="text" id="spawnPool" placeholder='e.g. "1..3" or "1,3"' style="
+                    width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+            </div>
+        `
+    } else {
+        fieldsHtml = `
+            <div style="margin-bottom: 12px;">
+                <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Item</label>
+                <input type="text" value="${escapeHtml(spawn.id)}" readonly style="
+                    width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">X</label>
+                    <input type="number" id="spawnX" value="${x}" readonly style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Y</label>
+                    <input type="number" id="spawnY" value="${y}" readonly style="
+                        width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+                </div>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;font-size:11px;color:#888;margin-bottom:4px;">Quantity</label>
+                <input type="number" id="spawnQty" value="1" min="1" style="
+                    width:100%;padding:6px 10px;background:#3c3c3c;border:1px solid #444;border-radius:3px;color:#e0e0e0;font-size:12px;box-sizing:border-box;">
+            </div>
+        `
+    }
+
+    modal.innerHTML = `
+        <div style="
+            background: #252526;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #e0e0e0;
+        ">
+            <h4 style="margin: 0 0 16px 0;">${isMonster ? '⚔️ Spawn Monster' : '💰 Spawn Item'}</h4>
+            ${fieldsHtml}
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+                <button id="spawnCancel" style="
+                    padding: 8px 16px;
+                    background: #3a3a3a;
+                    border: 1px solid #444;
+                    border-radius: 3px;
+                    color: #e0e0e0;
+                    cursor: pointer;
+                ">Cancel</button>
+                <button id="spawnConfirm" style="
+                    padding: 8px 16px;
+                    background: #0e639c;
+                    border: none;
+                    border-radius: 3px;
+                    color: white;
+                    cursor: pointer;
+                    font-weight: 500;
+                ">Place</button>
+            </div>
+        </div>
+    `
+
+    const confirmBtn = modal.querySelector('#spawnConfirm')
+    const cancelBtn = modal.querySelector('#spawnCancel')
+
+    confirmBtn.addEventListener('click', () => {
+        if (isMonster) {
+            const radius = parseInt(document.getElementById('spawnRadius').value, 10) || 0
+            const id = document.getElementById('spawnId').value.trim()
+            const pool = document.getElementById('spawnPool').value.trim()
+            addSpawnToMap('monster', spawn.name, x, y, { radius, id, pool })
+        } else {
+            const qty = parseInt(document.getElementById('spawnQty').value, 10) || 1
+            addSpawnToMap('item', spawn.id, x, y, { qty })
+        }
+        document.body.removeChild(modal)
+    })
+
+    cancelBtn.addEventListener('click', () => document.body.removeChild(modal))
+    modal.addEventListener('click', (e) => { if (e.target === modal) document.body.removeChild(modal) })
+
+    document.body.appendChild(modal)
+}
+
+function addSpawnToMap(type, nameOrId, x, y, options) {
+    if (!map) return
+
+    let script = findMapEnterScript()
+    if (!script) {
+        const mapName = map.id || currentMapName || document.getElementById('mapName')?.value.trim() || 'map'
+        script = createEmptyScript({ id: `enter_${mapName}`, on: 'map_enter', once: true, actions: [] })
+        map._scripts.push(script)
+    }
+
+    // Optional fields are only written when set, matching hand-authored actions
+    const action = type === 'monster'
+        ? { type: 'spawn_monster', monster: nameOrId, x, y }
+        : { type: 'spawn_item', item_id: nameOrId, x, y }
+    if (type === 'monster') {
+        if (options.radius) action.radius = options.radius
+        if (options.id) action.id = options.id
+        if (options.pool) action.pool = options.pool
+    } else if (options.qty > 1) {
+        action.qty = options.qty
+    }
+    script.actions.push(action)
+
+    onMapEnterChanged()
+}
+
+function findMapEnterScript() {
+    return map?._scripts?.find(s => s.on === 'map_enter')
+}
+
+// spawn_monster / spawn_item with plain tile coordinates can be drawn and removed directly
+function isPlainSpawnAction(a) {
+    return (a?.type === 'spawn_monster' || a?.type === 'spawn_item') &&
+        Number.isFinite(a.x) && Number.isFinite(a.y) && !a.position
+}
+
+// Top-level spawn actions of map_enter, normalised for drawing
+function getMapEnterSpawns() {
+    return (findMapEnterScript()?.actions ?? []).filter(isPlainSpawnAction).map(a => a.type === 'spawn_monster'
+        ? { type: 'monster', monster: a.monster, x: a.x, y: a.y, radius: a.radius ?? 0, id: a.id ?? '' }
+        : { type: 'item', item_id: a.item_id, x: a.x, y: a.y, qty: a.qty ?? 1 })
+}
+
+function onMapEnterChanged() {
+    mapScriptManagerPanel?.refresh?.()
+    refreshMapEnterPreview()
+    scheduleRender()
+}
+
+// Old map files kept placed spawns in a separate "spawns" section; fold them into map_enter
+function migrateLegacySpawns(spawns) {
+    if (!Array.isArray(spawns) || spawns.length === 0) return
+    for (const s of spawns) {
+        if (isPlacedSpawn(s.type, s.monster ?? s.item_id, s.x, s.y)) continue
+        addSpawnToMap(s.type, s.monster ?? s.item_id, s.x, s.y, s)
+    }
 }
 
 function isFrontCliff(map, x, y) {
@@ -2347,11 +2860,6 @@ async function renderMapEnterPreview() {
 // Monster data cache for preview rendering
 let monsterPreviewDataCache = null
 
-// Item spritesheet caches for preview rendering
-let itemsImg = null
-let craftingImg = null
-const ITEM_SIZE_HUD = 32  // source sprite size in items.png/crafting.png
-
 async function loadMonsterPreviewData() {
     if (monsterPreviewDataCache) return monsterPreviewDataCache
     try {
@@ -2375,6 +2883,8 @@ function renderPreviewMonsters(ctx, startX, startY, endX, endY) {
 
     for (const monster of mapEnterPreviewData.monsters) {
         if (monster.x < startX || monster.x >= endX || monster.y < startY || monster.y >= endY) continue
+        // Placed spawns are drawn by drawSpawnMarkers
+        if (isPlacedSpawn('monster', monster.monster, monster.x, monster.y)) continue
 
         const worldX = monster.x * TILE + TILE / 2
         const worldY = monster.y * TILE + TILE / 2
@@ -2460,6 +2970,7 @@ async function renderPreviewItems(ctx, startX, startY, endX, endY) {
 
     for (const item of mapEnterPreviewData.items) {
         if (item.x < startX || item.x >= endX || item.y < startY || item.y >= endY) continue
+        if (isPlacedSpawn('item', item.item_id, item.x, item.y)) continue
 
         const worldX = item.x * TILE + TILE / 2
         const worldY = item.y * TILE + TILE / 2
@@ -2520,37 +3031,7 @@ async function renderPreviewItems(ctx, startX, startY, endX, endY) {
             ctx.restore()
         }
 
-        // Draw quantity badge if > 1 and zoom >= 1 (match game's toast-item-badge style)
-        if (item.qty > 1 && zoom >= 1) {
-            ctx.save()
-            // Badge positioned at bottom-right of item sprite (16x16 at worldX,worldY center)
-            // Item drawn at [worldX-8, worldY-8] to [worldX+8, worldY+8]
-            // Badge at bottom-right with small offset
-            const badgeX = worldX + 11  // worldX + 8 (right edge) + 3 offset
-            const badgeY = worldY + 11  // worldY + 8 (bottom edge) + 3 offset
-            const text = `×${item.qty}`
-            const fontSize = 8
-            ctx.font = `bold ${fontSize}px monospace`
-            const textMetrics = ctx.measureText(text)
-            const paddingX = 3
-            const paddingY = 2
-            const badgeWidth = textMetrics.width + paddingX * 2
-            const badgeHeight = fontSize + paddingY * 2
-            const radius = 4
-
-            // Draw rounded rectangle background (red)
-            ctx.fillStyle = '#c84040'
-            ctx.beginPath()
-            ctx.roundRect(badgeX - badgeWidth, badgeY - badgeHeight, badgeWidth, badgeHeight, radius)
-            ctx.fill()
-
-            // Draw white text
-            ctx.fillStyle = '#fff'
-            ctx.textAlign = 'right'
-            ctx.textBaseline = 'bottom'
-            ctx.fillText(text, badgeX - paddingX, badgeY - paddingY)
-            ctx.restore()
-        }
+        drawQtyBadge(ctx, worldX, worldY, item.qty)
     }
 }
 
@@ -2741,6 +3222,7 @@ function render() {
 
     if (preview) renderObjectFoam()
     renderDecorationsAndTops()
+    drawSpawnMarkers()
     if (showMapEnterPreview) renderMapEnterPreview()
     if (showTraversable) renderTraversable()
 
@@ -3990,15 +4472,11 @@ async function applyMap(name, data) {
     // the loaded map is no longer the on-disk file a prior Save local pinned
     localFileHandle = null
 
-    // Reset map_enter preview
-    showMapEnterPreview = false
-    mapEnterPreviewData = null
-    const previewBtn = document.getElementById('btnMapEnterPreview')
-    if (previewBtn) {
-        previewBtn.classList.remove('active')
-        previewBtn.textContent = '👁️'
-        previewBtn.title = 'Preview map_enter (initial state)'
-    }
+    resetMapEnterPreview()
+
+    // Fold legacy "spawns" section into map_enter
+    migrateLegacySpawns(data.spawns)
+    refreshMapEnterPreview()
 
     const field = document.getElementById('mapName')
     if (field) field.value = name
@@ -4014,13 +4492,13 @@ async function save() {
     // Override the loaded file by name; if none is loaded yet, save to local disk.
     if (!currentMapName) return saveLocal()
     const name = currentMapName
-    const body = JSON.stringify(serializeMap(map))
+    const body = serializeMapFormatted(map)
     if (await postMap(name, body)) return
     downloadMap(name, body)   // fallback: download as file
 }
 
 async function saveLocal() {
-    const body = JSON.stringify(serializeMap(map))
+    const body = serializeMapFormatted(map)
     const field = document.getElementById('mapName')
     const defaultName = (currentMapName || field?.value || 'untitled').trim() || 'untitled'
 

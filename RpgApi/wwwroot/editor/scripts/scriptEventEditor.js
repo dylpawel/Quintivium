@@ -14,6 +14,7 @@
  */
 
 import { scriptState } from './scriptState.js';
+import { normalizeTile } from '../map.js';
 import { showJsonModal, createJsonButton, createPanelHeader } from './scriptJsonViewer.js';
 import {
   BUILTIN_EVENTS as EVENT_TYPES,
@@ -261,7 +262,8 @@ export function createScriptEventEditor() {
     let html = '';
 
     if (scopes.tile) {
-      const tile = event.tile || {};
+      // Tile scope may be a mark-name string or { x, y }
+      const tile = typeof event.tile === 'string' ? { mark: event.tile } : (event.tile || {});
       html += `
         <div class="form-field">
           <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 4px;">Tile Scope</label>
@@ -898,10 +900,12 @@ kills('goblin') >= 10</code></pre>
     const tileY = formData.get('tile_y') ?? '';
     const tileMark = formData.get('tile_mark') ?? '';
     if (tileX !== '' || tileY !== '' || tileMark !== '') {
-      event.tile = {};
-      if (tileX !== '') event.tile.x = parseInt(tileX, 10);
-      if (tileY !== '') event.tile.y = parseInt(tileY, 10);
-      if (tileMark !== '') event.tile.mark = tileMark;
+      const tile = normalizeTile({ x: parseInt(tileX, 10), y: parseInt(tileY, 10), mark: tileMark });
+      if (!tile) {
+        alert('Tile scope needs both x and y, or a mark name.');
+        return;
+      }
+      event.tile = tile;
     } else {
       delete event.tile;
     }

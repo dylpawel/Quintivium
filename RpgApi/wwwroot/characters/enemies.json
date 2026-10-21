@@ -53,7 +53,8 @@
   {"name":"Wizard Adept","hp":30,"attack":12,"defense":5,"armor":1,"agility":4,"xp":72,"sprite":{"mode":"composite","base":"Wizard","sheet":"Enemies.png","row":10,"z":4,"handRow":0,"hands":{"left":{"x":-7,"y":6,"z":5},"right":{"x":10,"y":6,"z":3}},"weapons":[{"file":"Weapon-Wood","col":5,"row":0,"cols":2,"x":11,"y":-1,"z":2,"rot":270}]}},
   {"name":"Wizard Elder","hp":55,"attack":21,"defense":12,"armor":4,"agility":8,"xp":195,"sprite":{"mode":"composite","base":"Wizard","sheet":"Enemies.png","row":10,"z":4,"handRow":0,"hands":{"left":{"x":-7,"y":6,"z":5},"right":{"x":10,"y":6,"z":3}},"weapons":[{"file":"Weapon-Wood","col":6,"row":1,"rows":3,"x":11,"y":-7,"z":2}]}},
   {"name":"Wizard Battlemage","hp":68,"attack":20,"defense":16,"armor":8,"agility":8,"xp":215,"sprite":{"mode":"composite","base":"Wizard","sheet":"Enemies.png","row":10,"z":1,"handRow":0,"hands":{"left":{"x":-7,"y":6,"z":5},"right":{"x":10,"y":6,"z":5}},"weapons":[{"file":"Weapon-Wood","col":6,"row":1,"rows":3,"x":5,"y":6,"z":4,"rot":90}]}},
-  {"name":"Crab","hp":10,"attack":0,"defense":0,"armor":2,"agility":0,"xp":8,"sprite":{"mode":"simple","base":"Hero-Crab","file":"Hero-Crab.png"}},
+  {"name":"Crab","hp":10,"attack":0,"defense":0,"armor":2,"agility":0,"xp":8,"sprite":{"mode":"simple","base":"Crab","file":"Crab.png"}},
   {"name":"Gorilla","hp":48,"attack":9,"defense":4,"armor":2,"agility":3,"xp":50,"sprite":{"mode":"simple","base":"Gorilla","file":"Gorilla.png"}},
-  {"name":"Bat","hp":10,"attack":0,"defense":0,"armor":2,"agility":10,"xp":10,"sprite":{"mode":"simple","base":"Bat","file":"Bat.png"}}
+  {"name":"Bat","hp":10,"attack":0,"defense":0,"armor":2,"agility":10,"xp":10,"sprite":{"mode":"simple","base":"Bat","file":"Bat.png"}},
+  {"name":"Big Bat","hp":20,"attack":0,"defense":5,"armor":5,"agility":10,"xp":40,"sprite":{"mode":"simple","base":"BatViolet","file":"BatViolet.png","frameW":34,"frameH":45}}
 ]

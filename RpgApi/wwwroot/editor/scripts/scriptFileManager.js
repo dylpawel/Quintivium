@@ -8,6 +8,7 @@
  */
 
 import { scriptState } from './scriptState.js';
+import { cleanScriptForSave } from '../map.js';
 import { showJsonModal, createJsonButton, createPanelHeader } from './scriptJsonViewer.js';
 import { getScriptFilesInfo, loadScriptFile, saveScriptFile, createScriptFileForMap } from './scriptStorage.js';
 
@@ -500,16 +501,7 @@ export function createScriptFileManager({ map }) {
 
   // --- Clean event for saving (remove editor-only fields) ---
   function cleanEventForSave(event) {
-    const cleaned = { ...event };
-    delete cleaned.name;
-    delete cleaned.enabled;
-    if (!cleaned.condition || cleaned.condition.trim() === '') delete cleaned.condition;
-    if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
-      delete cleaned.tile;
-    }
-    if (!cleaned.map) delete cleaned.map;
-    if (!cleaned.npc) delete cleaned.npc;
-    return cleaned;
+    return cleanScriptForSave(event);
   }
 
   // --- Event Listeners ---

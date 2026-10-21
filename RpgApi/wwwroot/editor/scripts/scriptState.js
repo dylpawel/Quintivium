@@ -2,13 +2,15 @@
  * Script Editor State Management
  *
  * Manages the 3-panel navigation stack and current editing context:
- * - Panel 1: Script File Manager (file selection + event list)
+ * - Panel 1: Map Scripts Manager (event list for current map)
  * - Panel 2: Event Editor (single ECA script)
  * - Panel 3: Action Editor (single action)
  */
 
+import { cleanScriptForSave } from '../map.js';
+
 export const PANEL_MODE = {
-  FILE_MANAGER: 'file_manager',
+  MAP_SCRIPTS: 'map_scripts',
   EVENT_EDITOR: 'event_editor',
   ACTION_EDITOR: 'action_editor',
   NESTED_ACTION_EDITOR: 'nested_action_editor'
@@ -16,31 +18,38 @@ export const PANEL_MODE = {
 
 export class ScriptState {
   constructor() {
-    this.panelStack = [PANEL_MODE.FILE_MANAGER];
-    this.currentFile = null;               // Current script file name (e.g., "cave_1_script.json")
-    this.currentEvents = [];               // Array of event scripts from current file
-    this.currentEvent = null;              // Event being edited (Panel 2)
-    this.currentEventIndex = -1;           // Index in currentEvents
-    this.isNewEvent = false;               // Whether current event is new
-    this.currentAction = null;             // Action being edited (Panel 3)
-    this.currentActionIndex = -1;          // Index in currentEvent.actions
-    this.isNewAction = false;              // Whether current action is new
-    this.currentActionParent = null;       // For nested actions: 'event' | 'choice' | 'pick_random'
-    this.currentChoiceIndex = -1;          // Index of choice in show_choice
-    this.currentPickRandomIndex = -1;      // Index of branch in pick_random
-    this.currentNestedIndex = -1;          // Index of nested action parent in event.actions
-    this.currentNestedType = null;         // 'choices' or 'branches'
-    this.currentNestedItem = null;         // The choice/branch object being edited
+    this.panelStack = [PANEL_MODE.MAP_SCRIPTS];
+    this.map = null;                         // Reference to current map object
+    this.currentEvents = [];                 // Array of event scripts from map._scripts
+    this.currentEvent = null;                // Event being edited (Panel 2)
+    this.currentEventIndex = -1;             // Index in currentEvents (map._scripts)
+    this.isNewEvent = false;                 // Whether current event is new
+    this.currentAction = null;               // Action being edited (Panel 3)
+    this.currentActionIndex = -1;            // Index in currentEvent.actions
+    this.isNewAction = false;                // Whether current action is new
+    this.currentActionParent = null;         // For nested actions: 'event' | 'choice' | 'pick_random'
+    this.currentChoiceIndex = -1;            // Index of choice in show_choice
+    this.currentPickRandomIndex = -1;        // Index of branch in pick_random
+    this.currentNestedIndex = -1;            // Index of nested action parent in event.actions
+    this.currentNestedType = null;           // 'choices' or 'branches'
+    this.currentNestedItem = null;           // The choice/branch object being edited
 
     // Callbacks (set by editor.js)
-    this.onPanelChange = null;         // (newMode, prevMode) => void
-    this.onSaveFile = null;            // (fileName, events) => Promise<boolean>
-    this.onLoadFile = null;            // (fileName) => Promise<Array>
-    this.onCreateFile = null;          // (mapId) => Promise<string>
-    this.onSaveEvent = null;           // (event, index) => void
-    this.onDeleteEvent = null;         // (index) => void
-    this.onSaveAction = null;          // (action, parentContext) => void
-    this.onDeleteAction = null;        // (parentContext, index) => void
+    this.onPanelChange = null;               // (newMode, prevMode) => void
+    this.onSaveEvent = null;                 // (event, index) => void
+    this.onDeleteEvent = null;               // (index) => void
+    this.onSaveAction = null;                // (action, parentContext) => void
+    this.onDeleteAction = null;              // (parentContext, index) => void
+  }
+
+  // --- Map Reference ---
+
+  setMap(map) {
+    this.map = map;
+    this.currentEvents = map._scripts || [];
+    // Ensure map._scripts exists
+    if (!map._scripts) map._scripts = [];
+    this.currentEvents = map._scripts;
   }
 
   // --- Panel Navigation ---
@@ -63,13 +72,13 @@ export class ScriptState {
     return true;
   }
 
-  goToFileManager() {
-    this.panelStack = [PANEL_MODE.FILE_MANAGER];
+  goToMapScripts() {
+    this.panelStack = [PANEL_MODE.MAP_SCRIPTS];
     this.currentEvent = null;
     this.currentEventIndex = -1;
     this.currentAction = null;
     this.currentActionIndex = -1;
-    if (this.onPanelChange) this.onPanelChange(PANEL_MODE.FILE_MANAGER, null);
+    if (this.onPanelChange) this.onPanelChange(PANEL_MODE.MAP_SCRIPTS, null);
   }
 
   goToEventEditor(eventIndex) {
@@ -81,8 +90,8 @@ export class ScriptState {
     this.currentActionParent = 'event';  // Set parent context for actions
     this.currentChoiceIndex = -1;
     this.currentPickRandomIndex = -1;
-    this.panelStack = [PANEL_MODE.FILE_MANAGER, PANEL_MODE.EVENT_EDITOR];
-    if (this.onPanelChange) this.onPanelChange(PANEL_MODE.EVENT_EDITOR, PANEL_MODE.FILE_MANAGER);
+    this.panelStack = [PANEL_MODE.MAP_SCRIPTS, PANEL_MODE.EVENT_EDITOR];
+    if (this.onPanelChange) this.onPanelChange(PANEL_MODE.EVENT_EDITOR, PANEL_MODE.MAP_SCRIPTS);
   }
 
   goToActionEditor(actionIndex, parentContext = 'event', parentActionIndex = -1, choiceBranchIndex = -1) {
@@ -110,7 +119,7 @@ export class ScriptState {
     this.isNewAction = actionIndex < 0 || actionIndex >= actions.length;
     this.currentAction = actions[actionIndex] ?? { type: '' };
 
-    this.panelStack = [PANEL_MODE.FILE_MANAGER, PANEL_MODE.EVENT_EDITOR, PANEL_MODE.ACTION_EDITOR];
+    this.panelStack = [PANEL_MODE.MAP_SCRIPTS, PANEL_MODE.EVENT_EDITOR, PANEL_MODE.ACTION_EDITOR];
     if (this.onPanelChange) this.onPanelChange(PANEL_MODE.ACTION_EDITOR, PANEL_MODE.EVENT_EDITOR);
   }
 
@@ -129,41 +138,18 @@ export class ScriptState {
     if (this.onPanelChange) this.onPanelChange(PANEL_MODE.NESTED_ACTION_EDITOR, PANEL_MODE.EVENT_EDITOR);
   }
 
-  // --- File Operations ---
-
-  async loadFile(fileName) {
-    if (!this.onLoadFile) return;
-    this.currentFile = fileName;
-    this.currentEvents = await this.onLoadFile(fileName) || [];
-    if (this.onPanelChange) this.onPanelChange(this.currentMode, this.currentMode); // Trigger refresh
-  }
-
-  async saveFile() {
-    if (!this.onSaveFile || !this.currentFile) return false;
-    const success = await this.onSaveFile(this.currentFile, this.currentEvents);
-    if (success && this.onPanelChange) this.onPanelChange(this.currentMode, this.currentMode);
-    return success;
-  }
-
-  async createNewFile(mapId) {
-    if (!this.onCreateFile) return null;
-    const fileName = await this.onCreateFile(mapId);
-    if (fileName) {
-      this.currentFile = fileName;
-      this.currentEvents = [];
-      if (this.onPanelChange) this.onPanelChange(this.currentMode, this.currentMode);
-    }
-    return fileName;
-  }
-
   // --- Event Operations ---
 
   createEmptyEvent() {
     return {
       id: crypto.randomUUID(),
-      once: true,
+      name: '',
       on: 'tile_enter',
+      once: false,
       condition: '',
+      tile: null,
+      map: null,
+      npc: null,
       actions: []
     };
   }
@@ -184,7 +170,7 @@ export class ScriptState {
       this.currentEventIndex = this.currentEvents.length - 1;
     }
     if (this.onSaveEvent) this.onSaveEvent(this.currentEvent, this.currentEventIndex);
-    this.popPanel(); // Back to file manager
+    this.popPanel(); // Back to map scripts
   }
 
   deleteEvent() {
@@ -192,7 +178,7 @@ export class ScriptState {
       this.currentEvents.splice(this.currentEventIndex, 1);
       if (this.onDeleteEvent) this.onDeleteEvent(this.currentEventIndex);
     }
-    this.goToFileManager();
+    this.goToMapScripts();
   }
 
   // --- Action Operations ---
@@ -308,36 +294,8 @@ export class ScriptState {
  * Clean event for JSON display - omit default/empty values
  */
 function cleanEventForJSON(event) {
-  const cleaned = { ...event };
-
-  // Remove name/enabled (not used by engine)
-  delete cleaned.name;
-  delete cleaned.enabled;
-
-  // Default once: true
-  if (cleaned.once === true) delete cleaned.once;
-
-  // Empty condition
-  if (!cleaned.condition || cleaned.condition.trim() === '') {
-    delete cleaned.condition;
-  }
-
-  // Empty tile
-  if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
-    delete cleaned.tile;
-  }
-
-  // Map scope - keep if explicitly set (file scope is separate)
-  if (!cleaned.map) delete cleaned.map;
-  if (!cleaned.npc) delete cleaned.npc;
-
-  // Empty actions
-  if (!cleaned.actions || cleaned.actions.length === 0) {
-    delete cleaned.actions;
-  } else {
-    cleaned.actions = cleaned.actions.map(cleanActionForJSON);
-  }
-
+  const cleaned = cleanScriptForSave(event);
+  cleaned.actions = cleaned.actions.map(cleanActionForJSON);
   return cleaned;
 }
 
@@ -381,8 +339,8 @@ function cleanActionForJSON(action) {
     case 'spawn_monster':
       // Handle new position field format { x, y, mark }
       if (cleaned.position) {
-        if (!cleaned.position.x) delete cleaned.position.x;
-        if (!cleaned.position.y) delete cleaned.position.y;
+        if (cleaned.position.x === '' || cleaned.position.x == null) delete cleaned.position.x;
+        if (cleaned.position.y === '' || cleaned.position.y == null) delete cleaned.position.y;
         if (!cleaned.position.mark) delete cleaned.position.mark;
         // If position is empty, remove it
         if (Object.keys(cleaned.position).length === 0) {
@@ -390,8 +348,8 @@ function cleanActionForJSON(action) {
         }
       }
       // Legacy x, y fields (for backwards compatibility)
-      if (!cleaned.x) delete cleaned.x;
-      if (!cleaned.y) delete cleaned.y;
+      if (cleaned.x === '' || cleaned.x == null) delete cleaned.x;
+      if (cleaned.y === '' || cleaned.y == null) delete cleaned.y;
       if (!cleaned.radius) delete cleaned.radius;
       if (!cleaned.id) delete cleaned.id;
       if (!cleaned.pool) delete cleaned.pool;
@@ -401,13 +359,13 @@ function cleanActionForJSON(action) {
       break;
     case 'change_map':
       if (!cleaned.mark) delete cleaned.mark;
-      if (!cleaned.x) delete cleaned.x;
-      if (!cleaned.y) delete cleaned.y;
+      if (cleaned.x === '' || cleaned.x == null) delete cleaned.x;
+      if (cleaned.y === '' || cleaned.y == null) delete cleaned.y;
       break;
     case 'change_tile':
       if (!cleaned.mark) delete cleaned.mark;
-      if (!cleaned.x) delete cleaned.x;
-      if (!cleaned.y) delete cleaned.y;
+      if (cleaned.x === '' || cleaned.x == null) delete cleaned.x;
+      if (cleaned.y === '' || cleaned.y == null) delete cleaned.y;
       break;
     case 'end_scenario':
       if (!cleaned.next) delete cleaned.next;

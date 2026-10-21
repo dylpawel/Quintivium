@@ -422,6 +422,8 @@ let _scripts  = []
 let _scenario = null
 let _hooks    = {}
 let _marks    = {}   // name.toLowerCase() → { x, y }
+// Map-specific scripts registry: mapId -> array of script objects (with map scope forced)
+let _mapScriptsRegistry = new Map()
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -446,6 +448,23 @@ export function setMapMarks(marksArray) {
     for (const m of marksArray ?? []) {
         _marks[m.name.toLowerCase()] = { x: m.x, y: m.y }
     }
+}
+
+/** Register scripts embedded in a map file (e.g., map_enter spawns).
+ *  Replaces any previously registered scripts for this map. */
+export function registerMapScripts(mapId, scripts) {
+    // Remove any existing scripts scoped to this map
+    _scripts = _scripts.filter(s => s.map !== mapId)
+
+    // Add new scripts with map scope forced
+    const scopedScripts = (scripts ?? []).map(s => ({
+        ...s,
+        map: mapId,
+        id: s.id ?? crypto.randomUUID()
+    }))
+    _scripts.push(...scopedScripts)
+    _mapScriptsRegistry.set(mapId, scopedScripts)
+    console.log(`[ECA] Registered ${scopedScripts.length} scripts for map "${mapId}"`)
 }
 
 /** Read-only view of the current state (variables, flags, inventory). */
@@ -682,20 +701,22 @@ export async function loadScenario(id, basePath = '/scenarios') {
     _scenario = await sRes.json()
 
     // Support scriptFiles array in scenario.json; fall back to scripts.json
+    // Only load GLOBAL scripts here (no map scope). Per-map scripts are loaded
+    // from map files when entering a map via registerMapScripts().
     let allScripts = []
     if (_scenario.scriptFiles?.length) {
         const entries = _scenario.scriptFiles.map(e =>
             typeof e === 'string' ? { file: e, map: null } : e
         )
+        // Filter to only global script files (no map scope)
+        const globalEntries = entries.filter(e => !e.map)
         const responses = await Promise.all(
-            entries.map(e => fetch(`${basePath}/${id}/${e.file}`))
+            globalEntries.map(e => fetch(`${basePath}/${id}/${e.file}`))
         )
         for (let i = 0; i < responses.length; i++) {
             const res = responses[i]
-            if (!res.ok) throw new Error(`Script file not found: ${entries[i].file}`)
+            if (!res.ok) throw new Error(`Script file not found: ${globalEntries[i].file}`)
             const scripts = await res.json()
-            const scopeMap = entries[i].map
-            if (scopeMap) scripts.forEach(s => { if (!s.map) s.map = scopeMap })
             allScripts.push(...scripts)
         }
     } else {

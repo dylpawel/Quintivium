@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sprite Sheet Generator & Previewer</title>
+  <style>
+    :root {
+      --bg: #1e1e24;
+      --card: #2b2b36;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text: #f3f4f6;
+      --border: #3f3f46;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1000px;
+      margin-inline: auto;
+    }
+
+    h1, h2 {
+      margin: 0 0 12px 0;
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--accent);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .dropzone.hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #818cf8;
+    }
+    .dropzone input {
+      display: none;
+    }
+
+    /* Controls Grid */
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-group label {
+      font-size: 0.85rem;
+      color: #a1a1aa;
+    }
+
+    input[type="number"], input[type="range"] {
+      background: #18181b;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #3f3f46; }
+    .btn-secondary:hover { background: #52525b; }
+
+    /* Visualizers */
+    .canvas-container {
+      overflow-x: auto;
+      background: repeating-conic-gradient(#18181b 0% 25%, #27272a 0% 50%) 50% / 16px 16px;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100px;
+    }
+
+    canvas {
+      image-rendering: pixelated;
+      max-width: 100%;
+    }
+
+    .preview-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sprite Sheet Generator</h1>
+
+  <!-- Input Section -->
+  <div class="card">
+    <div class="dropzone" id="dropzone">
+      <p>Drag & drop sprite images here, or <strong>click to select</strong></p>
+      <input type="file" id="fileInput" multiple accept="image/*">
+    </div>
+
+    <!-- Truncate / Crop Settings -->
+    <h2>Truncate Edges (Pixels Cut)</h2>
+    <div class="controls">
+      <div class="control-group">
+        <label for="cutTop">Cut Top</label>
+        <input type="number" id="cutTop" value="0" min="0">
+      </div>
+      <div class="control-group">
+        <label for="cutRight">Cut Right</label>
+        <input type="number" id="cutRight" value="0" min="0">
+      </div>
+      <div class="control-group">
+        <label for="cutBottom">Cut Bottom</label>
+        <input type="number" id="cutBottom" value="0" min="0">
+      </div>
+      <div class="control-group">
+        <label for="cutLeft">Cut Left</label>
+        <input type="number" id="cutLeft" value="0" min="0">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="downloadBtn" disabled>Download Sprite Sheet</button>
+      <button class="btn btn-secondary" id="clearBtn">Clear All Sprites</button>
+    </div>
+  </div>
+
+  <!-- Sprite Sheet Output -->
+  <div class="card">
+    <h2>Combined Sprite Sheet</h2>
+    <div class="canvas-container">
+      <canvas id="sheetCanvas"></canvas>
+    </div>
+    <p id="sheetInfo" style="font-size: 0.85rem; color: #a1a1aa; margin-top: 8px;">No frames added yet.</p>
+  </div>
+
+  <!-- Animation Preview -->
+  <div class="card preview-box">
+    <h2>Animation Preview</h2>
+    <div class="canvas-container">
+      <canvas id="previewCanvas"></canvas>
+    </div>
+    <div class="control-group" style="width: 100%; max-width: 300px;">
+      <label for="speedSlider">Frame Duration: <span id="speedVal">200</span> ms</label>
+      <input type="range" id="speedSlider" min="20" max="1000" step="10" value="200">
+    </div>
+  </div>
+
+  <script>
+    // State
+    const loadedImages = [];
+    let currentFrameIndex = 0;
+    let animTimer = null;
+
+    // DOM Elements
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const cutTop = document.getElementById('cutTop');
+    const cutRight = document.getElementById('cutRight');
+    const cutBottom = document.getElementById('cutBottom');
+    const cutLeft = document.getElementById('cutLeft');
+    const sheetCanvas = document.getElementById('sheetCanvas');
+    const sheetCtx = sheetCanvas.getContext('2d');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedVal = document.getElementById('speedVal');
+    const sheetInfo = document.getElementById('sheetInfo');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Event Listeners - Drag/Drop & Input
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('hover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('hover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('hover');
+      if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    [cutTop, cutRight, cutBottom, cutLeft].forEach(input => {
+      input.addEventListener('input', updateSheet);
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+      speedVal.textContent = e.target.value;
+      restartAnimation();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      loadedImages.length = 0;
+      updateSheet();
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'spritesheet.png';
+      link.href = sheetCanvas.toDataURL();
+      link.click();
+    });
+
+    // File Processing
+    function handleFiles(files) {
+      const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      let loadedCount = 0;
+
+      imageFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            loadedImages.push(img);
+            loadedCount++;
+            if (loadedCount === imageFiles.length) {
+              updateSheet();
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      fileInput.value = ''; // Reset input selection
+    }
+
+    // Canvas & Sprite Sheet Update
+    function updateSheet() {
+      if (loadedImages.length === 0) {
+        sheetCanvas.width = 0;
+        sheetCanvas.height = 0;
+        previewCanvas.width = 0;
+        previewCanvas.height = 0;
+        sheetInfo.textContent = 'No frames added yet.';
+        downloadBtn.disabled = true;
+        stopAnimation();
+        return;
+      }
+
+      const cTop = Math.max(0, parseInt(cutTop.value) || 0);
+      const cRight = Math.max(0, parseInt(cutRight.value) || 0);
+      const cBottom = Math.max(0, parseInt(cutBottom.value) || 0);
+      const cLeft = Math.max(0, parseInt(cutLeft.value) || 0);
+
+      // Determine max height and total width of combined sheet
+      let totalWidth = 0;
+      let maxHeight = 0;
+
+      const processedSprites = loadedImages.map(img => {
+        const sX = cLeft;
+        const sY = cTop;
+        const sWidth = Math.max(0, img.naturalWidth - cLeft - cRight);
+        const sHeight = Math.max(0, img.naturalHeight - cTop - cBottom);
+        return { img, sX, sY, sWidth, sHeight };
+      });
+
+      processedSprites.forEach(sprite => {
+        totalWidth += sprite.sWidth;
+        if (sprite.sHeight > maxHeight) maxHeight = sprite.sHeight;
+      });
+
+      if (totalWidth <= 0 || maxHeight <= 0) {
+        sheetInfo.textContent = 'Truncation dimensions are larger than sprite sizes!';
+        downloadBtn.disabled = true;
+        return;
+      }
+
+      // Draw horizontal sprite sheet
+      sheetCanvas.width = totalWidth;
+      sheetCanvas.height = maxHeight;
+      sheetCtx.clearRect(0, 0, totalWidth, maxHeight);
+
+      let currentX = 0;
+      processedSprites.forEach(sprite => {
+        if (sprite.sWidth > 0 && sprite.sHeight > 0) {
+          sheetCtx.drawImage(
+            sprite.img,
+            sprite.sX, sprite.sY, sprite.sWidth, sprite.sHeight,
+            currentX, 0, sprite.sWidth, sprite.sHeight
+          );
+        }
+        currentX += sprite.sWidth;
+      });
+
+      sheetInfo.textContent = `Frames: ${loadedImages.length} | Size: ${totalWidth}x${maxHeight}px`;
+      downloadBtn.disabled = false;
+
+      // Update Preview Canvas
+      const maxSpriteWidth = Math.max(...processedSprites.map(s => s.sWidth));
+      previewCanvas.width = maxSpriteWidth;
+      previewCanvas.height = maxHeight;
+
+      restartAnimation(processedSprites);
+    }
+
+    // Animation Loop Controls
+    function stopAnimation() {
+      if (animTimer) clearInterval(animTimer);
+      animTimer = null;
+    }
+
+    function restartAnimation(sprites) {
+      stopAnimation();
+      if (!sprites) {
+        const cTop = Math.max(0, parseInt(cutTop.value) || 0);
+        const cRight = Math.max(0, parseInt(cutRight.value) || 0);
+        const cBottom = Math.max(0, parseInt(cutBottom.value) || 0);
+        const cLeft = Math.max(0, parseInt(cutLeft.value) || 0);
+
+        sprites = loadedImages.map(img => ({
+          img,
+          sX: cLeft,
+          sY: cTop,
+          sWidth: Math.max(0, img.naturalWidth - cLeft - cRight),
+          sHeight: Math.max(0, img.naturalHeight - cTop - cBottom)
+        }));
+      }
+
+      if (sprites.length === 0) return;
+
+      currentFrameIndex = 0;
+      const renderFrame = () => {
+        const sprite = sprites[currentFrameIndex];
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+        if (sprite && sprite.sWidth > 0 && sprite.sHeight > 0) {
+          // Center frame inside preview canvas if frame sizes vary
+          const offsetX = Math.floor((previewCanvas.width - sprite.sWidth) / 2);
+          previewCtx.drawImage(
+            sprite.img,
+            sprite.sX, sprite.sY, sprite.sWidth, sprite.sHeight,
+            offsetX, 0, sprite.sWidth, sprite.sHeight
+          );
+        }
+
+        currentFrameIndex = (currentFrameIndex + 1) % sprites.length;
+      };
+
+      renderFrame();
+      const interval = parseInt(speedSlider.value) || 200;
+      animTimer = setInterval(renderFrame, interval);
+    }
+  </script>
+</body>
+</html>

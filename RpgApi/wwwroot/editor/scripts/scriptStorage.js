@@ -6,6 +6,8 @@
  * - { "file": "map_scripts.json", "map": "map_id" } — per-map scripts with auto map scope
  */
 
+import { cleanScriptForSave as cleanScriptFields } from '../map.js';
+
 const SCRIPTS_BASE_PATH = '../scenarios/mystic_island_PL'; // Current scenario path (relative to editor page)
 
 /**
@@ -198,7 +200,7 @@ export async function loadGlobalScripts() {
  */
 export async function saveMapScripts(mapId, scripts) {
   // Determine the script file for this map
-  const scriptFile = getScriptFileForMap(mapId);
+  const scriptFile = await getScriptFileForMap(mapId);
   if (!scriptFile) {
     console.error('[ScriptStorage] No script file configured for map:', mapId);
     return false;
@@ -206,12 +208,9 @@ export async function saveMapScripts(mapId, scripts) {
 
   // Filter scripts for this map
   const mapScripts = scripts.filter(s => s.map === mapId);
+  const body = stringifyScript(mapScripts.map(cleanScriptForSave), 2);
 
   try {
-    // Clean scripts before saving
-    const cleanedScripts = mapScripts.map(cleanScriptForSave);
-    const body = stringifyScript(cleanedScripts, 2);
-
     // Try server save first
     const res = await fetch(`${SCRIPTS_BASE_PATH}/${scriptFile}`, {
       method: 'POST',
@@ -243,11 +242,9 @@ export async function saveMapScripts(mapId, scripts) {
  */
 export async function saveGlobalScripts(scripts) {
   const globalScripts = scripts.filter(s => !s.map);
+  const body = stringifyScript(globalScripts.map(cleanScriptForSave), 2);
 
   try {
-    // Clean scripts before saving
-    const cleanedScripts = globalScripts.map(cleanScriptForSave);
-    const body = stringifyScript(cleanedScripts, 2);
     const res = await fetch(`${SCRIPTS_BASE_PATH}/scripts.json`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -501,44 +498,10 @@ export async function loadScriptFile(filePath) {
  * @returns {Object} Cleaned script object
  */
 function cleanScriptForSave(script) {
-  const cleaned = { ...script };
-
-  // Remove name entirely (not used by engine)
-  delete cleaned.name;
-
-  // Remove enabled entirely (not used by engine, default is true)
-  delete cleaned.enabled;
-
-  // Remove condition if empty or undefined
-  if (!cleaned.condition || cleaned.condition.trim() === '') {
-    delete cleaned.condition;
-  }
-
-  // Remove tile if it has no x/y/mark
-  if (cleaned.tile && (!Number.isFinite(cleaned.tile.x) && !Number.isFinite(cleaned.tile.y) && !cleaned.tile.mark)) {
-    delete cleaned.tile;
-  }
-
-  // Remove map if not set (global scripts don't need it)
-  if (!cleaned.map) {
-    delete cleaned.map;
-  }
-
-  // Remove npc if not set
-  if (!cleaned.npc) {
-    delete cleaned.npc;
-  }
-
-  // Normalize event -> on
-  if (cleaned.event && !cleaned.on) {
-    cleaned.on = cleaned.event;
-    delete cleaned.event;
-  }
+  const cleaned = cleanScriptFields(script);
 
   // Clean actions - remove default/empty fields from each action
-  if (cleaned.actions) {
-    cleaned.actions = cleaned.actions.map(cleanActionForSave);
-  }
+  cleaned.actions = cleaned.actions.map(cleanActionForSave);
 
   return cleaned;
 }
@@ -597,14 +560,14 @@ function cleanActionForSave(action) {
 
     case 'change_map':
       if (!cleaned.mark) delete cleaned.mark;
-      if (!cleaned.x) delete cleaned.x;
-      if (!cleaned.y) delete cleaned.y;
+      if (cleaned.x === '' || cleaned.x == null) delete cleaned.x;
+      if (cleaned.y === '' || cleaned.y == null) delete cleaned.y;
       break;
 
     case 'change_tile':
       if (!cleaned.mark) delete cleaned.mark;
-      if (!cleaned.x) delete cleaned.x;
-      if (!cleaned.y) delete cleaned.y;
+      if (cleaned.x === '' || cleaned.x == null) delete cleaned.x;
+      if (cleaned.y === '' || cleaned.y == null) delete cleaned.y;
       break;
 
     case 'show_dialog':

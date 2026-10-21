@@ -17,9 +17,9 @@
     "Wooden Shield": { "icon": [0, 30], "type": "hand", "bonuses": {"defense":2} },
     "Amber Amulet": { "icon": [0, 41], "type": "neck", "bonuses": {"attack":1,"defense":1} },
     "Double Axe": [6, 25],
-    "Leather Armor": [0, 34],
+    "Leather Armor": { "icon": [0, 34], "type": "torso", "bonuses": {"defense":3} },
     "Leather Shoes": { "icon": [2, 38], "type": "feet", "bonuses": {"agility":1} },
-    "Leather Gloves": [3, 36],
+    "Leather Gloves": { "icon": [3, 36], "type": "hand", "bonuses": {"agility":1} },
     "Red Potion": [2, 46]
   },
   "crafting":{

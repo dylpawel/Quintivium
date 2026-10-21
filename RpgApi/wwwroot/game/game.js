@@ -398,7 +398,7 @@ const SPRITE_DEFS = {
     'Hero-Mage':   {},
     'Hero-Boy':    {},
     'Hero-Farmer': {},        // 256×32 col sheet (8 frames) — matches defaults
-    // Hero-Crab, Gorilla, Bat are now defined in enemies.json sprite config
+    // Crab, Gorilla, Bat are now defined in enemies.json sprite config
 }
 
 /**
@@ -3615,7 +3615,7 @@ function _drawBattleSprites(monster) {
     if (resolved.composite) {
         _drawCompositeEnemy(resolved.def, mctx, frame, 2, 32, BATTLE_SPRITE_Y + 32, true)
     } else {
-        const sprite = _getEntityImg(monster.type)
+        const sprite = _getEntityImg(monster.type, resolved)
         if (sprite) {
             const { frameW, frameH } = resolved
             mctx.save()
@@ -4270,7 +4270,7 @@ function startBattle(monster) {
                         _drawCompositeEnemy(resolved.def, mctx, frame, 2,
                             32, BATTLE_SPRITE_Y + 32 - rise, true)
                     } else {
-                        const sprite = _getEntityImg(monster.type)
+                        const sprite = _getEntityImg(monster.type, resolved)
                         if (sprite) {
                             const { frameW, frameH } = resolved
                             mctx.save()
@@ -4612,7 +4612,6 @@ async function loadAndEnterMap(mapId, startX, startY, mark) {
             tileCache.clear()
         }
         map = deserializeMap(mapData, tileset)
-        map._marks     = mapMarks   // stash for restoration without re-fetching
         map._tilesetId = tilesetId
         buildBlockedMap()
     }
@@ -4622,6 +4621,9 @@ async function loadAndEnterMap(mapId, startX, startY, mark) {
 
     // Register marks with engine
     engine.setMapMarks(mapMarks)
+
+    // Register map-embedded scripts (map_enter, tile events, etc.); replaces earlier registration for this map
+    engine.registerMapScripts(mapId, map._scripts ?? [])
 
     // Resolve named mark to coordinates
     if (mark && mapMarks.length) {
