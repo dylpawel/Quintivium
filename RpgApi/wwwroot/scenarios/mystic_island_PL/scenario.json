@@ -1,7 +1,7 @@
 {
   "title": "Mistyczna Wyspa",
   "description": "Podróż po tajemniczej wyspie.",
-  "start_map": "cave_1",
+  "start_map": "island_1",
   "start_position": "start",
   "hero": "Tom",
   "questionPools": 1,
